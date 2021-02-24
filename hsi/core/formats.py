@@ -158,7 +158,12 @@ def convert(target_format, source_format, spec, wavelen=None):
         else:
             rwavelen = wavelen
 
-    # TODO: verify refraction calculation. Temporary use of scale factor
+    # Absorption coefficient (ua) and extinction coefficient (eps):
+    # ua = eps * log(10)
+    # Complex refractive Index :n = n_r + i n_i
+    # Absorption coefficient and imaginary refractive index:
+    # ua = 4 pi n_i/ lambda
+    # Intensity: I = exp(-ua * l) = 10 ** (-eps * l) = exp(-4 pi n_i / lambda)
     wscale = 1e9
 
     # from intensity
@@ -169,7 +174,7 @@ def convert(target_format, source_format, spec, wavelen=None):
     if target_format is HSExtinction and source_format is HSIntensity:
         return -np.log10(np.abs(spec))
     if target_format is HSRefraction and source_format is HSIntensity:
-        return - np.log10(np.abs(spec)) * (rwavelen * wscale) / (4 * np.pi)
+        return - np.log(np.abs(spec)) * (rwavelen * wscale) / (4 * np.pi)
 
     # from absorption
     if target_format is HSIntensity and source_format is HSAbsorption:
@@ -179,7 +184,7 @@ def convert(target_format, source_format, spec, wavelen=None):
     if target_format is HSExtinction and source_format is HSAbsorption:
         return spec / np.log(10)
     if target_format is HSRefraction and source_format is HSAbsorption:
-        return spec / np.log(10) * (rwavelen * wscale) / (4 * np.pi)
+        return spec * (rwavelen * wscale) / (4 * np.pi)
 
     # from extinction
     if target_format is HSIntensity and source_format is HSExtinction:
@@ -189,14 +194,14 @@ def convert(target_format, source_format, spec, wavelen=None):
     if target_format is HSExtinction and source_format is HSExtinction:
         return spec
     if target_format is HSRefraction and source_format is HSExtinction:
-        return spec * (rwavelen * wscale) / (4 * np.pi)
+        return spec * np.log(10) * (rwavelen * wscale) / (4 * np.pi)
 
     # from refraction
     if target_format is HSIntensity and source_format is HSRefraction:
-        return 10. ** (-spec * (4 * np.pi) / (rwavelen * wscale))
+        return np.exp (-spec * (4 * np.pi) / (rwavelen * wscale))
     if target_format is HSAbsorption and source_format is HSRefraction:
-        return spec * (4 * np.pi) / (rwavelen * wscale) * np.log(10)
-    if target_format is HSExtinction and source_format is HSRefraction:
         return spec * (4 * np.pi) / (rwavelen * wscale)
+    if target_format is HSExtinction and source_format is HSRefraction:
+        return spec * (4 * np.pi) / (rwavelen * wscale) / np.log(10)
     if target_format is HSRefraction and source_format is HSRefraction:
         return spec
