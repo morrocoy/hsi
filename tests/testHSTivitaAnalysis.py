@@ -35,14 +35,11 @@ def main():
     print("Spectral format: %s" % (format.key))
     tissue = HSTivitaAnalysis(spectra, wavelen, format=format)
 
-
-
     # tissue = HSTivitaAnalysis(format=HSIntensity)
     # tissue = HSTivitaAnalysis(format=HSExtinction)
     # tissue = HSTivitaAnalysis(format=HSRefraction)
 
     # verify oxixenation
-
     ddspectra = signal.savgol_filter(
         spectra, window_length=5, polyorder=3, deriv=2, axis=0)
 
@@ -61,7 +58,6 @@ def main():
     ratios = val0 / val1
     res =  val0 / r0 / (val0 / r0 + val1 / r1)
 
-
     tissIdx = 0
 
     calIndex = [0, 15, 1]
@@ -73,8 +69,6 @@ def main():
     print("measured ratios: {}".format(measuredRatios))
     print("scaled ratios: {}".format(scaledRatios))
     print("results: {}".format(res[calIndex]))
-
-
 
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)

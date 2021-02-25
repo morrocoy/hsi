@@ -185,15 +185,6 @@ class HSTivitaAnalysis:
             self._tivitaSolVector[3, index_mask] = self.evalTWIndex(
                 b, wavelen)
 
-            # self._tivitaSolVector[0, index_mask] = self.evalOxygenation(
-            #     spectra[:, index_mask], wavelen)
-            # self._tivitaSolVector[1, index_mask] = self.evalNIRPerfIndex(
-            #     spectra[:, index_mask], wavelen)
-            # self._tivitaSolVector[2, index_mask] = self.evalTHIndex(
-            #     spectra[:, index_mask], wavelen)
-            # self._tivitaSolVector[3, index_mask] = self.evalTWIndex(
-            #     spectra[:, index_mask], wavelen)
-
 
     @classmethod
     # def evalNIRPerfIndex(cls, spectra, wavelen, reg0=[655e-9, 735e-9],

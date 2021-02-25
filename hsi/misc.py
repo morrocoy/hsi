@@ -3,46 +3,16 @@
 # from __future__ import print_function, division
 
 import os.path
-import sys
-import re
-
-
-
+import xlrd
 import numpy as np
 
 import logging
-
 
 DEBUGGING = False
 LOG_FMT = '%(asctime)s %(filename)35s:%(lineno)-4d : %(levelname)-7s: %(message)s'
 
 logger = logging.getLogger(__name__)
 
-
-# # Reads the version of the program from the first line of version.txt
-# try:
-#     if getattr(sys, 'frozen', False):
-#         # If the application is run as a bundle, the pyInstaller bootloader
-#         # extends the sys module by a flag frozen=True and sets the app
-#         # path into variable _MEIPASS'.
-#         MODULE_DIR = os.path.join(sys._MEIPASS, 'cmlib')
-#         if DEBUGGING:
-#             print("Module dir from meipass: {}".format(MODULE_DIR), file=sys.stderr)
-#     else:
-#         MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-#         if DEBUGGING:
-#             print("Module dir from __file__: {}".format(MODULE_DIR), file=sys.stderr)
-#
-#     VERSION_FILE = os.path.join(MODULE_DIR, 'version.txt')
-#     if DEBUGGING:
-#         print("Reading version from: {}".format(VERSION_FILE), file=sys.stderr)
-#     logger.debug("Reading version from: {}".format(VERSION_FILE))
-#     with open(VERSION_FILE) as stream:
-#         __version__ = stream.readline().strip()
-# except Exception as ex:
-#     __version__ = "?.?.?"
-#     logger.error("Unable to read version number: {}".format(ex))
-#     raise
 
 def versionStrToTuple(versionStr):
     """ Converts a version string to tuple
@@ -83,6 +53,44 @@ def getPkgDir():
     # return os.path.join(os.path.dirname(__file__), os.pardir)
     return os.path.dirname(__file__)
 
+
+# excel stuff .................................................................
+def readExcelTbl(file, sheet, rows, cols, zerochars=[], nanchars=[]):
+
+    workbook = xlrd.open_workbook(file)
+
+    if isinstance(sheet, int):
+        worksheet = workbook.sheet_by_index(sheet)
+    else:
+        worksheet = workbook.sheet_by_name(sheet)
+
+    data = []
+    for i in (range(len(rows))):
+        line = []
+        if worksheet.nrows <= rows[i]:
+            break
+        for j in range(len(cols)):
+            readout = worksheet.cell_value(rows[i], cols[j])
+            # check for number
+            if isinstance(readout, (int, float)):
+                if readout == int(readout):
+                    line.append(int(readout))
+                else:
+                    line.append(readout)
+
+            # check for characters which shall be associated with zero
+            elif readout in zerochars:
+                line.append(0)
+
+            # check for characters which shall be associated with zero
+            elif readout in nanchars:
+                line.append(np.nan)
+
+            # append readout as string
+            else:
+                line.append(readout)
+        data.append(line)
+    return data
 
 
 # QT stuff ...................................................................

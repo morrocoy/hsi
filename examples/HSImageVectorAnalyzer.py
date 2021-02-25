@@ -120,6 +120,7 @@ class QHSImageViewerWidget(QtGui.QWidget):
 
         # user config widgets
         self.hsImageConfig.setMaximumWidth(200)
+        self.hsImageConfig.setFormat(HSAbsorption)
         self.hsVectorFitConfig.setMaximumWidth(200)
 
         layout = QtGui.QVBoxLayout()
@@ -148,13 +149,11 @@ class QHSImageViewerWidget(QtGui.QWidget):
             item.setXYLink(firstItem)
             item.sigCursorPositionChanged.connect(self.updateCursorPosition)
 
-
         self.hsImageConfig.sigValueChanged.connect(self.setHSImage)
         self.hsVectorFitConfig.sigValueChanged.connect(self.onVectorFitChanged)
         # self.spectViewer.sigRegionChanged.connect(self.onRegionChanged)
         self.spectViewer.sigRegionChangeFinished.connect(
             self.onRegionChangeFinished)
-
 
         # dark theme
         # self.setStyleSheet(
@@ -169,6 +168,7 @@ class QHSImageViewerWidget(QtGui.QWidget):
         #     "border-color: grey;"
         # )
 
+
     # def onRegionChanged(self, item):
     #     reg = item.getRegion()
     #     self.hsVectorFitConfig.blockSignals(True)
@@ -176,6 +176,7 @@ class QHSImageViewerWidget(QtGui.QWidget):
     #     self.hsVectorFitConfig.setROI(reg)
     #     self.hsVectorFitConfig.wavRegionWidget.blockSignals(False)
     #     self.hsVectorFitConfig.blockSignals(False)
+
 
     def onRegionChangeFinished(self, item):
         reg = item.getRegion()
@@ -214,6 +215,7 @@ class QHSImageViewerWidget(QtGui.QWidget):
         image = hsImageConfig.getImage()
         mask = hsImageConfig.getMask()
 
+
         red = image[:, :, 0]
         green = image[:, :, 1]
         blue = image[:, :, 2]
@@ -228,11 +230,11 @@ class QHSImageViewerWidget(QtGui.QWidget):
         # forward format of hyperspectral image to the vector analyzer
         hsformat = self.hsImageConfig.getFormat()
         self.hsVectorFitConfig.setFormat(hsformat)
+        self.hsVectorFitConfig.setMask(mask)
 
         if newFile:
             # update spectra and wavelength for analysis
             self.hsVectorFitConfig.setData(self.fspectra, self.wavelen)
-            self.hsVectorFitConfig.setMask(mask)
 
             # autorange image plots and cursor reset
             self.imagCtrlItems['rgb'].autoRange()
@@ -245,7 +247,7 @@ class QHSImageViewerWidget(QtGui.QWidget):
         else:
             # update only spectra for analysis (keep wavelength)
             self.hsVectorFitConfig.setData(self.fspectra)
-            self.hsVectorFitConfig.setMask(mask)
+
 
 
         # self.updateSpectViewer()

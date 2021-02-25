@@ -224,7 +224,7 @@ class QHSVectorConfigWidget(QtWidgets.QWidget):
             self.methodComboBox.setItemData(i, info, QtCore.Qt.ToolTipRole)
         self.methodComboBox.insertSeparator(6)
         self.methodComboBox.setCurrentIndex(1)
-        self.methodComboBox.setCurrentText('gesv')
+        # self.methodComboBox.setCurrentText('gesv')
         self.methodComboBox.setMinimumWidth(67)
         self.methodComboBox.setMaximumWidth(67)
         self.normalCheckBox.setChecked(True)

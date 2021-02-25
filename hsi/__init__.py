@@ -87,10 +87,14 @@ from .core.HSFile import HSFile
 from .core.formats import HSFormatFlag, HSFormatDefault, convert
 from .core.formats import HSIntensity, HSAbsorption, HSExtinction, HSRefraction
 
+# tissues
+from .tissue.HSTissueComponent import HSTissueComponent
+from .tissue.HSTissueCompound import HSTissueCompound
 
 __all__ = [
     "HSImage", "HSFile",
     "HSFormatFlag", "HSFormatDefault", "convert",
     "cm",  # color maps
-    "HSIntensity", "HSAbsorption", "HSExtinction", "HSRefraction"
+    "HSIntensity", "HSAbsorption", "HSExtinction", "HSRefraction",
+    "HSTissueComponent", "HSTissueCompound",  # tissues
 ]

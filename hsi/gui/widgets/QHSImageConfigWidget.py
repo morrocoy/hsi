@@ -472,3 +472,26 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
     def getFormat(self):
         """Get the format of hyperspectral data."""
         return self.hsImage.format
+
+
+    def setFormat(self, format):
+        """Set the format for the hyperspectral data.
+
+        Parameters
+        ----------
+        format :  :obj:`HSFormatFlag<hsi.HSFormatFlag>`, optional
+            The format for the hyperspectral data. Should be one of:
+
+                - :class:`HSIntensity<hsi.HSIntensity>`
+                - :class:`HSAbsorption<hsi.HSAbsorption>`
+                - :class:`HSExtinction<hsi.HSExtinction>`
+                - :class:`HSRefraction<hsi.HSRefraction>`
+
+
+        """
+        # check format, if not previously defined also set the format
+        if not HSFormatFlag.hasFlag(format):
+            logger.debug("Unknown format '{}'.".format(format))
+            return
+
+        self.spectFormatComboBox.setCurrentText(format.key)
