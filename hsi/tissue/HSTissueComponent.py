@@ -35,14 +35,6 @@ class HSTissueComponent:
     wavelen :  numpy.ndarray, optional
         The wavelengths [nm] at which the spectral information for the
         attenuation coefficient will be interpolated.
-    _attcoef :  numpy.ndarray
-        The sampled spectral information for the attenuation coefficient [cm-1].
-    _wavelen :  numpy.ndarray
-        The wavelengths [nm] at which the spectral information for the
-        attenuation coefficientis sampled.
-    _interp : :class:`scipy.interpolate.interp1d`,
-        The Interpolator for spectral data.
-
     """
 
     def __init__(self, yn, xn, wavelen=None):
@@ -53,18 +45,18 @@ class HSTissueComponent:
         yn :  numpy.ndarray
             The spectral information for the attenuation coefficient.
         xn :  numpy.ndarray
-            The wavelengths [nm] at which the spectral information is sampled.
+            The wavelengths at which the spectral information is sampled.
         wavelen :  numpy.ndarray, optional
-            The wavelengths [nm] at which the spectral information will be
+            The wavelengths at which the spectral information will be
             interpolated.
 
         """
-        self._wavelen = None  # wavelengths at which the spectral data are sampled.
-        self._attcoef = None  # mass attenuation coefficient [cm-1]
+        self._wavelen = None  # raw data wavelength.
+        self._absorption = None  # raw data for absorption coefficient
         self._interp = None  # interpolator
 
-        self.wavelen = None  # wavelength [nm] (interp.)
-        self.absorption = None  # attenuation coefficient [cm-1] (interp.)
+        self.wavelen = None  # interpolated wavelength
+        self.absorption = None  # interpolated absorption coefficient
 
         # set spectral data and
         self.setData(yn, xn, wavelen)
@@ -79,7 +71,7 @@ class HSTissueComponent:
             return
 
         if np.array_equal(self.wavelen, self._wavelen):
-            self.absorption = self._attcoef
+            self.absorption = self._absorption
         else:
             self.absorption = self._interp(self.wavelen)
 
@@ -113,7 +105,7 @@ class HSTissueComponent:
             raise Exception(
                 "Nodal x and y data for base spectrum must be of same length.")
 
-        self._attcoef = yn.view(np.ndarray)
+        self._absorption = yn.view(np.ndarray)
         self._wavelen = xn.view(np.ndarray)
 
         if wavelen is not None:
@@ -140,7 +132,7 @@ class HSTissueComponent:
             raise Exception("Nodal Data missing for Interpolation.")
 
         self._interp = interp1d(
-            self._wavelen, self._attcoef, kind=kind, fill_value=fill_value,
+            self._wavelen, self._absorption, kind=kind, fill_value=fill_value,
             bounds_error=bounds_error, assume_sorted=assume_sorted)
         self.interpolate()
 

@@ -37,20 +37,40 @@ class HSTissueCompound:
             A dictionary of tissue components.
         portions :  dict
             A dictionary of portions for each component to the compound.
-        wavelen :  numpy.ndarray, optional
-            The wavelengths [nm] at which the spectral information for the
-            tissue parameters is given.
-        attcoef : numpy.ndarray
-            The spectral information for the tissue attenuation
-            coefficient [cm-1].
         skintype :  ('epidermis', 'dermis', 'bone', 'musle', 'mucosa')
             The skin type.
+        wavelen :  numpy.ndarray
+            The wavelengths [nm] at which the spectral information for the
+            tissue parameters is given.
+        absorption : numpy.ndarray
+            The mass attenuation coefficient of the tissue [cm-1].
+        scattering : numpy.ndarray
+            The scattering coefficient [cm-1].
+        rscattering : numpy.ndarray
+            The reduced scattering coefficient [cm-1].
+        anisotropy : numpy.ndarray
+            The anisotropy of scattering
+        refraction : numpy.ndarray
+            The refractive index.
 
         """
 
     def __init__(self, portions=None, skintype='epidermis', wavelen=None,
                  libdir=None):
+        """Constructor.
 
+        Parameters
+        ----------
+        portions :  dict
+            A dictionary of portions for each component to the compound.
+        skintype :  ('epidermis', 'dermis', 'bone', 'musle', 'mucosa')
+            The skin type.
+        wavelen :  numpy.ndarray
+            The wavelengths [nm] at which the spectral information for the
+            tissue parameters is given.
+        libdir : str, optional
+            The directory for all material input files
+        """
         # directory for the parameter files
         if libdir is None:
             libdir = os.path.join(getPkgDir(), "materials")
@@ -89,6 +109,7 @@ class HSTissueCompound:
         self.anisotropy = None  # anisotropy of scattering
         self.scattering = None  # scattering coefficient
         self.rscattering = None  # reduced scattering coefficient
+        self.refraction = None  # refractive index
 
         # interpolator on reference data for anisotropy of scattering
         self._anisotropy = None
@@ -195,8 +216,8 @@ class HSTissueCompound:
         gref = self._anisotropy(wavelen)  # reference anisotropy
         anisotropy = np.zeros(wavelen.shape)
         anisotropy += gref
-        anisotropy += (0.98 - gref) * self.portions['blo']
-        anisotropy += (1.00 - gref) * self.portions['wat']
+        anisotropy += (0.98 - gref) * portions['blo']
+        anisotropy += (1.00 - gref) * portions['wat']
 
         # reduced scattering
         rscattering = np.zeros(wavelen.shape)
@@ -217,12 +238,20 @@ class HSTissueCompound:
         else:
             raise("Unknown skin type {}.".format(self.skintype))
 
+        # refraction
+        # formula by Jaques, "Optical properties of biological tissues:
+        # a review", Phys. Med. Biol. 58 R37, 2013
+        n_dry = 1.514
+        n_wat = 1.33
+        refraction = np.ones(wavelen.shape)
+        refraction *= n_dry - (n_dry - n_wat) * portions['wat']
 
         # store optical properties of tissue compound in member variables
         self.absorption = absorption
         self.anisotropy = anisotropy
         self.scattering = rscattering / (1. - anisotropy)
         self.rscattering = rscattering
+        self.refraction = refraction
 
 
     def loadDefaultComponents(self):

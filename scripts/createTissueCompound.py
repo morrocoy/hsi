@@ -42,6 +42,7 @@ mu_a = compound.absorption  # absorption coefficients
 mu_sp = compound.rscattering  # reduced scattering coefficients
 mu_s = compound.scattering  # scattering coefficients
 g = compound.anisotropy  # anisotropy of scattering
+n = compound.refraction  # refractive index
 
 # plot parameters .............................................................
 fig = plt.figure()
@@ -58,6 +59,7 @@ ax.plot(wavelen, mu_a, label='absorption [cm-1]', marker='o', **marker_options)
 ax.plot(wavelen, mu_s, label='scattering [cm-1]', marker='s', **marker_options)
 ax.plot(wavelen, mu_sp, label='reduced scattering [cm-1]', marker='^', **marker_options)
 ax.plot(wavelen, g, label='anisotropy', marker='*', **marker_options)
+ax.plot(wavelen, n, label='refractive index', marker='>', **marker_options)
 
 ax.set_xlabel("wavelength [nm]")
 ax.set_ylabel("optical parameters")
@@ -69,8 +71,8 @@ plt.close(fig)
 
 # export optical tissue parameters ............................................
 header ="tissue compound example"
-header += "\nlambda mu_a mu_sp mu_s g"
-header += "\n[nm] [cm-1] [cm-1] [cm-1] []"
+header += "\nlambda mu_a mu_sp mu_s g n"
+header += "\n[nm] [cm-1] [cm-1] [cm-1] [] []"
 np.savetxt(os.path.join(data_path, "tissue_compound_example.txt"),
-           np.column_stack((wavelen, mu_a, mu_sp, mu_s, g)),
-           fmt='%.1f %.5e %.5e %.5e %.5e', header=header)
+           np.column_stack((wavelen, mu_a, mu_sp, mu_s, g, n)),
+           fmt='%.1f %.5e %.5e %.5e %.5e %.5e', header=header)
