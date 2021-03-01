@@ -15,8 +15,8 @@ from ..misc import getPkgDir
 from ..core.HSFile import HSFile
 from ..core.formats import HSFormatFlag, HSAbsorption, HSFormatDefault, convert
 
-from .HSVector import HSVector
-from .HSVectorFile import HSVectorFile
+from .HSComponent import HSComponent
+from .HSComponentFile import HSComponentFile
 
 import logging
 
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 logger.propagate = LOGGING
 
 
-__all__ = ['HSVectorAnalysis']
+__all__ = ['HSComponentFit']
 
 
 if CONFIG_OPTIONS['enableBVLS']:
@@ -38,7 +38,7 @@ else:
         return None
 
 
-class HSVectorAnalysis:
+class HSComponentFit:
     """
     Class to approximate hyper spectral image data by a weighted sum of base
     spectra in order to analysize their individual contributions.
@@ -54,7 +54,7 @@ class HSVectorAnalysis:
         The wavelengths at which the spectral data are sampled.
     yData :  numpy.ndarray
         The spectral data.
-    baseVectors : dict of HSVector
+    baseVectors : dict of HSComponent
         A dictionary of base vector to represent the spectral data.
     roi : list of float
         The lower and upper bounds for the wavelength region of interest.
@@ -200,7 +200,7 @@ class HSVectorAnalysis:
         if self.xData is None:
             raise Exception("Spectral x data are missing for base vector.")
         else:
-            self.baseVectors[name] = HSVector(
+            self.baseVectors[name] = HSComponent(
                 y, x, self.xData, name=name, label=label, format=format,
                 weight=weight, bounds=bounds)
 
@@ -523,7 +523,7 @@ class HSVectorAnalysis:
             The intput file path.
         """
         self.clear()
-        with HSVectorFile(filePath) as file:
+        with HSComponentFile(filePath) as file:
             vectors, spectra, wavelen = file.read()
             format = file.format
 
@@ -629,7 +629,7 @@ class HSVectorAnalysis:
             print("No spectral available to export.")
             return
 
-        with HSVectorFile(filePath, format=self.format, title=title) as file:
+        with HSComponentFile(filePath, format=self.format, title=title) as file:
             if mode in ('bvec', 'all'):
                 for vec in self.baseVectors.values():
                     file.buffer(vec)

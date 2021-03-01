@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Feb 16 07:47:02 2021
+Created on Tue Feb 16 19:01:33 2021
 
-@author: kai
+@author: kpapke
 """
 import os.path
 from timeit import default_timer as timer
@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 # from matplotlib.colors import ListedColormap
 
 from hsi import HSImage, HSAbsorption, HSIntensity, HSExtinction, HSRefraction
-from hsi.analysis import HSVectorFile, HSTivitaAnalysis
+from hsi.analysis import HSComponentFile, HSTivita
 from hsi import cm
 
 import logging
@@ -45,7 +45,7 @@ def main():
     # mask = hsImage.getTissueMask([0.25, 0.9])
     # mask = hsImage.getTissueMask([0.4, 0.9])
 
-    tissue = HSTivitaAnalysis(format=HSAbsorption)
+    tissue = HSTivita(format=HSAbsorption)
     tissue.setData(spectra, wavelen, format=HSAbsorption)
 
 

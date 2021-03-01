@@ -2,7 +2,7 @@
 """
 Created on Tue Feb 23 10:42:17 2021
 
-@author: kai
+@author: kpapke
 """
 import sys
 import os.path

@@ -2,7 +2,7 @@
 """
 Created on Wed Feb 24 12:18:38 2021
 
-@author: kai
+@author: kpapke
 """
 import os.path
 import numpy as np

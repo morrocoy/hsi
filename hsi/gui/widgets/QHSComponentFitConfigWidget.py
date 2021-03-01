@@ -9,9 +9,9 @@ from ...misc import getPkgDir
 from ...core.formats import HSFormatFlag
 
 from ...bindings.Qt import QtWidgets, QtGui, QtCore
-from ...analysis.HSVectorAnalysis import HSVectorAnalysis
+from ...analysis.HSComponentFit import HSComponentFit
 
-from .QVarRegionWidget import QVarRegionWidget
+from .QParamRegionWidget import QParamRegionWidget
 
 import logging
 
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 logger.propagate = LOGGING
 
 
-__all__ = ['QHSVectorConfigWidget']
+__all__ = ['QHSComponentFitConfigWidget']
 
 
 if CONFIG_OPTIONS['enableBVLS']:
@@ -57,7 +57,7 @@ else:
 
 
 
-class QHSVectorConfigWidget(QtWidgets.QWidget):
+class QHSComponentFitConfigWidget(QtWidgets.QWidget):
     """ Config widget for hyper spectral images
     """
 
@@ -73,10 +73,10 @@ class QHSVectorConfigWidget(QtWidgets.QWidget):
             kwargs['parent'] = args[1]
 
         parent = kwargs.get('parent', None)
-        super(QHSVectorConfigWidget, self).__init__(parent=parent)
+        super(QHSComponentFitConfigWidget, self).__init__(parent=parent)
 
         # self.filePath = None  # file providing the base vectors
-        self.hsVectorAnalysis = HSVectorAnalysis()  # analysis object
+        self.hsVectorAnalysis = HSComponentFit()  # analysis object
 
         # mask for testwise fit
         self.testMask = None
@@ -93,7 +93,7 @@ class QHSVectorConfigWidget(QtWidgets.QWidget):
         self.fileLineEdit = QtGui.QLineEdit(self)
         self.normalCheckBox = QtGui.QCheckBox(self)
         self.methodComboBox = QtGui.QComboBox(self)
-        self.wavRegionWidget = QVarRegionWidget("roi", self)
+        self.wavRegionWidget = QParamRegionWidget("roi", self)
         self.lsVarRegionWidgets = []
 
         # configure actions
@@ -323,7 +323,7 @@ class QHSVectorConfigWidget(QtWidgets.QWidget):
         """ Should be called manually before object deletion
         """
         logger.debug("Finalizing: {}".format(self))
-        super(QHSVectorConfigWidget, self).finalize()
+        super(QHSComponentFitConfigWidget, self).finalize()
 
 
     def getROI(self):
@@ -380,7 +380,7 @@ class QHSVectorConfigWidget(QtWidgets.QWidget):
 
         # add parameter config widgets for each base vector
         for i, vec in enumerate(baseVectors.values()):
-            widget = QVarRegionWidget(vec.name, vec.bounds, 100., self)
+            widget = QParamRegionWidget(vec.name, vec.bounds, 100., self)
             widget.setLabel(vec.label)
             widget.setDecimals(1)
             widget.setSingleStep(0.1)

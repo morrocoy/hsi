@@ -2,7 +2,7 @@
 """
 Created on Wed Feb  3 14:46:45 2021
 
-@author: kai
+@author: kpapke
 """
 import sys
 import os

@@ -5,14 +5,14 @@
 
 # from .SpectralTissueCompound import SpectralTissueCompound
 
-from .HSVector import HSVector
-from .HSVectorAnalysis import HSVectorAnalysis
-from .HSVectorFile import HSVectorFile
-from .HSTivitaAnalysis import HSTivitaAnalysis
+from .HSComponent import HSComponent
+from .HSComponentFit import HSComponentFit
+from .HSComponentFile import HSComponentFile
+from .HSTivita import HSTivita
 
 __all__ = [
-    "HSVector", "HSVectorAnalysis", "HSVectorFile",
-    "HSTivitaAnalysis",
+    "HSComponent", "HSComponentFit", "HSComponentFile",
+    "HSTivita",
     # "SpectralTissueCompound",
 ]
 

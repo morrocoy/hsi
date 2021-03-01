@@ -2,7 +2,7 @@
 """
 Created on Wed Feb  3 19:07:19 2021
 
-@author: kai
+@author: kpapke
 """
 import os
 import datetime
@@ -14,7 +14,7 @@ from ..misc import getPkgDir
 from ..core.formats import HSFormatDefault
 from ..core.HSFile import HSFile
 
-from .HSVector import HSVector
+from .HSComponent import HSComponent
 
 import logging
 
@@ -24,12 +24,12 @@ logger = logging.getLogger(__name__)
 logger.propagate = LOGGING
 
 
-__all__ = ['HSVectorFile']
+__all__ = ['HSComponentFile']
 
 LABEL_VECTOR = 'bvec'
 
 
-class HSVectorFile(HSFile):
+class HSComponentFile(HSFile):
     """A class used to import and export spectral data using plain ASCII files.
 
     Objects of this class may be used to load and save a collection of spectral
@@ -84,7 +84,7 @@ class HSVectorFile(HSFile):
             A brief description of the data collection to be set.
 
         """
-        super(HSVectorFile, self).__init__(filePath, format, title)
+        super(HSComponentFile, self).__init__(filePath, format, title)
 
         # spectral base vectors
         self._bufVectors = {}  # dictionary using vector's name as key
@@ -138,7 +138,7 @@ class HSVectorFile(HSFile):
 
         if isinstance(spectra, (list, np.ndarray)):
             self.bufferData(*args, **kwargs)
-        elif isinstance(spectra, (HSVector)):
+        elif isinstance(spectra, (HSComponent)):
             self.bufferVector(*args, **kwargs)
 
 
@@ -150,7 +150,7 @@ class HSVectorFile(HSFile):
         spectra :  :obj:`hsi.analysis.HSVector`
             The spectral data.
         """
-        if not isinstance(spectra, HSVector) or not spectra.shape:
+        if not isinstance(spectra, HSComponent) or not spectra.shape:
             logger.debug(
                 "Empty vector '{}'. Skip writing to buffer".format(spectra))
             return -1
@@ -222,7 +222,7 @@ class HSVectorFile(HSFile):
         if LABEL_VECTOR in self._bufSpectra:
             spectra = self._bufSpectra[LABEL_VECTOR].view()
             for i, (key, value) in enumerate(self._bufVectors.items()):
-                vectors[key] = HSVector(
+                vectors[key] = HSComponent(
                     spectra[:, i], wavelen, wavelen, name=key, label=value[0],
                     format=self.format, weight=value[1], bounds=value[2:4])
 

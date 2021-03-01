@@ -2,15 +2,13 @@
 """
 Created on Tue Feb 16 14:29:59 2021
 
-@author: kai papke
+@author: kpapke
 
-Inspector for hyperspectral images. The spectrum is plotted at user defined
-corrdinated. Various filters may be applied on both, the image and spectral
-directions. The RGB picture is derived from the hyperspectral data using an
-in-build RGB filter is able to extract the different color channels. Besides
-the raw format, the hyperspectral data may be visualized as absorption,
-extinction, or refraction values. In addition, the data may be visualized with
-a standard normal variate correction.
+This example demonstrates the Tivita analysis applied on hyperspectral images.
+The spectrum is plotted at user defined coordinated. Various filters may be
+applied on both, the image and spectral directions. The RGB picture is derived
+from the hyperspectral data using an in-build RGB filter is able to extract
+the different color channels.
 """
 import sys
 import os
@@ -22,14 +20,14 @@ import pyqtgraph as pg
 from hsi import HSAbsorption
 
 from hsi.gui import QHSImageConfigWidget
-from hsi.gui import QHSVectorConfigWidget
+from hsi.gui import QHSComponentFitConfigWidget
 
 from hsi.gui import BaseImagCtrlItem
 from hsi.gui import HistImagCtrlItem
 from hsi.gui import PosnImagCtrlItem
 from hsi.gui import RegnPlotCtrlItem
 
-from hsi.analysis import HSTivitaAnalysis
+from hsi.analysis import HSTivita
 
 
 import logging
@@ -39,7 +37,7 @@ logger.propagate = LOGGING
 
 
 
-class QHSImageViewerWidget(QtGui.QWidget):
+class QHSTivitaAnalyzerWidget(QtGui.QWidget):
 
     def __init__(self, *args, **kwargs):
         QtGui.QWidget.__init__(self)
@@ -77,9 +75,9 @@ class QHSImageViewerWidget(QtGui.QWidget):
 
         # config widgets
         self.hsImageConfig = QHSImageConfigWidget()
-        self.hsVectorFitConfig = QHSVectorConfigWidget(format=HSAbsorption)
+        self.hsVectorFitConfig = QHSComponentFitConfigWidget(format=HSAbsorption)
 
-        self.hsTivitaAnalysis = HSTivitaAnalysis(format=HSAbsorption)
+        self.hsTivitaAnalysis = HSTivita(format=HSAbsorption)
 
         # set view
         self._setupViews(*args, **kwargs)
@@ -315,7 +313,7 @@ def main():
 
     app = QtWidgets.QApplication([])
 
-    win = QHSImageViewerWidget()
+    win = QHSTivitaAnalyzerWidget()
     # win.setGeometry(300, 30, 1200, 500)
     win.setGeometry(290, 30, 1630, 900)
     win.setWindowTitle("Hyperspectral Image Analysis")

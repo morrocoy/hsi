@@ -8,7 +8,7 @@ from ...core.HSImage import HSImage
 from ...core.formats import HSFormatFlag, HSFormatDefault
 from ...core.functions import snv
 
-from .QVarRegionWidget import QVarRegionWidget
+from .QParamRegionWidget import QParamRegionWidget
 
 import logging
 
@@ -53,7 +53,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         self.fileLineEdit = QtGui.QLineEdit(self)
         self.spectSNVCheckBox = QtGui.QCheckBox(self)
         self.spectFormatComboBox = QtGui.QComboBox(self)
-        self.maskThreshRegionWidget = QVarRegionWidget("mask", self)
+        self.maskThreshRegionWidget = QParamRegionWidget("mask", self)
         self.imageFilterTypeComboBox = QtGui.QComboBox(self)
         self.spectFilterTypeComboBox = QtGui.QComboBox(self)
 
@@ -453,12 +453,12 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         filter : boolean
             A flag to select between filtered or unfiltered data
         """
-        snv = self.spectSNVCheckBox.isChecked()
+        snv_flag = self.spectSNVCheckBox.isChecked()
         if filter and snv:
             return snv(self.hsImage.fspectra)
-        elif not filter and snv:
+        elif not filter and snv_flag:
             return snv(self.hsImage.spectra)
-        elif filter and not snv:
+        elif filter and not snv_flag:
             return self.hsImage.fspectra
         else:
             return self.hsImage.spectra

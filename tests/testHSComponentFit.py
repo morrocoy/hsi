@@ -2,7 +2,7 @@
 """
 Created on Thu Nov  5 15:24:22 2020
 
-@author: kai
+@author: kpapke
 """
 import os
 from timeit import default_timer as timer
@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from hsi import HSAbsorption, HSIntensity, HSExtinction, HSRefraction
-from hsi.analysis import HSVectorAnalysis
+from hsi.analysis import HSComponentFit
 
 import logging
 
@@ -27,7 +27,7 @@ def main():
 
     # load spectra and base vectors ..........................................
 
-    tissue = HSVectorAnalysis(format=HSAbsorption)
+    tissue = HSComponentFit(format=HSAbsorption)
     # tissue = HSVectorAnalysis(format=HSIntensity)
     # tissue = HSVectorAnalysis(format=HSExtinction)
     # tissue = HSVectorAnalysis(format=HSRefraction)

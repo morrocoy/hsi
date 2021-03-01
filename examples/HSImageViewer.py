@@ -2,7 +2,7 @@
 """
 Created on Mon Jan 25 11:10:02 2021
 
-@author: kai papke
+@author: kpapke
 
 Inspector for hyperspectral images. The spectrum is plotted at user defined
 corrdinated. Various filters may be applied on both, the image and spectral
@@ -117,7 +117,7 @@ class QHSImageViewerWidget(QtGui.QWidget):
             self.imageCtrlItem.autoRange()
             self.imageCtrlItem.setCursorPos((0, 0))
 
-        self.spectra = self.hsImageConfig.getSpectra(filter=True)
+        self.spectra = self.hsImageConfig.getSpectra(filter=False)
         self.fspectra = self.hsImageConfig.getSpectra(filter=True)
         self.wavelen = self.hsImageConfig.getWavelen()
 

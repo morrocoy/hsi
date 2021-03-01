@@ -2,7 +2,7 @@
 """
 Created on Mon Feb  1 07:55:39 2021
 
-@author: papkai
+@author: kpapke
 """
 import os.path
 import numpy as np
@@ -18,10 +18,10 @@ logger = logging.getLogger(__name__)
 logger.propagate = LOGGING
 
 
-__all__ = ['HSVector']
+__all__ = ['HSComponent']
 
 
-class HSVector:
+class HSComponent:
     """
     Class to represent a base vector associated with a certain spectrum.
 

@@ -2,7 +2,7 @@
 """
 Created on Sun Feb  7 07:54:44 2021
 
-@author: kai
+@author: kpapke
 """
 import sys
 import os
@@ -11,7 +11,7 @@ from shutil import copyfile
 import numpy as np
 
 import hsi
-from hsi.analysis import HSVector, HSVectorFile
+from hsi.analysis import HSComponent, HSComponentFile
 from hsi import HSIntensity, HSAbsorption, HSRefraction
 
 import logging
@@ -51,7 +51,7 @@ def main():
     bounds = [(0, 0.05), (0, 0.05), (0., 1.), (0., 1.), (0., 0.05)]
     vectors = {}
     for i, name in enumerate(names):
-        vectors[name] = HSVector(
+        vectors[name] = HSComponent(
             data[:, i], wavelen, wavelen, name=name, label=labels[i],
             format=formats[i], weight=weights[i], bounds=bounds[i])
 
@@ -62,7 +62,7 @@ def main():
     fpath5 = os.path.join(data_path, "..", "hsi", "data", "hsvectorfile_test3.txt")
 
     # write datasets without vectors to file
-    with HSVectorFile(fpath1) as file:
+    with HSComponentFile(fpath1) as file:
         file.buffer(spec1, wavelen, label="spec1")
         file.buffer(spec2, label="spec2", format=HSAbsorption)
         file.buffer(spec3, label="spec3", format=HSRefraction)
@@ -71,7 +71,7 @@ def main():
     copyfile(fpath1, fpath2)
 
     # load datasets without vectors from file
-    with HSVectorFile(fpath2) as file:
+    with HSComponentFile(fpath2) as file:
         file.load()
         file.setFormat(HSAbsorption)
         file.write()
@@ -79,7 +79,7 @@ def main():
         # file.write()
 
     # write datasets with vectors to file
-    with HSVectorFile(fpath3) as file:
+    with HSComponentFile(fpath3) as file:
         # file.buffer(spec1, wavelen, label="spec1")
         file.buffer(vectors['hhb'])
         file.buffer(vectors['ohb'])
@@ -90,7 +90,7 @@ def main():
     copyfile(fpath3, fpath4)
 
     # extend a dataset
-    with HSVectorFile(fpath4) as file:
+    with HSComponentFile(fpath4) as file:
         file.load()
         file.write(vectors['fat'])
         file.setFormat(HSAbsorption)
@@ -101,7 +101,7 @@ def main():
 
     # load hsi file from package data folder
     # with HSVectorFile("hsvectorfile_test3.txt") as file:
-    with HSVectorFile(fpath3) as file:
+    with HSComponentFile(fpath3) as file:
         rvectors, rspec, rwavelen = file.read()
         # rspec = file.read()
         version = file.version

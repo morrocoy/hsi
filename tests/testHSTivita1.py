@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Feb 16 07:47:02 2021
+Created on Tue Feb 16 09:34:02 2021
 
-@author: kai
+@author: kpapke
 """
 import os.path
 from timeit import default_timer as timer
@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from hsi import HSAbsorption, HSIntensity, HSExtinction, HSRefraction
-from hsi.analysis import HSVectorFile, HSTivitaAnalysis
+from hsi.analysis import HSComponentFile, HSTivita
 
 import logging
 
@@ -27,13 +27,13 @@ def main():
     pict_path = os.path.join(os.getcwd(), "..", "pictures")
 
     # load spectra from file .................................................
-    with HSVectorFile("basevectors_1.txt") as file:
+    with HSComponentFile("basevectors_1.txt") as file:
         vectors, spectra, wavelen = file.read()
         format = file.format
 
     spectra = spectra['spec']
     print("Spectral format: %s" % (format.key))
-    tissue = HSTivitaAnalysis(spectra, wavelen, format=format)
+    tissue = HSTivita(spectra, wavelen, format=format)
 
     # tissue = HSTivitaAnalysis(format=HSIntensity)
     # tissue = HSTivitaAnalysis(format=HSExtinction)

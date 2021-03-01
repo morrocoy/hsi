@@ -15,8 +15,8 @@ from ..misc import getPkgDir
 from ..core.HSFile import HSFile
 from ..core.formats import HSFormatFlag, HSAbsorption, HSFormatDefault, convert
 
-from .HSVector import HSVector
-from .HSVectorFile import HSVectorFile
+from .HSComponent import HSComponent
+from .HSComponentFile import HSComponentFile
 
 import logging
 
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 logger.propagate = LOGGING
 
 
-__all__ = ['HSTivitaAnalysis']
+__all__ = ['HSTivita']
 
 
 if CONFIG_OPTIONS['enableBVLS']:
@@ -38,7 +38,7 @@ else:
         return None
 
 
-class HSTivitaAnalysis:
+class HSTivita:
     """
     Class to approximate hyper spectral image data by a weighted sum of base
     spectra in order to analysize their individual contributions.
@@ -54,7 +54,7 @@ class HSTivitaAnalysis:
         The wavelengths at which the spectral data are sampled.
     spectra :  numpy.ndarray
         The spectral data.
-    baseVectors : dict of HSVector
+    baseVectors : dict of HSComponent
         A dictionary of base vector to represent the spectral data.
     format :  :obj:`HSFormatFlag<hsi.HSFormatFlag>`, optional
         The format for the hyperspectral data. Should be one of:

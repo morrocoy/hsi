@@ -16,9 +16,7 @@ if CONFIG_OPTIONS['enableGUI']:
     from .graphicsItems.PosnImagCtrlItem import PosnImagCtrlItem
 
     from .widgets.QHSImageConfigWidget import QHSImageConfigWidget
-    from .widgets.QHSVectorConfigWidget import QHSVectorConfigWidget
-
-    from .widgets.QHSImageFitWidget import QHSImageFitWidget
+    from .widgets.QHSComponentFitConfigWidget import QHSComponentFitConfigWidget
 
     __all__ = [
         "InfiniteLine",
@@ -28,8 +26,7 @@ if CONFIG_OPTIONS['enableGUI']:
         "HistImagCtrlItem",
         "PosnImagCtrlItem",
         "QHSImageConfigWidget",
-        "QHSVectorConfigWidget",
-        "QHSImageFitWidget"
+        "QHSComponentFitConfigWidget",
     ]
 
 else:

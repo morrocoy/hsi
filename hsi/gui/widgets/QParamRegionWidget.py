@@ -2,7 +2,7 @@
 """
 Created on Fri Feb 12 10:35:08 2021
 
-@author: kai
+@author: kpapke
 """
 import numpy as np
 
@@ -16,10 +16,10 @@ LOGGING = True
 logger = logging.getLogger(__name__)
 logger.propagate = LOGGING
 
-__all__ = ['QVarRegionWidget']
+__all__ = ['QParamRegionWidget']
 
 
-class QVarRegionWidget(QtWidgets.QWidget):
+class QParamRegionWidget(QtWidgets.QWidget):
     """ Config widget with two spinboxes that control the parameter bounds."""
 
     sigValueChanged = QtCore.Signal(str, list)
@@ -28,7 +28,7 @@ class QVarRegionWidget(QtWidgets.QWidget):
         """ Constructor
         """
         parent = kwargs.get('parent', None)
-        super(QVarRegionWidget, self).__init__(parent=parent)
+        super(QParamRegionWidget, self).__init__(parent=parent)
 
         if len(args) == 1:
             kwargs['parent'] = args[0]
@@ -150,7 +150,7 @@ class QVarRegionWidget(QtWidgets.QWidget):
 
 
     def setMaximumWidth(self, val):
-        super(QVarRegionWidget, self).setMaximumWidth(val)
+        super(QParamRegionWidget, self).setMaximumWidth(val)
         width = int((val - 50) // 2 - 8)
         self.lowerBoundSpinBox.setMaximumWidth(width)
         self.upperBoundSpinBox.setMaximumWidth(width)
