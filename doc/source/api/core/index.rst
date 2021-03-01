@@ -11,6 +11,9 @@ Contents:
     :maxdepth: 2
 
     formats
-    hsfile
+    hscomponent
     hsimage
+    hsfile
+    hscomponentfile
+
 

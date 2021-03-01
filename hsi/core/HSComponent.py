@@ -4,11 +4,10 @@ Created on Mon Feb  1 07:55:39 2021
 
 @author: kpapke
 """
-import os.path
 import numpy as np
 from scipy.interpolate import interp1d
 
-from ..core.formats import HSFormatFlag, HSFormatDefault, convert
+from .formats import HSFormatFlag, HSFormatDefault, convert
 
 import logging
 

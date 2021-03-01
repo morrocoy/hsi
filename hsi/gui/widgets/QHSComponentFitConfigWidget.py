@@ -1,6 +1,4 @@
-import os
-import numpy as np
-
+import os.path
 from timeit import default_timer as timer
 
 from ... import CONFIG_OPTIONS

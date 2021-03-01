@@ -11,8 +11,8 @@ from shutil import copyfile
 import numpy as np
 
 import hsi
-from hsi.analysis import HSComponent, HSComponentFile
 from hsi import HSIntensity, HSAbsorption, HSRefraction
+from hsi import HSComponent, HSComponentFile
 
 import logging
 

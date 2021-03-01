@@ -4,19 +4,14 @@ Created on Mon Nov  2 11:30:26 2020
 
 @author: papkai
 """
-import os.path
 import numpy as np
-from scipy.optimize import minimize, OptimizeResult, nnls, lsq_linear
+from scipy.optimize import minimize, nnls, lsq_linear
 
 from .. import CONFIG_OPTIONS
-from .. import __version__
 
-from ..misc import getPkgDir
-from ..core.HSFile import HSFile
-from ..core.formats import HSFormatFlag, HSAbsorption, HSFormatDefault, convert
-
-from .HSComponent import HSComponent
-from .HSComponentFile import HSComponentFile
+from ..core.formats import HSFormatFlag, HSAbsorption, convert
+from ..core.HSComponent import HSComponent
+from ..core.HSComponentFile import HSComponentFile
 
 import logging
 
@@ -620,7 +615,6 @@ class HSComponentFit:
             vectors, while the option 'spec' refers to the spectral data, only.
             To export both types of data, use 'all'. Default is 'bvec'.
         """
-        import datetime
 
         if not self.baseVectors and mode in ('bvec', 'all'):
             print("No base vectors available to export.")

@@ -122,6 +122,7 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
 
         # user config widgets
         self.hsImageConfig.setMaximumWidth(200)
+        self.hsImageConfig.setFormat(HSAbsorption)
         self.hsVectorFitConfig.setMaximumWidth(200)
 
         layout = QtGui.QVBoxLayout()
@@ -230,7 +231,7 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         # forward format of hyperspectral image to the vector analyzer
         hsformat = self.hsImageConfig.getFormat()
         self.hsVectorFitConfig.setFormat(hsformat)
-
+        self.hsVectorFitConfig.setMask(mask)
 
         self.hsTivitaAnalysis.setData(self.fspectra, self.wavelen, format=hsformat)
         self.hsTivitaAnalysis.evaluate(mask=mask)
@@ -238,7 +239,6 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         if newFile:
             # update spectra and wavelength for analysis
             self.hsVectorFitConfig.setData(self.fspectra, self.wavelen)
-            self.hsVectorFitConfig.setMask(mask)
 
             # autorange image plots and cursor reset
             self.imagCtrlItems['rgb'].autoRange()
@@ -251,12 +251,9 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         else:
             # update only spectra for analysis (keep wavelength)
             self.hsVectorFitConfig.setData(self.fspectra)
-            self.hsVectorFitConfig.setMask(mask)
 
 
         # self.updateSpectViewer()
-
-
         # data = hsImageConfig.value()
 
 
@@ -264,11 +261,11 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         if self.hsImageConfig.isEmpty():
             return
 
-        param = self.hsTivitaAnalysis.getVarVector(unpack=True, clip=True)
+        param = self.hsTivitaAnalysis.getVarVector(unpack=True)#, clip=True)
         keys = ['nir', 'oxy', 'thi', 'twi']
         for key in keys:
             self.imagCtrlItems[key].setImage(param[key])
-            self.imagCtrlItems[key].setLevels([0., 1.])
+            # self.imagCtrlItems[key].setLevels([0., 1.])
 
         # format = self.hsImageConfig.getFormat()
         self.mspectra = analyzer.getSpectra()#format=format)

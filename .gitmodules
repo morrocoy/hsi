@@ -1,0 +1,3 @@
+[submodule "packages/BVLS"]
+	path = packages/BVLS
+	url = https://github.com/treverhines/BVLS.git

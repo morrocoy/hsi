@@ -4,19 +4,13 @@ Created on Mon Nov  2 11:30:26 2020
 
 @author: papkai
 """
-import os.path
 import numpy as np
-from scipy import signal, ndimage
+from scipy import signal
 
 from .. import CONFIG_OPTIONS
-from .. import __version__
 
-from ..misc import getPkgDir
-from ..core.HSFile import HSFile
-from ..core.formats import HSFormatFlag, HSAbsorption, HSFormatDefault, convert
-
-from .HSComponent import HSComponent
-from .HSComponentFile import HSComponentFile
+from ..core.formats import HSFormatFlag, HSAbsorption, convert
+from ..core.HSComponent import HSComponent
 
 import logging
 

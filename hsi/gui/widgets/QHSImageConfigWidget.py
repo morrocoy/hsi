@@ -6,7 +6,7 @@ from ...bindings.Qt import QtWidgets, QtGui, QtCore
 from ...core.HSImage import HSImage
 
 from ...core.formats import HSFormatFlag, HSFormatDefault
-from ...core.functions import snv
+from ...core import functions as fn
 
 from .QParamRegionWidget import QParamRegionWidget
 
@@ -421,8 +421,6 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
     def updateFormat(self):
         """Retrieve spectral data according to the current format setting
         """
-
-
         sformat = self.spectFormatComboBox.currentText()
         format = HSFormatFlag.fromStr(sformat)
         self.hsImage.setFormat(format)
@@ -453,12 +451,12 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         filter : boolean
             A flag to select between filtered or unfiltered data
         """
-        snv_flag = self.spectSNVCheckBox.isChecked()
-        if filter and snv:
-            return snv(self.hsImage.fspectra)
-        elif not filter and snv_flag:
-            return snv(self.hsImage.spectra)
-        elif filter and not snv_flag:
+        norm = self.spectSNVCheckBox.isChecked()
+        if filter and norm:
+            return fn.snv(self.hsImage.fspectra)
+        elif not filter and norm:
+            return fn.snv(self.hsImage.spectra)
+        elif filter and not norm:
             return self.hsImage.fspectra
         else:
             return self.hsImage.spectra

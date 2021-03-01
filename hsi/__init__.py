@@ -77,24 +77,35 @@ def systemInfo():
     pprint.pprint(CONFIG_OPTIONS)
 
 
-from .core.HSImage import HSImage
-from .core.cm import cm  # color maps
+# color maps
+from .core.cm import cm
 
-from .core.functions import *
-
-# from .core import functions
-from .core.HSFile import HSFile
+# spectral formats
 from .core.formats import HSFormatFlag, HSFormatDefault, convert
 from .core.formats import HSIntensity, HSAbsorption, HSExtinction, HSRefraction
+
+# hyperspectral data representation
+from .core.HSImage import HSImage
+from .core.HSComponent import HSComponent
+
+# File IO
+from .core.HSFile import HSFile
+from .core.HSComponentFile import HSComponentFile
 
 # tissues
 from .tissue.HSTissueComponent import HSTissueComponent
 from .tissue.HSTissueCompound import HSTissueCompound
 
 __all__ = [
-    "HSImage", "HSFile",
+    # color maps
+    "cm",
+    # spectral formats
     "HSFormatFlag", "HSFormatDefault", "convert",
-    "cm",  # color maps
     "HSIntensity", "HSAbsorption", "HSExtinction", "HSRefraction",
-    "HSTissueComponent", "HSTissueCompound",  # tissues
+    # hyperspectral data representation
+    "HSImage", "HSComponent",
+    # File IO
+    "HSFile", "HSComponentFile",
+    # tissues
+    "HSTissueComponent", "HSTissueCompound",
 ]

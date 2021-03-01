@@ -1,20 +1,16 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
+#*.py[cod]
 
 # C extensions
 *.so
-*.lib
-*.dll
-
-
+#*.packages
+#*.dll
 
 # distribution / packaging
 bin/
 build/
 data/
-lib/
-lib64/
 pictures/
 *.egg-info/
 *.egg

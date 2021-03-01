@@ -10,7 +10,6 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
-    hsvector
-    hsvectoranalysis
-    hsvectorfile
+    hscomponentfit
+    hstivita
 

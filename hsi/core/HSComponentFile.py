@@ -11,8 +11,8 @@ import numpy as np
 from .. import __version__
 from ..misc import getPkgDir
 
-from ..core.formats import HSFormatDefault
-from ..core.HSFile import HSFile
+from .formats import HSFormatDefault
+from .HSFile import HSFile
 
 from .HSComponent import HSComponent
 

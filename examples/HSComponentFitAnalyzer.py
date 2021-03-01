@@ -213,7 +213,6 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
         image = hsImageConfig.getImage()
         mask = hsImageConfig.getMask()
 
-
         red = image[:, :, 0]
         green = image[:, :, 1]
         blue = image[:, :, 2]
@@ -334,6 +333,7 @@ def main():
 if __name__ == '__main__':
 
     requests_logger = logging.getLogger('hsi')
+    # requests_logger = logging.getLogger(__name__)
     requests_logger.setLevel(logging.DEBUG)
 
     handler = logging.StreamHandler()

@@ -12,9 +12,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 # from matplotlib.colors import ListedColormap
 
-from hsi import HSImage, HSAbsorption, HSIntensity, HSExtinction, HSRefraction
-from hsi.analysis import HSComponentFile, HSTivita
 from hsi import cm
+from hsi import HSImage
+from hsi import HSAbsorption, HSIntensity, HSExtinction, HSRefraction
+from hsi.analysis import HSTivita
+
+
 
 import logging
 

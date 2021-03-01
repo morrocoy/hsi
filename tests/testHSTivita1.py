@@ -12,7 +12,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from hsi import HSAbsorption, HSIntensity, HSExtinction, HSRefraction
-from hsi.analysis import HSComponentFile, HSTivita
+from hsi import HSComponentFile
+from hsi.analysis import HSTivita
+
 
 import logging
 
