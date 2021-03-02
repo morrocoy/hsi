@@ -6,7 +6,7 @@ Created on Tue Feb 16 19:01:33 2021
 """
 import os.path
 from timeit import default_timer as timer
-from scipy import signal, ndimage
+from scipy import ndimage
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 from hsi import cm
 from hsi import HSImage
 from hsi import HSAbsorption, HSIntensity, HSExtinction, HSRefraction
+
+from hsi.analysis import HSOpenTivita
 from hsi.analysis import HSTivita
 
 
@@ -39,22 +41,24 @@ def main():
 
     hsImage = HSImage(imgFilePath)
 
-    hsImage.setFormat(HSAbsorption)
-    hsImage.addFilter(mode='image', type='mean', size=5)
+    hsImage.setFormat(HSIntensity)
+    hsImage.addFilter(mode='image', type='gauss', sigma=1, truncate=4)
 
-    spectra = hsImage.fspectra
+    spectra = hsImage.spectra  # raw spectral data
+    fspectra = hsImage.fspectra  # filtered spectral data
     wavelen = hsImage.wavelen
+
     mask = hsImage.getTissueMask([0.1, 0.9])
     # mask = hsImage.getTissueMask([0.25, 0.9])
     # mask = hsImage.getTissueMask([0.4, 0.9])
 
-    tissue = HSTivita(format=HSAbsorption)
-    tissue.setData(spectra, wavelen, format=HSAbsorption)
+    # Tivita algorithms
+    # tissue = HSTivita(format=HSIntensity)
+    # tissue.setData(spectra, wavelen, format=HSIntensity)
 
-
-    # tissue = HSTivitaAnalysis(format=HSIntensity)
-    # tissue = HSTivitaAnalysis(format=HSExtinction)
-    # tissue = HSTivitaAnalysis(format=HSRefraction)
+    # open source Tivita algorithms
+    tissue = HSOpenTivita(format=HSAbsorption)
+    tissue.setData(fspectra, wavelen, format=HSIntensity)
 
     # evaluate spectral index values according to tivita algorithms ..........
     start = timer()
@@ -62,17 +66,17 @@ def main():
     print("Elapsed time: %f sec" % (timer() - start))
 
     # plot mask ..............................................................
-    filePath = os.path.join(pict_path, "mask1.png")
+    filePath = os.path.join(pict_path, "tivita_mask")
     fig = plt.figure()
     ax = fig.add_subplot(111)
     pos = plt.imshow(mask, cmap='gray', vmin=0, vmax=1)
     fig.colorbar(pos, ax=ax)
-    plt.savefig(filePath, format="png", dpi=300)
+    plt.savefig(filePath + ".png", format="png", dpi=300)
     plt.show()
 
     # plot reference tivita index values for the hyperspectral image .........
-    keys = ['oxy', 'nir', 'thi']#, 'twi']
-    labels = ["Oxygenation", "NIR-Perfusion", "THI"]
+    keys = ['oxy', 'nir', 'thi', 'twi']
+    labels = ["Oxygenation", "NIR-Perfusion", "THI", "TWI"]
 
     fig = plt.figure()
     fig.set_size_inches(10, 8)
@@ -90,14 +94,14 @@ def main():
         'pad_inches': 0.03,
         'dpi': 300,  # high resolution png file
     }
-    filePath = os.path.join(pict_path, "_tivita_reference_index_values.png")
+    filePath = os.path.join(pict_path, "tivita_reference_index_values")
     plt.savefig(filePath + ".png", format="png", **options)
     plt.show()
 
     # plot tivita index values for the hyperspectral image ...................
     cmap = cm.tivita()
 
-    param = tissue.getVarVector(unpack=True, clip=False)
+    param = tissue.getSolution(unpack=True, clip=False)
     keys = ['oxy', 'nir', 'thi', 'twi']
 
     fig = plt.figure()
@@ -105,7 +109,7 @@ def main():
     for i, key in enumerate(keys):
         ax = fig.add_subplot(2, 2, i+1)
         pos = plt.imshow(param[key], cmap=cmap, vmin=0, vmax=1)
-        fig.colorbar(pos, ax=ax)
+        # fig.colorbar(pos, ax=ax)
         ax.set_title(key.upper())
 
     options = {
@@ -113,7 +117,7 @@ def main():
         'pad_inches': 0.03,
         'dpi': 300,  # high resolution png file
     }
-    filePath = os.path.join(pict_path, "_tivita_index_values.png")
+    filePath = os.path.join(pict_path, "tivita_index_values")
     plt.savefig(filePath + ".png", format="png", **options)
     plt.show()
 

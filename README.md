@@ -17,6 +17,7 @@ minimal effort.
 
 It is known to run on Linux and Windows.
 
-You can use
+
+<!--You can use
 [Github-flavored Markdown](https://guides.github.com/features/mastering-markdown/)
-to write your content.
+to write your content.-->

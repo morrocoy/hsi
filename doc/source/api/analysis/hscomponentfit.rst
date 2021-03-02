@@ -4,6 +4,7 @@ HSComponentFit
 ==============
 
 .. autoclass:: hsi.analysis.HSComponentFit
+    :inherited-members:
     :members:
 
     .. automethod:: hsi.analysis.HSComponentFit.__init__

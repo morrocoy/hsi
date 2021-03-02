@@ -1,16 +1,18 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-#*.py[cod]
+*.py[co]
 
 # C extensions
-*.so
+#*.so
 #*.packages
 #*.dll
+#*.lib
 
 # distribution / packaging
 bin/
 build/
 data/
+deprecated/
 pictures/
 *.egg-info/
 *.egg
@@ -21,3 +23,5 @@ pictures/
 
 # Sphinx documentation
 doc/build/
+
+

@@ -333,7 +333,7 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         return self.hsVectorAnalysis.model(format)
 
 
-    def getVarVector(self):
+    def getSolution(self):
         """Get the solution vectors of the least square fit for the entire
         spectral dataset.
 
@@ -341,9 +341,9 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         """
         meth = self.methodComboBox.currentText()
         if meth in ("gesv", "lstsq", "cg", "nelder-mead"):  # unconstrained
-            return self.hsVectorAnalysis.getVarVector(unpack=True, clip=False)
+            return self.hsVectorAnalysis.getSolution(unpack=True, clip=False)
         else:  # constrained
-            return self.hsVectorAnalysis.getVarVector(unpack=True, clip=True)
+            return self.hsVectorAnalysis.getSolution(unpack=True, clip=True)
 
 
     def loadFile(self, filePath):
@@ -389,7 +389,7 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
             self.mainLayout.insertRow(i+3, widget)
 
         # reconfigure wavelength region widget
-        lbnd, ubnd = self.hsVectorAnalysis.xData[[0, -1]]
+        lbnd, ubnd = self.hsVectorAnalysis.wavelen[[0, -1]]
         self.wavRegionWidget.setBounds([lbnd, ubnd])
         self.wavRegionWidget.setValueDefault([lbnd, ubnd])
         self.wavRegionWidget.setValue([lbnd, ubnd])
@@ -561,7 +561,7 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
             list, array of integer arrays, one for each dimension, or a boolean
             array serving as a mask.
         """
-        # if self.hsVectorAnalysis.yData is None:
+        # if self.hsVectorAnalysis.spectra is None:
         #     self.testMask = None
 
         self.mask = mask
@@ -578,7 +578,7 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
             list, array of integer arrays, one for each dimension, or a boolean
             array serving as a mask.
         """
-        # if self.hsVectorAnalysis.yData is None:
+        # if self.hsVectorAnalysis.spectra is None:
         #     self.testMask = None
 
         self.testMask = mask

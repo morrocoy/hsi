@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt
 
 from hsi import HSAbsorption, HSIntensity, HSExtinction, HSRefraction
 from hsi import HSComponentFile
-from hsi.analysis import HSTivita
+from hsi.analysis import HSOpenTivita as HSTivita
+# from hsi.analysis import HSTivita as HSTivita
 
 
 import logging
@@ -114,7 +115,7 @@ def main():
     # tissue.evaluate()
     # print("Elapsed time: %f sec" % (timer() - start))
 
-    # param = tissue.getVarVector(unpack=True, clip=False)
+    # param = tissue.getSolution(unpack=True, clip=False)
     #
     # param['oxy']
     # idx = np.nonzero(param['blo'])

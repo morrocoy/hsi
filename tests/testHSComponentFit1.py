@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 
 from hsi import HSAbsorption, HSIntensity, HSExtinction, HSRefraction
 from hsi.analysis import HSComponentFit
+# from hsi.analysis import HSComponentFit2 as HSComponentFit
 
 import logging
 
@@ -115,7 +116,8 @@ def main():
 
     print("Elapsed time: %f sec" % (timer() - start))
 
-    param = tissue.getVarVector(unpack=True)
+    # param = tissue.getVarVector(unpack=True)
+    param = tissue.getSolution(unpack=True)
     param['blo'] = param['hhb'] + param['ohb']
     param['oxy'] = np.zeros(param['blo'].shape)
     idx = np.nonzero(param['blo'])
@@ -132,8 +134,8 @@ def main():
     for key in ['blo', 'oxy', 'wat', 'fat', 'mel']:
         info += "\n%s = %f" % (key, param[key][tissIdx])
 
-    wavelen = tissue.xData
-    spec = tissue.yData[:, tissIdx]
+    wavelen = tissue.wavelen
+    spec = tissue.spectra[:, tissIdx]
     specFit = tissue.model()[:, tissIdx]
 
     fig = plt.figure()

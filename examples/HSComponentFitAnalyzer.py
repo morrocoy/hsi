@@ -247,19 +247,13 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
 
 
 
-        # self.updateSpectViewer()
-
-
-        # data = hsImageConfig.value()
-
-
     def onVectorFitChanged(self, analyzer, enableTest=False):
         if self.hsImageConfig.isEmpty():
             return
 
         # update image plots
         if not enableTest:
-            param = analyzer.getVarVector()
+            param = analyzer.getSolution()
             param['blo'] = param['hhb'] + param['ohb']
             param['oxy'] = np.zeros(param['blo'].shape)
             idx = np.nonzero(param['blo'])

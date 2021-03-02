@@ -2,7 +2,7 @@
 """
 Created on Mon Nov  2 11:30:26 2020
 
-@author: papkai
+@author: kpapke
 """
 import numpy as np
 from scipy.optimize import minimize, nnls, lsq_linear
@@ -12,6 +12,8 @@ from .. import CONFIG_OPTIONS
 from ..core.formats import HSFormatFlag, HSAbsorption, convert
 from ..core.HSComponent import HSComponent
 from ..core.HSComponentFile import HSComponentFile
+
+from .HSBaseAnalysis import HSBaseAnalysis
 
 import logging
 
@@ -33,7 +35,7 @@ else:
         return None
 
 
-class HSComponentFit:
+class HSComponentFit(HSBaseAnalysis):
     """
     Class to approximate hyper spectral image data by a weighted sum of base
     spectra in order to analysize their individual contributions.
@@ -45,9 +47,9 @@ class HSComponentFit:
 
     Attributes
     ----------
-    xData :  numpy.ndarray
+    wavelen :  numpy.ndarray
         The wavelengths at which the spectral data are sampled.
-    yData :  numpy.ndarray
+    spectra :  numpy.ndarray
         The spectral data.
     baseVectors : dict of HSComponent
         A dictionary of base vector to represent the spectral data.
@@ -63,17 +65,19 @@ class HSComponentFit:
             - :class:`HSExtinction<hsi.HSExtinction>`
             - :class:`HSRefraction<hsi.HSRefraction>`
 
-
+    keys : dict
+        A dictionary of solution parameters
     """
 
-    def __init__(self, y=None, x=None, bounds=None, format=HSAbsorption):
+    def __init__(self, spectra=None, wavelen=None, bounds=None,
+                 format=HSAbsorption):
         """ Constructor
 
         Parameters
         ----------
-        y :  numpy.ndarray, optional
+        spectra :  numpy.ndarray, optional
             The spectral data.
-        x :  numpy.ndarray, optional
+        wavelen :  numpy.ndarray, optional
             The wavelengths at which the spectral data are sampled.
         bounds :  list or tuple, optional
             The lower and upper bounds for the region of interest.
@@ -85,30 +89,14 @@ class HSComponentFit:
                 - :class:`HSExtinction<hsi.HSExtinction>`
                 - :class:`HSRefraction<hsi.HSRefraction>`
         """
-        self.xData = None  # wavelength axis
-        self.yData = None  # image data flatten to 2D ndarray
+        super(HSComponentFit, self).__init__(spectra, wavelen, format)
 
-        self.baseVectors = {}  # dict of base vector to represent spectral data
-
-        self._lsTrgVector = None
-        self._lsVarVector = None  # vector of unknowns
-        self._lsResVector = None  # residual vector (squared Euclidean 2-norm)
-        self._lsSysMatrix = None  # assembly of normalized based vector
-        self._lsVarScales = None  # scale factors for each unknown variable
-        self._lsVarBounds = None  # bounds for each unknown variable
+        # dict of base vector to represent spectral data
+        self.baseVectors = {}
 
         # list of bounds for the region of interest
         self.roi = [None, None]
         self.roiIndex = [None, None]
-
-        # check format, if not previously defined also set the format
-        if not HSFormatFlag.hasFlag(format):
-            raise Exception("Unknown format '{}'.".format(format))
-        self.format = format
-
-        # Forwards data arguments to self.setData() if available
-        if y is not None:
-            self.setData(y, x)
 
         # adopt roi bounds and corresponing indices
         self.setROI(bounds)
@@ -119,50 +107,6 @@ class HSComponentFit:
         eps = np.einsum('ij,j->i', a, x) - b
         return np.einsum('i,i->', eps, eps) / len(eps)
         # return np.sum(eps ** 2) / len(eps)
-
-
-    def _ravelMask(self, mask=None):
-        """Convert a mask to raveled indices for fitting selectively.
-
-        Parameters
-        ----------
-        mask : (tuple, list, or numpy.ndarray), optional
-            Evaluate the fit only for selected spectra using either a tuple,
-            list, array of integer arrays, one for each dimension, or a boolean
-            array serving as a mask.
-
-        Returns
-        -------
-        raveled_indices: numpy.ndarray
-            An array of indices into the flattened version of
-            :attr:`~.HSImageLSAnalysis.yData` apart from the first dimension
-            which corresponds to the wavelength.
-        """
-        shape = self.yData.shape[1:]
-        if isinstance(mask, (tuple, list, np.ndarray)) and len(mask) == len(shape):
-            # tuple, list, or array of integer arrays, one for each dimension
-            raveledMask = np.ravel_multi_index(mask, shape, mode='raise')
-            if not hasattr(raveledMask, '__len__'):  # convert integer to list
-                raveledMask = [raveledMask]
-            logger.debug("Index Mask: {} to {} {}".format(mask, raveledMask, type(raveledMask)))
-        elif isinstance(mask, np.ndarray) and mask.shape == shape:
-            # array of boolean providing the same shape as the spectral data
-            rmask = mask.reshape([-1])
-            raveledMask = np.where(rmask)[0]  # where returns a tuple of array
-            logger.debug("Boolean Mask: {} to {}".format(mask, raveledMask))
-        else:
-            # select all spectra if no mask defined
-            raveledMask = range(int(np.prod(shape)))
-            logger.debug("No Mask")
-
-        return raveledMask
-
-        # if type(index) in (tuple, list) and len(index) != len(shape):
-        #     self.testIndex = np.ravel_multi_index(index, shape, mode='clip')
-        # elif isinstance(index, int):
-        #     self.testIndex = np.clip(index, 0, np.prod(shape)-1)
-        # else:
-        #     self.testIndex = 0
 
 
     def addBaseVector(self, y, x, name=None, label=None, format=None,
@@ -192,28 +136,20 @@ class HSComponentFit:
         if format is None:
             format = self.format
 
-        if self.xData is None:
+        if self.wavelen is None:
             raise Exception("Spectral x data are missing for base vector.")
         else:
             self.baseVectors[name] = HSComponent(
-                y, x, self.xData, name=name, label=label, format=format,
+                y, x, self.wavelen, name=name, label=label, format=format,
                 weight=weight, bounds=bounds)
+            self.keys.append(name)
 
 
     def clear(self):
         """ Clear all spectral information including base vectors."""
-        self.xData = None  # wavelength axis
-        self.yData = None  # image data flatten to 2D ndarray
-
+        super(HSComponentFit, self).clear()
         self.roiIndex = [None, None]
         self.baseVectors.clear()
-
-        self._lsTrgVector = None
-        self._lsVarVector = None
-        self._lsResVector = None
-        self._lsSysMatrix = None
-        self._lsVarScales = None
-        self._lsVarBounds = None
 
 
     def fit(self, method='gesv', **kwargs):
@@ -277,21 +213,21 @@ class HSComponentFit:
         **kwargs : dict
             A dictionary of additional solver specific options.
         """
-        if self.yData is None or not self.baseVectors:
+        if self.spectra is None or not self.baseVectors:
             return
 
         il, iu = self.roiIndex
 
-        a = self._lsSysMatrix[il:iu]  # matrix of base vectors
-        b = self._lsTrgVector[il:iu]  # spectra to be fitted
-        x = self._lsVarVector.view()  # vector of unknowns
-        r = self._lsResVector.view()  # residuals
+        a = self._anaSysMatrix[il:iu]  # matrix of base vectors
+        b = self._anaTrgVector[il:iu]  # spectra to be fitted
+        x = self._anaVarVector.view()  # vector of unknowns
+        r = self._anaResVector.view()  # residuals
 
         # m, n = b.shape  # number of wavelengths or spectra, respectively
         # k, n = x.shape  # number of wavelengths or spectra, respectively
 
-        lbnd = self._lsVarBounds[:, 0]
-        ubnd = self._lsVarBounds[:, 1]
+        lbnd = self._anaVarBounds[:, 0]
+        ubnd = self._anaVarBounds[:, 1]
 
         # configure methods
         meth = method.lower()
@@ -407,23 +343,23 @@ class HSComponentFit:
         **kwargs : dict
             A dictionary of additional solver specific options.
         """
-        if self.yData is None or not self.baseVectors:
+        if self.spectra is None or not self.baseVectors:
             return
 
         il, iu = self.roiIndex
 
-        a = self._lsSysMatrix[il:iu]  # matrix of base vectors
-        b = self._lsTrgVector[il:iu]  # spectra to be fitted
-        x = self._lsVarVector.view()  # vector of unknowns
-        r = self._lsResVector.view()  # residuals
+        a = self._anaSysMatrix[il:iu]  # matrix of base vectors
+        b = self._anaTrgVector[il:iu]  # spectra to be fitted
+        x = self._anaVarVector.view()  # vector of unknowns
+        r = self._anaResVector.view()  # residuals
 
         m, n = b.shape  # number of wavelengths or spectra, respectively
         k, n = x.shape  # number of wavelengths or spectra, respectively
 
-        x0 = 1. / self._lsVarScales  # normalized starting vector
+        x0 = 1. / self._anaVarScales  # normalized starting vector
 
-        lbnd = self._lsVarBounds[:, 0]  # lower bounds
-        ubnd = self._lsVarBounds[:, 1]  # upper bounds
+        lbnd = self._anaVarBounds[:, 0]  # lower bounds
+        ubnd = self._anaVarBounds[:, 1]  # upper bounds
         bounds = list(zip(lbnd, ubnd))
 
         # normal equations
@@ -477,38 +413,6 @@ class HSComponentFit:
                                axis=0)
 
 
-    def getResiduals(self):
-        _shape = self.yData.shape
-        return self._lsResVector.reshape(_shape[1:])
-
-
-    def getVarVector(self, unpack=False, clip=True):
-        """Get the solution vector for each spectrum.
-
-        Parameters
-        ----------
-        unpack :  bool
-            If true split the solution vector in a dictionary according to the
-            labes of the base vectors.
-        """
-        if clip:
-            lbnd = self._lsVarBounds[:, 0]
-            ubnd = self._lsVarBounds[:, 1]
-            x =  self._lsVarScales * np.clip(
-                self._lsVarVector, lbnd[:, None], ubnd[:, None])
-        else:
-            x = self._lsVarScales * self._lsVarVector
-
-        if unpack:
-            shape = self.yData.shape[1:]
-            return {key: x[i].reshape(shape) for i, key in
-                    enumerate(self.baseVectors.keys())}
-        else:
-            k, n = self._lsVarVector.shape  # number of variables, spectra
-            shape = (k,) + self.yData.shape[1:]
-            return x.reshape(shape)
-
-
     def loadtxt(self, filePath, mode='bvec'):
         """Load the base vectors and spectral data from a file.
 
@@ -530,75 +434,76 @@ class HSComponentFit:
         logger.debug("Set spectral test data.")
 
         if mode in ('spec', 'all') and 'spec' in spectra:
-            self.xData = wavelen
-            self.yData = convert(self.format, format, spectra['spec'], wavelen)
+            self.wavelen = wavelen
+            self.spectra = convert(self.format, format, spectra['spec'], wavelen)
 
         # set base vectors
         if mode in ('bvec', 'all'):
             logger.debug("Set loaded base vectors.")
-            if self.xData is None:
-                self.xData = wavelen
+            if self.wavelen is None:
+                self.wavelen = wavelen
             for vec in vectors.values():
                 vec.setFormat(self.format)  # adopt format
-                vec.setInterpPnts(self.xData)
+                vec.setInterpPnts(self.wavelen)
             self.baseVectors.update(vectors)
+            self.keys = [key for key in  vectors.keys()]
 
         return self.baseVectors # return dict of base vectors if no errors occur
 
 
     def model(self, format=None):
-        a = self._lsSysMatrix.view()
-        x = self._lsVarVector.view()
+        a = self._anaSysMatrix.view()
+        x = self._anaVarVector.view()
         b = np.einsum('ij,jk->ik', a, x)
-        mspectra = b.reshape(self.yData.shape)
+        mspectra = b.reshape(self.spectra.shape)
 
         if format is None:
             return mspectra
         else:
             if not HSFormatFlag.hasFlag(format):
                 raise Exception("Unknown format '{}'.".format(format))
-            return convert(format, self.format, mspectra, self.xData)
+            return convert(format, self.format, mspectra, self.wavelen)
 
 
     def prepareLSProblem(self):
         """Prepare least square problem for fitting procedure"""
 
-        if self.yData is None or not self.baseVectors:
-            self._lsTrgVector = None
-            self._lsVarVector = None
-            self._lsResVector = None
-            self._lsSysMatrix = None
-            self._lsVarScales = None
-            self._lsVarBounds = None
+        if self.spectra is None or not self.baseVectors:
+            self._anaTrgVector = None
+            self._anaVarVector = None
+            self._anaResVector = None
+            self._anaSysMatrix = None
+            self._anaVarScales = None
+            self._anaVarBounds = None
 
         else:
 
             k = len(self.baseVectors)  # number of unknown variables
-            m = len(self.yData)  # number of wavelengths
+            m = len(self.spectra)  # number of wavelengths
 
             # target vector: spectral data in a reshaped 2-dimensional format
-            self._lsTrgVector = self.yData.reshape(m, -1)  # (wavelen, spectrum)
-            m, n = self._lsTrgVector.shape  # number of wavelengths, spectra
+            self._anaTrgVector = self.spectra.reshape(m, -1)  # (wavelen, spectrum)
+            m, n = self._anaTrgVector.shape  # number of wavelengths, spectra
 
             # vector of unknowns for each spectrum
-            self._lsVarVector = np.empty((k + 1, n))  # (variable, spectrum)
+            self._anaVarVector = np.empty((k + 1, n))  # (variable, spectrum)
 
             # vector of residuals for each spectrum
-            self._lsResVector = np.empty(n)  # (spectrum, )
+            self._anaResVector = np.empty(n)  # (spectrum, )
 
-            self._lsSysMatrix = np.empty((m, k + 1))  # (wavelen, base vector)
-            self._lsVarScales = np.empty((k + 1, 1))  # (variable, )
-            self._lsVarBounds = np.empty((k + 1, 2))  # (variable, bound)
+            self._anaSysMatrix = np.empty((m, k + 1))  # (wavelen, base vector)
+            self._anaVarScales = np.empty((k + 1, 1))  # (variable, )
+            self._anaVarBounds = np.empty((k + 1, 2))  # (variable, bound)
             for i, vec in enumerate(self.baseVectors.values()):
-                self._lsSysMatrix[:, i] = vec.getScaledValue()
-                self._lsVarScales[i, :] = vec.weight * vec.scale
-                self._lsVarBounds[i, :] = vec.getScaledBounds()
-                logger.debug("bounds: {}".format(self._lsVarBounds[i, :]))
+                self._anaSysMatrix[:, i] = vec.getScaledValue()
+                self._anaVarScales[i, :] = vec.weight * vec.scale
+                self._anaVarBounds[i, :] = vec.getScaledBounds()
+                logger.debug("bounds: {}".format(self._anaVarBounds[i, :]))
 
             # variable to correct offset
-            self._lsSysMatrix[:, -1] = 1.
-            self._lsVarScales[-1, :] = 1.
-            self._lsVarBounds[-1, :] = [-1e9, 1e9]
+            self._anaSysMatrix[:, -1] = 1.
+            self._anaVarScales[-1, :] = 1.
+            self._anaVarBounds[-1, :] = [-1e9, 1e9]
 
 
     def savetxt(self, filePath, title=None, mode='bvec'):
@@ -619,7 +524,7 @@ class HSComponentFit:
         if not self.baseVectors and mode in ('bvec', 'all'):
             print("No base vectors available to export.")
             return
-        if self.yData is None and mode in ('spec', 'all'):
+        if self.spectra is None and mode in ('spec', 'all'):
             print("No spectral available to export.")
             return
 
@@ -628,7 +533,7 @@ class HSComponentFit:
                 for vec in self.baseVectors.values():
                     file.buffer(vec)
             if mode in ('spec', 'all'):
-                file.buffer(self.yData, self.xData, label="spec",
+                file.buffer(self.spectra, self.wavelen, label="spec",
                             format=self.format)
             file.write()
 
@@ -646,64 +551,32 @@ class HSComponentFit:
             :attr:`~.HSImageLSAnalysis.xData` are used. If no data are
             available an error is raised.
         """
-        if format is None:
-            format = self.format
-
-        if not HSFormatFlag.hasFlag(format):
-            raise Exception("Unknown format '{}'.".format(format))
-
-        if isinstance(y, list):
-            y = np.array(y)
-        if not isinstance(y, np.ndarray) or y.ndim < 1:
-            raise Exception("Spectral y data must be ndarray of at least one "
-                            "dimension.")
-
-        # ensure two- or higher-dimensional array
-        if y.ndim < 2:
-            y = y[:, np.newaxis]
-
+        super(HSComponentFit, self).setData(y, x, format)
         if x is not None:
-            if isinstance(x, list):
-                x = np.array(x)
-            if not isinstance(x, np.ndarray) or x.ndim > 1:
-                raise Exception("Spectral x data must be 1D ndarray.")
-            if len(x) != len(y):
-                raise Exception("Spectral x and y data must be of same length.")
-
-            logger.debug("setData: Set spectral data. Update wavelength.")
-            self.yData = convert(self.format, format, y, x)
-            self.xData = x.view(np.ndarray)
-
             # update lower and upper bound indices for range of interest
             self.updateROIIndex()
-
             # update base vectors according to the new wavelength axis
             for vec in self.baseVectors.values():
-                vec.setInterpPnts(self.xData)
-
-        else:
-            if self.xData is None: # set yData without
-                raise Exception("Wavelength information is not available. "
-                                "Cannot update spectral y data")
-            elif len(self.xData) != len(y):
-                raise Exception("Spectral x and y data must be of same length.")
-            else:
-                logger.debug("setData: Set spectral data. Preserve wavelength.")
-                self.yData = convert(self.format, format, y, self.xData)
+                vec.setInterpPnts(self.wavelen)
 
 
     def setFormat(self, format):
+        """Set the format for the hyperspectral data.
 
-        if not HSFormatFlag.hasFlag(format):
-            raise Exception("Unknown format '{}'.".format(format))
+        Parameters
+        ----------
+        format :  :obj:`HSFormatFlag<hsi.HSFormatFlag>`, optional
+            The format for the hyperspectral data. Should be one of:
 
-        if format != self.format:
-            if self.yData is not None:
-                self.yData[:] = convert(
-                    format, self.format, self.yData, self.xData)
-            for vec in self.baseVectors.values():
-                vec.setFormat(format)
-            self.format = format
+                - :class:`HSIntensity<hsi.HSIntensity>`
+                - :class:`HSAbsorption<hsi.HSAbsorption>`
+                - :class:`HSExtinction<hsi.HSExtinction>`
+                - :class:`HSRefraction<hsi.HSRefraction>`
+
+        """
+        super(HSComponentFit, self).setFormat(format)
+        for vec in self.baseVectors.values():
+            vec.setFormat(self.format)
 
 
     def setROI(self, bounds=None):
@@ -743,22 +616,13 @@ class HSComponentFit:
             self.prepareLSProblem()
 
 
-
-    @property
-    def shape(self):
-        if self.yData is None:
-            return tuple([])
-        else:
-            return self.yData.shape[1:]
-
-
     def updateROIIndex(self):
         """Update lower and upper bound indices for range of interest."""
-        if self.xData is None:
+        if self.wavelen is None:
             return
 
         lbnd, ubnd = self.roi
-        x = self.xData.view()
+        x = self.wavelen.view()
         llim, ulim = x[0], x[-1]
 
         if lbnd is None or lbnd <= llim:

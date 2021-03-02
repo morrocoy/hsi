@@ -27,7 +27,7 @@ from hsi.gui import HistImagCtrlItem
 from hsi.gui import PosnImagCtrlItem
 from hsi.gui import RegnPlotCtrlItem
 
-from hsi.analysis import HSTivita
+from hsi.analysis import HSOpenTivita
 
 
 import logging
@@ -77,7 +77,7 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         self.hsImageConfig = QHSImageConfigWidget()
         self.hsVectorFitConfig = QHSComponentFitConfigWidget(format=HSAbsorption)
 
-        self.hsTivitaAnalysis = HSTivita(format=HSAbsorption)
+        self.hsTivitaAnalysis = HSOpenTivita(format=HSAbsorption)
 
         # set view
         self._setupViews(*args, **kwargs)
@@ -261,7 +261,7 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         if self.hsImageConfig.isEmpty():
             return
 
-        param = self.hsTivitaAnalysis.getVarVector(unpack=True)#, clip=True)
+        param = self.hsTivitaAnalysis.getSolution(unpack=True)#, clip=True)
         keys = ['nir', 'oxy', 'thi', 'twi']
         for key in keys:
             self.imagCtrlItems[key].setImage(param[key])
