@@ -4,7 +4,7 @@ Created on Wed Feb  3 19:07:19 2021
 
 @author: kpapke
 """
-import os
+import os.path
 import datetime
 import numpy as np
 

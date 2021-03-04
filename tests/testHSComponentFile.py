@@ -5,7 +5,7 @@ Created on Sun Feb  7 07:54:44 2021
 @author: kpapke
 """
 import sys
-import os
+import os.path
 from shutil import copyfile
 
 import numpy as np
