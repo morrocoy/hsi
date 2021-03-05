@@ -177,19 +177,19 @@ class HSDataset(object):
         logger.debug("Load data of entry {}: {}.".format(index, key))
         group = self._file[key]
         keys = group.keys()
-        akeys = group.attrs.keys()
+        # akeys = group.attrs.keys()
 
         spectra = group['spectra'][()] if 'spectra' in keys else None
         wavelen = group['wavelen'][()] if 'wavelen' in keys else None
         masks = group['masks'][()] if 'masks' in keys else None
 
-        sformat = group.attrs['format'] if 'format' in akeys else None
-        format = HSFormatFlag.fromStr((sformat))
+        # sformat = group.attrs['format'] if 'format' in akeys else None
+        # format = HSFormatFlag.fromStr((sformat))
 
         # series of complementary metadata
-        df2 = pd.Series(format, index=['format'], dtype=object)
+        # df2 = pd.Series(format, index=['format'], dtype=object)
 
-        return df.append(df2), spectra, wavelen, masks
+        return df, spectra, wavelen, masks
 
 
     def setFormat(self, format):

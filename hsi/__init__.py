@@ -97,6 +97,9 @@ from .core.HSDataset import HSDataset
 from .tissue.HSTissueComponent import HSTissueComponent
 from .tissue.HSTissueCompound import HSTissueCompound
 
+# miscellaneous
+from .misc import genHash
+
 __all__ = [
     # color maps
     "cm",
@@ -109,4 +112,6 @@ __all__ = [
     "HSFile", "HSComponentFile", "HSDataset",
     # tissues
     "HSTissueComponent", "HSTissueCompound",
+    # miscellaneous
+    "genHash",
 ]

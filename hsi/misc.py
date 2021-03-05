@@ -5,6 +5,7 @@
 import os.path
 import xlrd
 import numpy as np
+import hashlib
 
 import logging
 
@@ -52,6 +53,31 @@ def check_class(var, cls, allowNone=False):
 def getPkgDir():
     # return os.path.join(os.path.dirname(__file__), os.pardir)
     return os.path.dirname(__file__)
+
+
+def genHash(obj):
+    m = hashlib.md5()
+    # m = hashlib.sha1()
+
+    if isinstance(obj, np.ndarray):
+        ndim = obj.ndim
+        shape = obj.shape
+        if ndim == 1:
+            arr = obj[:]
+        elif ndim == 2:
+            arr = np.sum(obj, axis=0)
+        else:
+            arr = np.sum(obj.reshape((shape[0], -1)), axis=0)
+
+        m.update(arr.tostring())
+
+    elif isinstance(obj, str):
+        m.update(obj.encode('utf-8'))
+
+    else:
+        m.update(obj)
+
+    return m.hexdigest()
 
 
 # excel stuff .................................................................

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb  3 14:46:45 2021
+Created on Fri Mar  5 12:38:38 2021
 
 @author: kpapke
 """
 import sys
 import os.path
 from timeit import default_timer as timer
-import hashlib
+import multiprocessing
 
 import numpy as np
 
@@ -57,6 +57,7 @@ def task(metadata, spectra, wavelen, masks):
     return res
 
 
+
 def main():
     logger.info("Python executable: {}".format(sys.executable))
     logger.info("Python hsi version: {}".format(hsi.__version__))
@@ -77,26 +78,19 @@ def main():
         for i, group in enumerate(dataset.groups):
             print(group)
 
-        print("\nLoad spectral data")
+        print("\nLoad spectral data (parallel)")
         print("---------------------------------")
         start = timer()
-
-        n = len(dataset.groups)
-        checksum = np.zeros((n, 3), dtype='>f4')
-
-        for i in range(n):
-            metadata, spectra, wavelen, masks = dataset[i]
-            checksum[i, :] = task(metadata, spectra, wavelen, masks)
-
-        # for i, (metadata, spectra, wavelen, masks) in dataset.items():
-        #     checksum[i, :] = task(metadata, spectra, wavelen, masks)
-
+        with multiprocessing.Pool(processes=8) as pool:
+            # pool.starmap(task, dataset.items())  # very slow using yield
+            pool.starmap(task, list(dataset.items()))  # list preferred solution
         print("\nElapsed time: %f sec" % (timer() - start))
 
 
-    refchecksum = np.load(os.path.join(data_path, fileName + "_cs.npy"))
-    print("Residual: {}".format(np.max(np.abs(checksum-refchecksum), axis=0)))
-    # print(data[:, 1]-refdata[:, 1])
+    # # refdata = np.zeros((n, 3))
+    # refchecksum = np.load(os.path.join(data_path, fileName + "_cs.npy"))
+    # print("Residual: {}".format(np.max(np.abs(checksum-refchecksum), axis=0)))
+    # # print(data[:, 1]-refdata[:, 1])
 
 
 
