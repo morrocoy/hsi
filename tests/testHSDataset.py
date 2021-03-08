@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 logger.propagate = LOGGING
 
 
-def task(metadata, spectra, wavelen, masks):
+def task( spectra, wavelen, masks, metadata):
     """Example task applied on each entry.
 
     Parameters
@@ -41,19 +41,19 @@ def task(metadata, spectra, wavelen, masks):
     numpy.ndarray : Array of values for validation.
 
     """
-    # print("pid {:10} | spectra {:<10.6f} | masks {:<10.6f}".format(
-    #     metadata['pid'], np.mean(spectra), np.mean(masks)))
+    # print("pid {:10} | spectra {:<10.6f} | mask {:<10.6f}".format(
+    #     metadata['pid'], np.mean(spectra), np.mean(masks["tissue"])))
 
     # checksum
     hash = genHash(spectra)
     state = "valid" if hash == metadata['hash'] else "invalid"
 
-    print("pid {:10} | spectra {:<10.6f} | masks {:<10.6f} | hash {} {}".format(
-        metadata['pid'], np.mean(spectra), np.mean(masks), hash, state))
+    print("pid {:10} | spectra {:<10.6f} | mask {:<10.6f} | hash {} {}".format(
+        metadata['pid'], np.mean(spectra), np.mean(masks["tissue"]), hash, state))
 
     # return values for validation
     res = np.array(
-        [metadata['pid'], np.mean(spectra), np.mean(masks)], dtype='>f4')
+        [metadata['pid'], np.mean(spectra), np.mean(masks["tissue"])], dtype='>f4')
     return res
 
 
@@ -85,8 +85,8 @@ def main():
         checksum = np.zeros((n, 3), dtype='>f4')
 
         for i in range(n):
-            metadata, spectra, wavelen, masks = dataset[i]
-            checksum[i, :] = task(metadata, spectra, wavelen, masks)
+            spectra, wavelen, masks, metadata = dataset[i]
+            checksum[i, :] = task(spectra, wavelen, masks, metadata)
 
         # for i, (metadata, spectra, wavelen, masks) in dataset.items():
         #     checksum[i, :] = task(metadata, spectra, wavelen, masks)

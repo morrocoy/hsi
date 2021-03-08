@@ -4,8 +4,10 @@ import os.path
 
 from .HSComponentFit import HSComponentFit
 from .HSOpenTivita import HSOpenTivita
+from .HSBaseStudy import HSBaseStudy
 
 __all__ = [
+    "HSBaseStudy",
     "HSComponentFit",
     "HSOpenTivita",
 ]

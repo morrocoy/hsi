@@ -48,19 +48,23 @@ def task(metadata, spectra, wavelen, masks):
     hash = genHash(spectra)
     state = "valid" if hash == metadata['hash'] else "invalid"
 
-    print("pid {:10} | spectra {:<10.6f} | masks {:<10.6f} | hash {} {}".format(
-        metadata['pid'], np.mean(spectra), np.mean(masks), hash, state))
+    print("pid {:10} | spectra {:<10.6f} | mask {:<10.6f} | hash {} {}".format(
+        metadata['pn'], np.mean(spectra), np.mean(masks["tissue"]), hash, state))
+
+    msg = "pid {:10} | spectra {:<10.6f} | mask {:<10.6f} | hash {} {}".format(
+        metadata['pn'], np.mean(spectra), np.mean(masks["tissue"]), hash, state)
 
     # return values for validation
-    res = np.array(
-        [metadata['pid'], np.mean(spectra), np.mean(masks)], dtype='>f4')
-    return res
+    # res = metadata['pn'], np.mean(spectra), np.mean(masks)
+    return msg
 
 
 
 def main():
     logger.info("Python executable: {}".format(sys.executable))
     logger.info("Python hsi version: {}".format(hsi.__version__))
+
+    lock = multiprocessing.Lock()
 
     # data_path = os.path.join(os.getcwd(), "..", "data")
     data_path = os.path.join(os.getcwd(), "..", "..", "..", "amputation", "data")
@@ -81,13 +85,63 @@ def main():
         print("\nLoad spectral data (parallel)")
         print("---------------------------------")
         start = timer()
-        with multiprocessing.Pool(processes=8) as pool:
-            # pool.starmap(task, dataset.items())  # very slow using yield
-            pool.starmap(task, list(dataset.items()))  # list preferred solution
+
+        # with multiprocessing.Pool(processes=4) as pool:
+        #     rst = pool.starmap(task, dataset.items())  # very slow using yield
+        #     # pool.starmap(task, list(dataset.items()))  # list preferred solution
+        #
+        #     for msg in rst:
+        #         print(msg)
+
+        nproc = 4
+        nitems = len(dataset)
+        with multiprocessing.Pool(processes=nproc) as pool:
+            # res = pool.apply_async(dataset.select, range(10))
+
+            i = 0
+            j = 0
+            buffer = []
+            while i < nitems:
+                while i < nitems and j < nproc:
+                    buffer.append(dataset[i])
+                    i += 1
+                    j += 1
+
+                # rst = pool.starmap(task, buffer)
+                # for msg in rst:
+                #     print(msg)
+
+                mrst = [pool.apply_async(task, buf) for buf in buffer]
+                [rst.get(timeout=10) for rst in mrst]
+                buffer.clear()
+                j = 0
+
+
+        # nproc = 4
+        # nitems = len(dataset)
+        #
+        # i = 0
+        # j = 0
+        # plist = []
+        # while i < nitems:
+        #     while i < nitems and j < nproc:
+        #         p = multiprocessing.Process(target=task, args=dataset[i])
+        #         p.start()
+        #         plist.append(p)
+        #         i += 1
+        #         j += 1
+        #
+        #     for p in plist:
+        #         p.join()
+        #
+        #     plist.clear()
+        #     j = 0
+
+
+
         print("\nElapsed time: %f sec" % (timer() - start))
 
-
-    # # refdata = np.zeros((n, 3))
+        # # refdata = np.zeros((n, 3))
     # refchecksum = np.load(os.path.join(data_path, fileName + "_cs.npy"))
     # print("Residual: {}".format(np.max(np.abs(checksum-refchecksum), axis=0)))
     # # print(data[:, 1]-refdata[:, 1])

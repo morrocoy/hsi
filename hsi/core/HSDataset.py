@@ -10,8 +10,6 @@ import numpy as np
 import pandas as pd
 import h5py
 
-from .formats import HSFormatFlag, HSFormatDefault, convert
-
 from ..misc import getPkgDir
 
 import logging
@@ -26,20 +24,13 @@ __all__ = ['HSDataset']
 
 class HSDataset(object):
 
-    def __init__(self, filePath, format=None):
+    def __init__(self, filePath):
         """Constructor.
 
         Parameters
         ----------
         filePath :  str
             The absolute path to the input file.
-        format : :obj:`HSFormatFlag<hsi.HSFormatFlag>`, optional
-            The spectral format to be set. Should be one of:
-
-                - :class:`HSIntensity<hsi.HSIntensity>`
-                - :class:`HSAbsorption<hsi.HSAbsorption>`
-                - :class:`HSExtinction<hsi.HSExtinction>`
-                - :class:`HSRefraction<hsi.HSRefraction>`
 
         """
         # source file
@@ -58,7 +49,6 @@ class HSDataset(object):
         # self.notes = []  # notes
 
         # hyperspectral image of all records
-        self.format = None
         self.featureNames = None
         self.targets = []
         self.targetNames = None
@@ -88,6 +78,13 @@ class HSDataset(object):
             return self.select(index)
         else:
             return None
+
+
+    def __len__(self):
+        if isinstance(self.metadata, pd.DataFrame):
+            return len(self.metadata.index)
+        else:
+            return 0
 
 
     def clear(self):
@@ -168,6 +165,7 @@ class HSDataset(object):
         # get series of metadata
         df = self.metadata.iloc[index]
 
+
         key = df['group']
         if key not in self.groups:
             logger.debug(
@@ -181,35 +179,18 @@ class HSDataset(object):
 
         spectra = group['spectra'][()] if 'spectra' in keys else None
         wavelen = group['wavelen'][()] if 'wavelen' in keys else None
-        masks = group['masks'][()] if 'masks' in keys else None
+        maskarr = group['masks'][()] if 'masks' in keys else None
+
+        masks = {label: maskarr[i] for i, label in enumerate([
+            "tissue", "critical wound region", "wound region",
+            "wound and proximity"])}
+
+
 
         # sformat = group.attrs['format'] if 'format' in akeys else None
-        # format = HSFormatFlag.fromStr((sformat))
-
         # series of complementary metadata
         # df2 = pd.Series(format, index=['format'], dtype=object)
-
-        return df, spectra, wavelen, masks
-
-
-    def setFormat(self, format):
-        """Set the format for the hyperspectral data.
-
-        Parameters
-        ----------
-        format : :obj:`HSFormatFlag<hsi.HSFormatFlag>`
-            The spectral format to be set. Should be one of:
-
-                - :class:`HSIntensity<hsi.HSIntensity>`
-                - :class:`HSAbsorption<hsi.HSAbsorption>`
-                - :class:`HSExtinction<hsi.HSExtinction>`
-                - :class:`HSRefraction<hsi.HSRefraction>`
-
-        """
-        if not HSFormatFlag.hasFlag(format):
-            raise Exception("Unknown format '{}'.".format(format))
-        self.format = format
-
+        return spectra, wavelen, masks, df
 
 
     def setTargetNames(self, names):

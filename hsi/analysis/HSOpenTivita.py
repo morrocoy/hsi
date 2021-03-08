@@ -65,6 +65,8 @@ class HSOpenTivita(HSBaseAnalysis):
         """
         super(HSOpenTivita, self).__init__(spectra, wavelen, format)
         self.keys = ['oxy', 'nir', 'thi', 'twi']
+        self.labels = ["Oxygenation", "NIR-Perfusion", "THI", "TWI"]
+
 
     def evaluate(self, mask=None):
         """Evaluate Tivita index values.

@@ -48,8 +48,6 @@ class HSImage:
         The hyperspectral image in raw data format.
     fspectra :  numpy.ndarray
         The hyperspectral image in filtered data format (if any filter).
-    limits : list of float
-        The lower and upper limits of the wavelength range.
     rgbBounds :  dict('red': list, 'green': list, 'blue': list)
         A dictionary which defines lower and upper bounds for each color.
 
@@ -104,8 +102,7 @@ class HSImage:
 
     """
 
-    def __init__(self, filePath=None, limits=[500e-9, 1000e-9],
-                 format=HSFormatDefault):
+    def __init__(self, spectra=None, wavelen=None, format=HSFormatDefault):
         """Constructor
 
         The __init__ method may be documented in either the class level
@@ -116,8 +113,11 @@ class HSImage:
 
         Parameters
         ----------
-        filePath : str, optional
-            The full path to the input file.
+        filePath : np.ndarray or filepath, optional
+            Either the multidimensional array of the spectral data or the full
+            path to the input file.
+        wavelen : list of np.ndarray, optional
+            The wavelengths at which the spectral data are sampled.
         format :  :obj:`HSFormatFlag<hsi.HSFormatFlag>`, optional
             The format for the hyperspectral data. Should be one of:
 
@@ -126,11 +126,7 @@ class HSImage:
                 - :class:`HSExtinction<hsi.HSExtinction>`
                 - :class:`HSRefraction<hsi.HSRefraction>`
 
-        limits : list of float
-            The lower and upper limits of the wavelength range.
-
         """
-        self.limits = limits  # wavelength
         self.rgbBounds = {
             'red': [585e-9, 725e-9],
             'green': [540e-9, 590e-9],
@@ -146,9 +142,12 @@ class HSImage:
             raise Exception("Unknown format '{}'.".format(format))
         self.format = format
 
-        # load data from file (note: wavelength information not included)
-        if filePath is not None:
-            self.load(filePath)
+        # load data from file or set directly
+        if isinstance(spectra, str):
+            self.load(spectra)
+        elif isinstance(spectra, (np.ndarray, list)):
+            self.setData(spectra, wavelen, format)
+
 
 
     def _testFilter(self):
@@ -240,31 +239,6 @@ class HSImage:
     def clearFilter(self):
         """Remove all filters previously added to the hyperspectral image."""
         self.fspectra = self.spectra
-
-
-    def setFormat(self, format):
-        """Set the format for the hyperspectral data.
-
-        Parameters
-        ----------
-        format :  :obj:`HSFormatFlag<hsi.HSFormatFlag>`, optional
-            The format for the hyperspectral data. Should be one of:
-
-                - :class:`HSIntensity<hsi.HSIntensity>`
-                - :class:`HSAbsorption<hsi.HSAbsorption>`
-                - :class:`HSExtinction<hsi.HSExtinction>`
-                - :class:`HSRefraction<hsi.HSRefraction>`
-
-
-        """
-        # check format, if not previously defined also set the format
-        if not HSFormatFlag.hasFlag(format):
-            raise Exception("Unknown format '{}'.".format(format))
-
-        old_format = self.format
-        self.spectra = convert(format, old_format, self.spectra, self.wavelen)
-        self.fspectra = convert(format, old_format, self.fspectra, self.wavelen)
-        self.format = format
 
 
     def getTissueMask(self, thresholds=[0.2, 0.8], bounds=None):
@@ -366,6 +340,9 @@ class HSImage:
     def load(self, filePath, rotation=True, ndim=3, dtype=np.float32):
         """Load data cube from binary file.
 
+        Note: wavelength information not included in *.dat files. It is fixed
+        to the range: 500, 505, ..., 955 nm.
+
         Parameters
         ----------
         filePath : str
@@ -403,10 +380,105 @@ class HSImage:
         # put wavelength axis first
         spectra = np.transpose(spectra, axes=(2, 0, 1))
 
-        self.wavelen = np.linspace(
-            self.limits[0], self.limits[1], len(spectra), endpoint=False)
+        self.wavelen = np.linspace(500e-9, 1000e-9, 100, endpoint=False)
         self.spectra = convert(self.format, HSIntensity, spectra, self.wavelen)
         self.fspectra = self.spectra.copy()
+
+
+    def setData(self, spectra, wavelen=None, format=None):
+        """Set spectral data to be fitted.
+
+        Parameters
+        ----------
+        spectra :  numpy.ndarray
+            The spectral data.
+        wavelen :  numpy.ndarray, optional
+            The wavelengths at which the spectral data are sampled. If not
+            defined the internally stored wavelength data in
+            :attr:`~.HSImageLSAnalysis.xData` are used. If no data are
+            available an error is raised.
+        """
+        if format is None:
+            format = self.format
+
+        if not HSFormatFlag.hasFlag(format):
+            raise Exception("Unknown format '{}'.".format(format))
+
+        if isinstance(spectra, list):
+            spectra = np.array(spectra)
+        if not isinstance(spectra, np.ndarray) or spectra.ndim < 1:
+            raise Exception("Spectral y data must be ndarray of at least one "
+                            "dimension.")
+
+        # ensure two- or higher-dimensional array for spectra
+        if spectra.ndim < 2:
+            spectra = spectra[:, np.newaxis]
+
+        if wavelen is not None:
+            if isinstance(wavelen, list):
+                wavelen = np.array(wavelen)
+            if not isinstance(wavelen, np.ndarray) or wavelen.ndim > 1:
+                raise Exception("Spectral x data must be 1D ndarray.")
+            if len(wavelen) != len(spectra):
+                raise Exception("Spectral x and y data must be of same length.")
+
+            logger.debug("setData: Set spectral data. Update wavelength.")
+            self.wavelen = wavelen.view(np.ndarray)
+            self.spectra = convert(self.format, format, spectra, wavelen)
+            self.fspectra = self.spectra.copy()
+
+        else:
+            if self.wavelen is None: # set spectra without new wavelengths
+                raise Exception("Wavelength information is not available. "
+                                "Cannot update spectral y data")
+            elif len(self.wavelen) != len(spectra):
+                raise Exception("Spectral x and y data must be of same length.")
+            else:
+                logger.debug("setData: Set spectral data. Preserve wavelength.")
+                self.spectra = convert(self.format, format, spectra, self.wavelen)
+                self.fspectra = self.spectra.copy()
+
+
+    def setFormat(self, format):
+        """Set the format for the hyperspectral data.
+
+        Parameters
+        ----------
+        format :  :obj:`HSFormatFlag<hsi.HSFormatFlag>`, optional
+            The format for the hyperspectral data. Should be one of:
+
+                - :class:`HSIntensity<hsi.HSIntensity>`
+                - :class:`HSAbsorption<hsi.HSAbsorption>`
+                - :class:`HSExtinction<hsi.HSExtinction>`
+                - :class:`HSRefraction<hsi.HSRefraction>`
+
+
+        """
+        # check format, if not previously defined also set the format
+        if not HSFormatFlag.hasFlag(format):
+            raise Exception("Unknown format '{}'.".format(format))
+
+        old_format = self.format
+        self.spectra = convert(format, old_format, self.spectra, self.wavelen)
+        self.fspectra = convert(format, old_format, self.fspectra, self.wavelen)
+        self.format = format
+
+    def setRange(self, start, stop, endpoint=False):
+        """Set the wavelength range.
+
+        Parameters
+        ----------
+        start : float
+            The lower limit of the range.
+        stop : float
+            The upper limit of the range.
+        endpoint : bool, optional
+            If True, stop is the last sample. Otherwise, it is not included.
+            Default is True.
+        """
+        if isinstance(self.spectra, np.ndarray):
+            self.wavelen = np.linspace(
+                start, stop, len(self.spectra), endpoint=endpoint)
 
 
     @property
@@ -416,20 +488,3 @@ class HSImage:
             return self.spectra.shape
         else:
             return None
-
-
-    def setRange(self, start, stop):
-        """Set the wavelength range.
-
-        Parameters
-        ----------
-        start : float
-            The lower limit of the range.
-        stop : float
-            The upper limit of the range.
-
-        """
-        self.limits = [start, stop]
-        if isinstance(self.spectra, np.ndarray):
-            self.wavelen = np.linspace(
-                self.limits[0], self.limits[1], len(self.spectra), endpoint=True)
