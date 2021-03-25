@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import h5py
 
+from ..log import logmanager
 from ..misc import genHash, getPkgDir
 
 from ..core.formats import HSFormatFlag, HSFormatDefault, convert
@@ -23,12 +24,7 @@ from ..core.cm import cm
 
 from .HSTivita import HSTivita
 
-import logging
-
-LOGGING = True
-# LOGGING = False
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+logger = logmanager.getLogger(__name__)
 
 
 __all__ = ['HSBaseStudy']
@@ -206,8 +202,8 @@ class HSBaseStudy(object):
         # if self.hsformat is not None:
         #     metadata.replace({'format',  self.hsformat.key})
 
-        with pd.HDFStore(filePath, 'a') as store:
-            store.append('metadata', df, format='table', data_columns=True)
+        # with pd.HDFStore(filePath, 'a') as store:
+        #     store.append('metadata', df, format='table', data_columns=True)
 
         with h5py.File(filePath, 'r+') as store:
             group = store.create_group(metadata['group'])
@@ -260,7 +256,7 @@ class HSBaseStudy(object):
         start = timer()
 
         nproc = 7
-        nitems = 7 #len(dataset)
+        nitems = len(dataset)
         with multiprocessing.Pool(processes=nproc) as pool:
             i = 0
             buffer = []

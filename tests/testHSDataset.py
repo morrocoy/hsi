@@ -6,6 +6,7 @@ Created on Wed Feb  3 14:46:45 2021
 """
 import sys
 import os.path
+import logging
 from timeit import default_timer as timer
 import hashlib
 
@@ -14,12 +15,9 @@ import numpy as np
 import hsi
 from hsi import HSDataset, genHash
 from hsi import HSIntensity, HSAbsorption, HSRefraction
-import logging
+from hsi.log import logmanager
 
-# LOGGING = True
-LOGGING = False
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+logger = logmanager.getLogger(__name__)
 
 
 def task( spectra, wavelen, masks, metadata):
@@ -101,21 +99,8 @@ def main():
 
 
 if __name__ == '__main__':
-    # fmt = "%(asctime)s %(filename)35s: %(lineno)-4d: %(funcName)20s(): " \
-    #       "%(levelname)-7s: %(message)s"
-    # logging.basicConfig(level='DEBUG', format=fmt)
-
-    # requests_logger = logging.getLogger('hsi')
-    requests_logger = logging.getLogger(__file__)
-    requests_logger.setLevel(logging.DEBUG)
-
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-            "%(asctime)s %(filename)35s: %(lineno)-4d: %(funcName)20s(): " \
-              "%(levelname)-7s: %(message)s")
-    handler.setFormatter(formatter)
-    handler.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-    requests_logger.addHandler(handler)
+    logmanager.setLevel(logging.DEBUG)
+    logger.info("Python executable: {}".format(sys.executable))
+    logger.info("Python hsi version: {}".format(hsi.__version__))
 
     main()

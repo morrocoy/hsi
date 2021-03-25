@@ -4,20 +4,25 @@ Created on Fri Feb  12  7:57:45 2021
 
 @author: kpapke
 """
+import sys
 import os
+import logging
 
 import numpy as np
 import matplotlib.pyplot as plt
 
+import hsi
 from hsi import HSImage
 from hsi import HSAbsorption
+from hsi.log import logmanager
 
+logger = logmanager.getLogger(__name__)
 
-import logging
-
-LOGGING = True
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+# import logging
+#
+# LOGGING = True
+# logger = logging.getLogger(__name__)
+# logger.propagate = LOGGING
 
 def main():
 
@@ -98,17 +103,25 @@ def main():
 
 
 if __name__ == '__main__':
+    # fmt = "%(asctime)s %(filename)35s: %(lineno)-4d: %(funcName)20s(): " \
+    #       "%(levelname)-7s: %(message)s"
+    # logging.basicConfig(level='DEBUG', format=fmt)
 
-    requests_logger = logging.getLogger('hsi')
-    requests_logger.setLevel(logging.DEBUG)
+    # requests_logger = logging.getLogger('hsi')
+    # requests_logger = logging.getLogger(__file__)
+    # requests_logger.setLevel(logging.DEBUG)
+    #
+    # handler = logging.StreamHandler()
+    # formatter = logging.Formatter(
+    #         "%(asctime)s %(filename)35s: %(lineno)-4d: %(funcName)20s(): " \
+    #           "%(levelname)-7s: %(message)s")
+    # handler.setFormatter(formatter)
+    # handler.setLevel(logging.DEBUG)
+    # logger.addHandler(handler)
+    # requests_logger.addHandler(handler)
 
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-            "%(asctime)s %(filename)35s: %(lineno)-4d: %(funcName)20s(): " \
-              "%(levelname)-7s: %(message)s")
-    handler.setFormatter(formatter)
-    handler.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-    requests_logger.addHandler(handler)
+    logmanager.setLevel(logging.DEBUG)
+    logger.info("Python executable: {}".format(sys.executable))
+    logger.info("Python hsi version: {}".format(hsi.__version__))
 
     main()

@@ -1,17 +1,16 @@
 import sys
+import logging
+
 import numpy as np
 
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtWidgets
 
+import hsi
 from hsi.gui import RegnPlotCtrlItem
+from hsi.log import logmanager
 
-import logging
-
-LOGGING = True
-LOGGING = False
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+logger = logmanager.getLogger(__name__)
 
 
 class DemoWindow(QtWidgets.QMainWindow):
@@ -94,7 +93,8 @@ def main():
 
 
 if __name__ == '__main__':
-    LOG_FMT = '%(asctime)s %(filename)25s:%(lineno)-4d : %(levelname)-7s: %(message)s'
-    logging.basicConfig(level='DEBUG', format=LOG_FMT)
+    logmanager.setLevel(logging.DEBUG)
+    logger.info("Python executable: {}".format(sys.executable))
+    logger.info("Python hsi version: {}".format(hsi.__version__))
 
     main()

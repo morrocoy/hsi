@@ -16,16 +16,17 @@ pict_path = os.path.join(os.getcwd(), "..", "pictures")
 
 # create compound .............................................................
 wavelen = np.linspace(500, 1000, 100, endpoint=False)
+wavelen = np.linspace(500, 1000, 50, endpoint=False)
 skintype = 'dermis'  # can be ('epidermis', 'dermis', 'bone', 'musle', 'mucosa')
 portions = {
-    'blo': 0.03,  # blood
-    'ohb': 0.5,  # oxygenated hemoglobin (O2HB)
-    'hhb': 0.5,  # deoxygenation (HHB) - should be (1 - 'ohb')
+    'blo': 0.005,  # blood
+    'ohb': 1.0,  # oxygenated hemoglobin (O2HB)
+    'hhb': 0.0,  # deoxygenation (HHB) - should be (1 - 'ohb')
     'methb': 0.,  # methemoglobin
     'cohb': 0.,  # carboxyhemoglobin
     'shb': 0.,  # sulfhemoglobin
-    'wat': 0.6,  # water
-    'fat': 0.2,  # fat
+    'wat': 0.65,  # water
+    'fat': 0.0,  # fat
     'mel': 0 * 0.025,  # melanin
 }
 # notes:
@@ -76,3 +77,6 @@ header += "\n[nm] [cm-1] [cm-1] [cm-1] [] []"
 np.savetxt(os.path.join(data_path, "tissue_compound_example.txt"),
            np.column_stack((wavelen, mu_a, mu_sp, mu_s, g, n)),
            fmt='%.1f %.5e %.5e %.5e %.5e %.5e', header=header)
+
+for i in range(10):
+    print("%d: %.6f" % (wavelen[i], mu_a[i]))

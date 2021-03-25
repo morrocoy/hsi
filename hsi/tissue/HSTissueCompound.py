@@ -9,16 +9,12 @@ import numpy as np
 
 from scipy.interpolate import interp1d
 
+from ..log import logmanager
 from ..misc import getPkgDir
+
 from .HSTissueComponent import HSTissueComponent
 
-import logging
-
-LOGGING = True
-# LOGGING = False
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
-
+logger = logmanager.getLogger(__name__)
 
 __all__ = ['HSTissueCompound']
 

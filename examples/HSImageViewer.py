@@ -13,19 +13,19 @@ extinction, or refraction values. In addition, the data may be visualized with
 a standard normal variate correction.
 """
 import sys
-import os
+import logging
 
 from pyqtgraph.Qt import QtWidgets, QtGui
 import pyqtgraph as pg
 
+import hsi
+
 from hsi.gui import PosnImagCtrlItem
 from hsi.gui import QHSImageConfigWidget
 
-import logging
-LOGGING = True
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+from hsi.log import logmanager
 
+logger = logmanager.getLogger(__name__)
 
 
 class QHSImageViewerWidget(QtGui.QWidget):
@@ -171,19 +171,9 @@ def main():
 
 
 if __name__ == '__main__':
-
-    requests_logger = logging.getLogger('hsi')
-    requests_logger.setLevel(logging.DEBUG)
-
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-            "%(asctime)s %(filename)35s: %(lineno)-4d: %(funcName)20s(): " \
-              "%(levelname)-7s: %(message)s")
-    handler.setFormatter(formatter)
-    handler.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-    requests_logger.addHandler(handler)
-
+    logmanager.setLevel(logging.DEBUG)
+    logger.info("Python executable: {}".format(sys.executable))
+    logger.info("Python hsi version: {}".format(hsi.__version__))
 
     main()
 

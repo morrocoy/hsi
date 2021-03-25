@@ -7,14 +7,11 @@ Created on Mon Feb  1 07:55:39 2021
 import numpy as np
 from scipy.interpolate import interp1d
 
+from ..log import logmanager
+
 from .formats import HSFormatFlag, HSFormatDefault, convert
 
-import logging
-
-LOGGING = True
-# LOGGING = False
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+logger = logmanager.getLogger(__name__)
 
 
 __all__ = ['HSComponent']

@@ -4,7 +4,9 @@ Created on Tue Feb 16 19:01:33 2021
 
 @author: kpapke
 """
+import sys
 import os.path
+import logging
 from timeit import default_timer as timer
 from scipy import ndimage
 
@@ -12,20 +14,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 # from matplotlib.colors import ListedColormap
 
+import hsi
 from hsi import cm
 from hsi import HSImage
 from hsi import HSAbsorption, HSIntensity, HSExtinction, HSRefraction
 
 from hsi.analysis import HSOpenTivita
 from hsi.analysis import HSTivita
+from hsi.log import logmanager
 
-
-
-import logging
-
-LOGGING = True
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+logger = logmanager.getLogger(__name__)
 
 
 def main():
@@ -53,12 +51,12 @@ def main():
     # mask = hsImage.getTissueMask([0.4, 0.9])
 
     # Tivita algorithms
-    # tissue = HSTivita(format=HSIntensity)
-    # tissue.setData(spectra, wavelen, format=HSIntensity)
+    tissue = HSTivita(format=HSIntensity)
+    tissue.setData(spectra, wavelen, format=HSIntensity)
 
     # open source Tivita algorithms
-    tissue = HSOpenTivita(format=HSAbsorption)
-    tissue.setData(fspectra, wavelen, format=HSIntensity)
+    # tissue = HSOpenTivita(format=HSAbsorption)
+    # tissue.setData(fspectra, wavelen, format=HSIntensity)
 
     # evaluate spectral index values according to tivita algorithms ..........
     start = timer()
@@ -80,8 +78,10 @@ def main():
 
     fig = plt.figure()
     fig.set_size_inches(10, 8)
+    fig.patch.set_visible(False)
     for i, key in enumerate(keys):
         ax = fig.add_subplot(2, 2, i+1)
+        ax.axis('off')
         imgFilePath = os.path.join(
             data_path, subfolder, timestamp, timestamp + "_%s.png" % labels[i])
         img = plt.imread(imgFilePath)
@@ -105,11 +105,13 @@ def main():
     keys = ['oxy', 'nir', 'thi', 'twi']
 
     fig = plt.figure()
-    fig.set_size_inches(10, 8)
+    fig.set_size_inches(12, 8)
+    fig.patch.set_visible(False)
     for i, key in enumerate(keys):
         ax = fig.add_subplot(2, 2, i+1)
+        ax.axis('off')
         pos = plt.imshow(param[key], cmap=cmap, vmin=0, vmax=1)
-        # fig.colorbar(pos, ax=ax)
+        fig.colorbar(pos, ax=ax)
         ax.set_title(key.upper())
 
     options = {
@@ -121,23 +123,9 @@ def main():
     plt.savefig(filePath + ".png", format="png", **options)
     plt.show()
 
-
 if __name__ == '__main__':
-
-    # fmt = "%(asctime)s %(filename)35s: %(lineno)-4d: %(funcName)20s(): " \
-    #       "%(levelname)-7s: %(message)s"
-    # logging.basicConfig(level='DEBUG', format=fmt)
-
-    requests_logger = logging.getLogger('hsi')
-    requests_logger.setLevel(logging.DEBUG)
-
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-            "%(asctime)s %(filename)35s: %(lineno)-4d: %(funcName)20s(): " \
-              "%(levelname)-7s: %(message)s")
-    handler.setFormatter(formatter)
-    handler.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-    requests_logger.addHandler(handler)
+    logmanager.setLevel(logging.DEBUG)
+    logger.info("Python executable: {}".format(sys.executable))
+    logger.info("Python hsi version: {}".format(hsi.__version__))
 
     main()

@@ -7,14 +7,9 @@ Created on Fri Feb 12 10:35:08 2021
 import numpy as np
 
 from ...bindings.Qt import QtWidgets, QtGui, QtCore
+from ...log import logmanager
 
-import logging
-
-LOGGING = True
-# LOGGING = False
-
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+logger = logmanager.getLogger(__name__)
 
 __all__ = ['QParamRegionWidget']
 

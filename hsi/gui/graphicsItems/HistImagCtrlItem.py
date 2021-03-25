@@ -4,17 +4,13 @@ import numpy as np
 import pyqtgraph as pg
 
 from ...bindings.Qt import QtWidgets, QtGui, QtCore
+from ...log import logmanager
 from ...misc import getPkgDir
 
 from .ColorBarItem import ColorBarItem
 from .BaseImagCtrlItem import BaseImagCtrlItem
 
-import logging
-
-LOGGING = True
-LOGGING = False
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+logger = logmanager.getLogger(__name__)
 
 __all__ = ['HistImagCtrlItem']
 
@@ -242,76 +238,3 @@ class HistImagCtrlItem(BaseImagCtrlItem):
     def setLevels(self, levels):
         self.colorBarItem.setLevels(levels)
 
-
-
-class DemoWindow(QtWidgets.QMainWindow):
-
-    def __init__(self, lut, showHistogram, parent=None):
-        super(DemoWindow, self).__init__(parent=parent)
-
-        self._setupViews(lut, showHistogram)
-
-
-    def _setupViews(self, lut, showHistogram):
-        """ Creates the UI widgets.
-        """
-        self.mainWidget = QtWidgets.QWidget()
-        self.setCentralWidget(self.mainWidget)
-
-        self.mainLayout = QtWidgets.QVBoxLayout()
-        self.mainLayout.setContentsMargins(0, 0, 0, 0) # left, top, right, bottom
-        self.mainLayout.setSpacing(0)
-        self.mainWidget.setLayout(self.mainLayout)
-
-        self.histItem1 = HistImagCtrlItem(lut, label="Oxygenation", showHistogram=showHistogram, cbarWidth=10)
-
-        img1 = pg.gaussianFilter(np.random.normal(size=(300, 200)), (5, 5)) * 20
-        self.histItem1.setImage(img1)
-
-        self.histItem2 = HistImagCtrlItem(lut, label="Oxygenation", showHistogram=showHistogram, cbarWidth=10)
-
-        img2 = pg.gaussianFilter(np.random.normal(size=(300, 200)), (5, 5)) * 20
-        self.histItem2.setImage(img2)
-
-        self.histItem1.setXYLink(self.histItem2)
-
-        self.graphicsLayoutWidget = pg.GraphicsLayoutWidget()
-        self.graphicsLayoutWidget.addItem(self.histItem1, 0, 0)
-        self.graphicsLayoutWidget.addItem(self.histItem2, 0, 1)
-
-        self.mainLayout.addWidget(self.graphicsLayoutWidget)
-
-
-def main():
-
-    logger.info("Python executable: {}".format(sys.executable))
-    logger.info("Python version: {}".format(sys.version))
-    logger.info("PyQt bindings: {}".format(pg.Qt.QT_LIB))
-    logger.info("PyQtGraph version: {}".format(pg.__version__))
-
-    app = QtWidgets.QApplication([])
-
-
-    cmap = pg.ColorMap([0, 0.25, 0.75, 1], [[0, 0, 0, 255], [255, 0, 0, 255], [255, 255, 0, 255], [255, 255, 255, 255]])
-    lut0 = cmap.getLookupTable()
-    lut1 = np.array([(237,248,251), (178,226,226), (102,194,164), (35,139,69), (0, 0, 0)])
-    lut2 = np.array([(237, 248, 251), (204, 236, 230), (153, 216, 201), (102, 194, 164),
-                     (65, 174, 118), (35, 139, 69), (0, 88, 36)])
-    # alpha = 100
-    # lut2 = np.hstack((lut2, alpha * np.ones((7, 1))))
-
-    lut = lut2.astype(np.uint8) # Use uint8 so that the resulting image will also be of that type/
-    lut = np.flipud(lut) # test reversed map
-    win = DemoWindow(lut=lut, showHistogram=True)
-    # win = QImageLevelsWidget(lut=lut, showHistogram=True)
-    win.setGeometry(400, 100, 800, 500)
-    win.setWindowTitle('PgColorbar Demo')
-    win.show()
-    app.exec_()
-
-
-if __name__ == '__main__':
-    LOG_FMT = '%(asctime)s %(filename)25s:%(lineno)-4d : %(levelname)-7s: %(message)s'
-    logging.basicConfig(level='DEBUG', format=LOG_FMT)
-
-    main()

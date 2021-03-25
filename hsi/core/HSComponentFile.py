@@ -9,6 +9,8 @@ import datetime
 import numpy as np
 
 from .. import __version__
+
+from ..log import logmanager
 from ..misc import getPkgDir
 
 from .formats import HSFormatDefault
@@ -16,12 +18,7 @@ from .HSFile import HSFile
 
 from .HSComponent import HSComponent
 
-import logging
-
-LOGGING = True
-# LOGGING = False
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+logger = logmanager.getLogger(__name__)
 
 
 __all__ = ['HSComponentFile']

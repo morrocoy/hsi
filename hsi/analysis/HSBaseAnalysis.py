@@ -6,15 +6,11 @@ Created on Mon Mar  1 17:39:03 2021
 """
 import numpy as np
 
+from ..log import logmanager
+
 from ..core.formats import HSFormatFlag, HSAbsorption, convert
 
-import logging
-
-LOGGING = True
-# LOGGING = False
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
-
+logger = logmanager.getLogger(__name__)
 
 __all__ = ['HSBaseAnalysis']
 

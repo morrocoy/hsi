@@ -4,24 +4,23 @@ Created on Tue Feb 16 09:34:02 2021
 
 @author: kpapke
 """
+import sys
 import os.path
+import logging
 from timeit import default_timer as timer
 from scipy import signal, ndimage
 
 import numpy as np
 import matplotlib.pyplot as plt
 
+import hsi
 from hsi import HSAbsorption, HSIntensity, HSExtinction, HSRefraction
 from hsi import HSComponentFile
 from hsi.analysis import HSOpenTivita as HSTivita
 # from hsi.analysis import HSTivita as HSTivita
+from hsi.log import logmanager
 
-
-import logging
-
-LOGGING = True
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+logger = logmanager.getLogger(__name__)
 
 
 def main():
@@ -123,21 +122,8 @@ def main():
 
 
 if __name__ == '__main__':
-
-    # fmt = "%(asctime)s %(filename)35s: %(lineno)-4d: %(funcName)20s(): " \
-    #       "%(levelname)-7s: %(message)s"
-    # logging.basicConfig(level='DEBUG', format=fmt)
-
-    requests_logger = logging.getLogger('hsi')
-    requests_logger.setLevel(logging.DEBUG)
-
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-            "%(asctime)s %(filename)35s: %(lineno)-4d: %(funcName)20s(): " \
-              "%(levelname)-7s: %(message)s")
-    handler.setFormatter(formatter)
-    handler.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-    requests_logger.addHandler(handler)
+    logmanager.setLevel(logging.DEBUG)
+    logger.info("Python executable: {}".format(sys.executable))
+    logger.info("Python hsi version: {}".format(hsi.__version__))
 
     main()

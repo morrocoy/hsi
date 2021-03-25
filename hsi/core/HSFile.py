@@ -11,16 +11,13 @@ import datetime
 import numpy as np
 
 from .. import __version__
+
+from ..log import logmanager
 from ..misc import getPkgDir
+
 from .formats import HSFormatFlag, HSFormatDefault, convert
 
-import logging
-
-LOGGING = True
-# LOGGING = False
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
-
+logger = logmanager.getLogger(__name__)
 
 __all__ = ['HSFile']
 

@@ -1,5 +1,6 @@
 """ hsi. A hyper spectral image analysis package
 """
+# from __future__ import absolute_import
 
 import os.path
 import sys

@@ -8,6 +8,7 @@ import numpy as np
 from scipy.optimize import minimize, nnls, lsq_linear
 
 from .. import CONFIG_OPTIONS
+from ..log import logmanager
 
 from ..core.formats import HSFormatFlag, HSAbsorption, convert
 from ..core.HSComponent import HSComponent
@@ -15,12 +16,9 @@ from ..core.HSComponentFile import HSComponentFile
 
 from .HSBaseAnalysis import HSBaseAnalysis
 
-import logging
 
-LOGGING = True
-# LOGGING = False
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+
+logger = logmanager.getLogger(__name__)
 
 
 __all__ = ['HSComponentFit']

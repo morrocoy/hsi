@@ -10,12 +10,10 @@ import numpy as np
 
 from scipy.interpolate import interp1d
 
-import logging
+from ..log import logmanager
 
-LOGGING = True
-# LOGGING = False
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+logger = logmanager.getLogger(__name__)
+
 
 
 __all__ = ['HSTissueComponent']

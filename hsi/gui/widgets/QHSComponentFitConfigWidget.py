@@ -3,22 +3,15 @@ from timeit import default_timer as timer
 
 from ... import CONFIG_OPTIONS
 
-from ...misc import getPkgDir
-from ...core.formats import HSFormatFlag
-
 from ...bindings.Qt import QtWidgets, QtGui, QtCore
+from ...log import logmanager
+from ...misc import getPkgDir
+
 from ...analysis.HSComponentFit import HSComponentFit
 
 from .QParamRegionWidget import QParamRegionWidget
 
-import logging
-
-LOGGING = True
-# LOGGING = False
-
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
-
+logger = logmanager.getLogger(__name__)
 
 __all__ = ['QHSComponentFitConfigWidget']
 

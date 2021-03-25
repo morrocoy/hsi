@@ -8,21 +8,20 @@ import numpy as np
 import pyqtgraph as pg
 
 from ...bindings.Qt import QtWidgets, QtCore
+from ...log import logmanager
 from ...misc import versionStrToTuple
 from ...misc import check_is_an_array, check_class
 
 import cProfile
 import pstats
-import logging
 
 X_AXIS = pg.ViewBox.XAxis
 Y_AXIS = pg.ViewBox.YAxis
 BOTH_AXES = pg.ViewBox.XYAxes
 CODE_PROFILING = False
-LOGGING = False
 
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+logger = logmanager.getLogger(__name__)
+
 
 def assertIsLut(lut):
     """ Checks that lut is Nx3 or Nx4 array of dtype uint8

@@ -4,21 +4,21 @@ Created on Thu Nov  5 15:24:22 2020
 
 @author: kpapke
 """
+import sys
 import os
+import logging
 from timeit import default_timer as timer
 
 import numpy as np
 import matplotlib.pyplot as plt
 
+import hsi
 from hsi import HSAbsorption, HSIntensity, HSExtinction, HSRefraction
 from hsi.analysis import HSComponentFit
 # from hsi.analysis import HSComponentFit2 as HSComponentFit
+from hsi.log import logmanager
 
-import logging
-
-LOGGING = True
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+logger = logmanager.getLogger(__name__)
 
 
 def main():
@@ -167,21 +167,10 @@ def main():
 
 
 if __name__ == '__main__':
+    if __name__ == '__main__':
+        logmanager.setLevel(logging.DEBUG)
+        logger.info("Python executable: {}".format(sys.executable))
+        logger.info("Python hsi version: {}".format(hsi.__version__))
 
-    # fmt = "%(asctime)s %(filename)35s: %(lineno)-4d: %(funcName)20s(): " \
-    #       "%(levelname)-7s: %(message)s"
-    # logging.basicConfig(level='DEBUG', format=fmt)
+        main()
 
-    requests_logger = logging.getLogger('hsi')
-    requests_logger.setLevel(logging.DEBUG)
-
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-            "%(asctime)s %(filename)35s: %(lineno)-4d: %(funcName)20s(): " \
-              "%(levelname)-7s: %(message)s")
-    handler.setFormatter(formatter)
-    handler.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-    requests_logger.addHandler(handler)
-
-    main()

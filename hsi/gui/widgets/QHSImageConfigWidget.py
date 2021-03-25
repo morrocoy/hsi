@@ -1,8 +1,7 @@
 import os
-import numpy as np
-
 
 from ...bindings.Qt import QtWidgets, QtGui, QtCore
+from ...log import logmanager
 from ...core.HSImage import HSImage
 
 from ...core.formats import HSFormatFlag, HSFormatDefault
@@ -10,13 +9,7 @@ from ...core import functions as fn
 
 from .QParamRegionWidget import QParamRegionWidget
 
-import logging
-
-LOGGING = True
-# LOGGING = False
-
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+logger = logmanager.getLogger(__name__)
 
 
 __all__ = ['QHSImageConfigWidget']

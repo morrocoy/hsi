@@ -10,17 +10,13 @@ import numpy as np
 import pandas as pd
 import h5py
 
+from ..log import logmanager
 from ..misc import getPkgDir
 
-import logging
-
-LOGGING = True
-# LOGGING = False
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
-
+logger = logmanager.getLogger(__name__)
 
 __all__ = ['HSDataset']
+
 
 class HSDataset(object):
 

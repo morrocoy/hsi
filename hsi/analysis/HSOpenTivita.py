@@ -7,17 +7,14 @@ Created on Mon Nov  2 11:30:26 2020
 import numpy as np
 from scipy import signal
 
+from ..log import logmanager
 from ..core.formats import HSAbsorption
 
 from .HSBaseAnalysis import HSBaseAnalysis
 
-import logging
 
-LOGGING = True
-# LOGGING = False
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
 
+logger = logmanager.getLogger(__name__)
 
 __all__ = ['HSOpenTivita']
 

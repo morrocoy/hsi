@@ -8,16 +8,12 @@ import os
 import numpy as np
 from scipy import signal, ndimage
 
+from ..log import logmanager
+
 from .formats import HSFormatFlag, HSFormatDefault, convert
 from .formats import HSIntensity, HSAbsorption
 
-import logging
-
-LOGGING = True
-# LOGGING = False
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
-
+logger = logmanager.getLogger(__name__)
 
 __all__ = ['HSImage']
 

@@ -4,20 +4,12 @@ import numpy as np
 import pyqtgraph as pg
 
 from ...bindings.Qt import QtWidgets, QtGui, QtCore
+from ...log import logmanager
 from ...misc import check_is_an_array, check_class
 
-
-import logging
-
-LOGGING = True
-# LOGGING = False
-
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
-
+logger = logmanager.getLogger(__name__)
 
 __all__ = ['RegnPlotCtrlItem']
-
 
 
 class QRegnPlotCtrlConfigWidget(QtWidgets.QWidget):

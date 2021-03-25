@@ -1,19 +1,25 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Feb  7 07:54:44 2021
+
+@author: kpapke
+"""
 import sys
 import os.path
-import numpy as np
+import logging
 
+import numpy as np
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 
 from utils import readExcelTbl
+
+import hsi
 from hsi import HSTissueCompound
+from hsi.log import logmanager
 
-import logging
+logger = logmanager.getLogger(__name__)
 
-LOGGING = True
-LOGGING = False
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
 
 data_path = os.path.join(os.getcwd(), "..", "data")
 pict_path = os.path.join(os.getcwd(), "..", "pictures")
@@ -165,21 +171,8 @@ def main():
     testCompound("test_tissue_compound5.txt")
 
 if __name__ == '__main__':
-    # fmt = "%(asctime)s %(filename)35s: %(lineno)-4d: %(funcName)20s(): " \
-    #       "%(levelname)-7s: %(message)s"
-    # logging.basicConfig(level='DEBUG', format=fmt)
-
-    requests_logger = logging.getLogger('hsi')
-    requests_logger.setLevel(logging.DEBUG)
-
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        "%(asctime)s %(filename)35s: %(lineno)-4d: %(funcName)20s(): " \
-        "%(levelname)-7s: %(message)s")
-    handler.setFormatter(formatter)
-    handler.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-    requests_logger.addHandler(handler)
-
+    logmanager.setLevel(logging.DEBUG)
+    logger.info("Python executable: {}".format(sys.executable))
+    logger.info("Python hsi version: {}".format(hsi.__version__))
 
     main()

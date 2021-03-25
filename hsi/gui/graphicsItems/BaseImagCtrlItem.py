@@ -5,18 +5,13 @@ import numpy as np
 import pyqtgraph as pg
 
 from ...bindings.Qt import QtWidgets, QtCore
+from ...log import logmanager
 from ...misc import check_is_an_array, check_class
 
 from .ColorBarItem import ColorBarItem
 from .InfiniteLine import InfiniteLine
 
-import logging
-
-LOGGING = True
-# LOGGING = False
-
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
+logger = logmanager.getLogger(__name__)
 
 
 __all__ = ['BaseImagCtrlItem']
@@ -157,64 +152,4 @@ class BaseImagCtrlItem(pg.GraphicsWidget):
 
 
 
-class DemoWindow(QtWidgets.QMainWindow):
 
-    def __init__(self, parent=None):
-        super(DemoWindow, self).__init__(parent=parent)
-
-        self._setupViews()
-
-
-    def _setupViews(self):
-        """ Creates the UI widgets.
-        """
-        self.mainWidget = QtWidgets.QWidget()
-        self.setCentralWidget(self.mainWidget)
-
-        self.mainLayout = QtWidgets.QVBoxLayout()
-        self.mainLayout.setContentsMargins(0, 0, 0, 0) # left, top, right, bottom
-        self.mainLayout.setSpacing(0)
-        self.mainWidget.setLayout(self.mainLayout)
-
-        img1 = pg.gaussianFilter(np.random.normal(size=(300, 200)), (5, 5)) * 20
-        img2 = pg.gaussianFilter(np.random.normal(size=(300, 200)), (5, 5)) * 20
-
-        self.controlItem1 = BaseImagCtrlItem(label="Oxygenation")
-        self.controlItem1.setImage(img1)
-        self.controlItem2 = BaseImagCtrlItem(label="Oxygenation")
-        self.controlItem2.setImage(img2)
-
-        self.controlItem1.setXYLink(self.controlItem2)
-
-        self.graphicsLayoutWidget = pg.GraphicsLayoutWidget()
-        self.graphicsLayoutWidget.addItem(self.controlItem1, 0, 0)
-        self.graphicsLayoutWidget.addItem(self.controlItem2, 0, 1)
-
-
-        self.mainLayout.addWidget(self.graphicsLayoutWidget)
-
-
-def main():
-
-    logger.info("Python executable: {}".format(sys.executable))
-    logger.info("Python version: {}".format(sys.version))
-    logger.info("PyQt bindings: {}".format(pg.Qt.QT_LIB))
-    logger.info("PyQtGraph version: {}".format(pg.__version__))
-
-    app = QtWidgets.QApplication([])
-
-
-    cmap = pg.ColorMap([0, 0.25, 0.75, 1], [[0, 0, 0, 255], [255, 0, 0, 255], [255, 255, 0, 255], [255, 255, 255, 255]])
-    win = DemoWindow()
-
-    win.setGeometry(400, 100, 800, 500)
-    win.setWindowTitle('PgColorbar Demo')
-    win.show()
-    app.exec_()
-
-
-if __name__ == '__main__':
-    LOG_FMT = '%(asctime)s %(filename)25s:%(lineno)-4d : %(levelname)-7s: %(message)s'
-    logging.basicConfig(level='DEBUG', format=LOG_FMT)
-
-    main()

@@ -11,11 +11,13 @@ from the hyperspectral data using an in-build RGB filter is able to extract
 the different color channels.
 """
 import sys
-import os
+import logging
 
 import numpy as np
 from pyqtgraph.Qt import QtWidgets, QtGui
 import pyqtgraph as pg
+
+import hsi
 
 from hsi import HSAbsorption
 
@@ -27,12 +29,9 @@ from hsi.gui import HistImagCtrlItem
 from hsi.gui import PosnImagCtrlItem
 from hsi.gui import RegnPlotCtrlItem
 
+from hsi.log import logmanager
 
-import logging
-LOGGING = True
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
-
+logger = logmanager.getLogger(__name__)
 
 
 class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
@@ -325,19 +324,9 @@ def main():
 
 
 if __name__ == '__main__':
-
-    requests_logger = logging.getLogger('hsi')
-    # requests_logger = logging.getLogger(__name__)
-    requests_logger.setLevel(logging.DEBUG)
-
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-            "%(asctime)s %(filename)35s: %(lineno)-4d: %(funcName)20s(): " \
-              "%(levelname)-7s: %(message)s")
-    handler.setFormatter(formatter)
-    handler.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
-    requests_logger.addHandler(handler)
+    logmanager.setLevel(logging.DEBUG)
+    logger.info("Python executable: {}".format(sys.executable))
+    logger.info("Python hsi version: {}".format(hsi.__version__))
 
     main()
 

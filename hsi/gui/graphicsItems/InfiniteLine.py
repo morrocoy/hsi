@@ -10,17 +10,10 @@ from pyqtgraph import functions as fn
 import weakref
 
 from ...bindings.Qt import QtGui, QtCore
-
-import logging
-
-LOGGING = True
-# LOGGING = False
-
-logger = logging.getLogger(__name__)
-logger.propagate = LOGGING
-
+from ...log import logmanager
 from ...misc import check_is_an_array, check_class
 
+logger = logmanager.getLogger(__name__)
 
 __all__ = ['InfiniteLine', 'InfLineLabel']
 
