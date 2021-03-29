@@ -114,6 +114,9 @@ class HSTissueCompound:
         self.loadDefaultComponents()
         self.loadReferenceAnisotropy()
 
+        # calculate parameters of tissue compound
+        self.evaluate()
+
 
     def addComponentData(self, wavelen, attcoef, name,
                          xunit='nm', yunit='cm-1'):

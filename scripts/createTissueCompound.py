@@ -16,7 +16,8 @@ pict_path = os.path.join(os.getcwd(), "..", "pictures")
 
 # create compound .............................................................
 wavelen = np.linspace(500, 1000, 100, endpoint=False)
-wavelen = np.linspace(500, 1000, 50, endpoint=False)
+wavelen = np.linspace(500, 1000, 500, endpoint=False)
+wavelen = np.arange(495, 505, 0.1)
 skintype = 'dermis'  # can be ('epidermis', 'dermis', 'bone', 'musle', 'mucosa')
 portions = {
     'blo': 0.005,  # blood
@@ -36,7 +37,6 @@ portions = {
 
 compound = HSTissueCompound(
     portions=portions, skintype=skintype, wavelen=wavelen)
-compound.evaluate()
 
 # retrieve optical parameters of tissue compound
 mu_a = compound.absorption  # absorption coefficients
@@ -78,5 +78,5 @@ np.savetxt(os.path.join(data_path, "tissue_compound_example.txt"),
            np.column_stack((wavelen, mu_a, mu_sp, mu_s, g, n)),
            fmt='%.1f %.5e %.5e %.5e %.5e %.5e', header=header)
 
-for i in range(10):
-    print("%d: %.6f" % (wavelen[i], mu_a[i]))
+for i in range(len(wavelen)):
+    print("%f: %.6f" % (wavelen[i], mu_a[i]))

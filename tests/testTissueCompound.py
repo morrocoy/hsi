@@ -120,7 +120,6 @@ def testCompound(fileName):
         refdata = np.loadtxt(file, skiprows=2)
 
     compound = HSTissueCompound(portions=portions, skintype=skintype)
-    compound.evaluate()
 
     icut = fileName.rfind('.')
 
