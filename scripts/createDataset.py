@@ -96,11 +96,11 @@ def loadHSData(pathName, baseName):
     return hsImage, masks
 
 
+rootPath = os.path.join("d:", os.sep, "projects", "hyperlimit", "amputation")
+dataPath = os.path.join(rootPath, "data")
+pictPath = os.path.join(rootPath, "pictures")
+rsltPath = os.path.join(rootPath, "results")
 
-dataPath = os.path.join(os.getcwd(), "..", "data")
-pictPath = os.path.join(os.getcwd(), "..", "pictures")
-rsltPath = os.path.join(os.getcwd(), "..", "results")
-# dataPath = os.path.join("c:", os.sep, "temp")
 
 
 # load metadata ..............................................................
@@ -167,6 +167,7 @@ with pd.HDFStore(filePath, 'a') as store:
 # checksum
 np.save(os.path.join(dataPath, fileName + "_cs.npy"),
         checksum)  # store checksum
+
 
 
 
