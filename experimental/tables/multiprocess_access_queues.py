@@ -6,7 +6,6 @@ import os.path
 import queue
 
 import multiprocessing
-import random
 import time
 from pathlib import Path
 
@@ -105,13 +104,13 @@ class DataProcessor(multiprocessing.Process):
     def run(self):
         self.output_file = open(self.output_file, 'w')
         # read a random row from the file
-        row_num = random.randrange(self.array_size)
+        row_num = np.random.randint(self.array_size)
         self.read_queue.put((row_num, self.proc_num))
         self.output_file.write(str(row_num) + '\n')
         self.output_file.write(str(self.result_queue.get()) + '\n')
 
         # modify a random row to equal 11 * (self.proc_num + 1)
-        row_num = random.randrange(self.array_size)
+        row_num = np.random.randint(self.array_size)
         new_data = (np.zeros((1, self.array_size), 'i8') +
                     11 * (self.proc_num + 1))
         self.write_queue.put((row_num, new_data))
@@ -145,7 +144,6 @@ if __name__ == '__main__':
     file_name = "tutorial_multiprocess.h5"
     file_path = os.path.join(data_path, file_name)
 
-    # file_path = 'test.h5'
     n = 10
     make_file(file_path, n)
 
@@ -175,12 +173,12 @@ if __name__ == '__main__':
     shutdown_send.send(0)
 
     # print out contents of log files and delete them
-    print()
+    print(os.path.abspath(output_file))
     for output_file in output_files:
         print()
         print(f'contents of log file {output_file}')
         print(open(output_file).read())
         Path(output_file).unlink()
 
-    # Path('test.h5').unlink()
-    # Path(file_path).unlink()
+    time.sleep(0.1)
+    Path(file_path).unlink()

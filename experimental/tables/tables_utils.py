@@ -78,8 +78,8 @@ def loadHSData(pathName, baseName, hsformat):
     return hsImage, masks
 
 
-def loadHSMetaData(filePath, sheet_name=0, columns=None,
-                   skiprows=None, nrows=None):
+def loadPatientData(filePath, sheet_name=0, columns=None,
+                    skiprows=None, nrows=None):
     """ Load meta data of all records.
 
     Parameters
@@ -160,7 +160,7 @@ def plotMasks(fileName, image, masks):
     filepath = os.path.join(_rootPath, "pictures", fileName)
 
     fig.savefig(filepath, format=ext, **fig_options)
-    plt.show()
+    # plt.show()
     plt.close()
 
 
@@ -192,5 +192,5 @@ def plotParam(fileName, param):
     filepath = os.path.join(_rootPath, "pictures", fileName)
 
     fig.savefig(filepath, format=ext, **fig_options)
-    plt.show()
+    # plt.show()
     plt.close()

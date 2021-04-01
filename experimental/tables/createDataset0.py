@@ -36,7 +36,7 @@ import pandas as pd
 import numpy as np
 import h5py
 
-from tables_utils import getDirPaths, loadHSMetaData, loadHSData
+from tables_utils import getDirPaths, loadPatientData, loadHSData
 from hsi import HSIntensity, HSAbsorption
 
 dirPaths = getDirPaths()
@@ -47,7 +47,7 @@ filePath = os.path.join(dirPaths['results'], fileName)
 project = "rostock"
 hsformat = HSIntensity
 
-dfMetadata = loadHSMetaData(filePath, sheet_name=0, skiprows=1)
+dfMetadata = loadPatientData(filePath, sheet_name=0, skiprows=1)
 dfMetadata['hsformat'] = hsformat.key
 # dfHSImages = dfMetadata.apply(lambda x: loadHSImage(x['timestamp']), axis=1)
 # dfData = dfMetadata['timestamp'].apply(loadHSData)

@@ -74,7 +74,7 @@ def task(patient, hsidata, wavelen, mask):
 
     fileName = "PN_%03d_PID_%07d_Date_%s_Masks.jpg" % (
         patient["pn"], patient["pid"], patient["timestamp"])
-    # plotMasks(fileName, image, mask)
+    plotMasks(fileName, image, mask)
 
     # analysis ................................................................
     analysis = HSTivita(format=HSIntensity)
@@ -84,7 +84,7 @@ def task(patient, hsidata, wavelen, mask):
     # param = None
     fileName = "PN_%03d_PID_%07d_Date_%s_Tivita.jpg" % (
         patient["pn"], patient["pid"], patient["timestamp"])
-    # plotParam(fileName, param)
+    plotParam(fileName, param)
 
     return param
 

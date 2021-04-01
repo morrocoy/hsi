@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar 30 12:16:59 2021
+Created on Thu Apr  1 07:40:56 2021
 
 @author: kpapke
 """
@@ -27,6 +27,48 @@ from hsi.analysis import HSTivita
 from hsi.log import logmanager
 
 logger = logmanager.getLogger(__name__)
+
+
+def task_split(patient, hsidata, wavelen, mask):
+    hsformat = HSFormatFlag.fromStr(patient["hsformat"].decode())
+
+    print("%8d | %8d | %-20s | %-20s | %-10s | %3d |" % (
+        patient["pn"],
+        patient["pid"],
+        patient["descr"].decode(),
+        patient["timestamp"].decode(),
+        hsformat.key,
+        patient["target"]
+    ))
+
+    hsImage = HSImage(
+        spectra=hsidata, wavelen=wavelen, format=hsformat)
+    image = hsImage.getRGBValue()
+
+    keys = [
+        "tissue",
+        "critical wound region",
+        "wound region",
+        "wound and proximity",
+        "wound proximity"
+    ]
+    mask = {key: val for (key, val) in zip(keys, mask)}
+
+    fileName = "PN_%03d_PID_%07d_Date_%s_Masks.jpg" % (
+        patient["pn"], patient["pid"], patient["timestamp"])
+    # plotMasks(fileName, image, mask)
+
+    analysis = HSTivita(format=HSIntensity)
+    analysis.setData(hsImage.spectra, hsImage.wavelen, format=hsformat)
+    analysis.evaluate(mask=mask["tissue"])
+    param = analysis.getSolution(unpack=True, clip=True)
+    # param = None
+    fileName = "PN_%03d_PID_%07d_Date_%s_Tivita.jpg" % (
+        patient["pn"], patient["pid"], patient["timestamp"])
+    # plotParam(fileName, param)
+
+    return param
+
 
 
 def task(patient):
@@ -56,7 +98,7 @@ def task(patient):
 
     fileName = "PN_%03d_PID_%07d_Date_%s_Masks.jpg" % (
         patient["pn"], patient["pid"], patient["timestamp"])
-    plotMasks(fileName, image, mask)
+    # plotMasks(fileName, image, mask)
 
     analysis = HSTivita(format=HSIntensity)
     analysis.setData(hsImage.spectra, hsImage.wavelen, format=hsformat)
@@ -65,10 +107,36 @@ def task(patient):
     # param = None
     fileName = "PN_%03d_PID_%07d_Date_%s_Tivita.jpg" % (
         patient["pn"], patient["pid"], patient["timestamp"])
-    plotParam(fileName, param)
+    # plotParam(fileName, param)
 
     return param
 
+
+def fun(f, q_in, q_out):
+    while True:
+        i, x = q_in.get()
+        if i is None:
+            break
+        q_out.put((i, f(x)))
+
+
+def parmap(f, X, nprocs=multiprocessing.cpu_count()):
+    q_in = multiprocessing.Queue(1)
+    q_out = multiprocessing.Queue()
+
+    proc = [multiprocessing.Process(target=fun, args=(f, q_in, q_out))
+            for _ in range(nprocs)]
+    for p in proc:
+        p.daemon = True
+        p.start()
+
+    sent = [q_in.put((i, x)) for i, x in enumerate(X)]
+    [q_in.put((None, None)) for _ in range(nprocs)]
+    res = [q_out.get() for _ in range(len(sent))]
+
+    [p.join() for p in proc]
+
+    return [x for i, x in sorted(res)]
 
 
 def main():
@@ -98,22 +166,25 @@ def main():
     nproc = 7
     nitems = table.nrows
     print("Items: ", nitems)
-    with multiprocessing.Pool(processes=nproc) as pool:
 
-        # apply_async with unlimited pool size
-        # mrst = [
-        #     pool.apply_async(task, (buf.fetch_all_fields(),))
-        #     for buf in table.iterrows()]
-        # [rst.get(timeout = 3) for rst in mrst]
+    parmap(task, table.iterrows())
 
-        # apply_async with limited pool size
-        for i in range(0, nitems, nproc):
-            mrst = [
-                pool.apply_async(task, (table[i + j],))
-                for j in range(nproc if i + nproc < nitems else nitems - i)
-            ]
-            # [rst.get(timeout=10) for rst in mrst]
-            [rst.get() for rst in mrst]
+    # with multiprocessing.Pool(processes=nproc) as pool:
+
+    #     # apply_async with unlimited pool size
+    #     # mrst = [
+    #     #     pool.apply_async(task, (buf.fetch_all_fields(),))
+    #     #     for buf in table.iterrows()]
+    #     # [rst.get(timeout = 3) for rst in mrst]
+    #
+    #     # apply_async with limited pool size
+    #     for i in range(0, nitems, nproc):
+    #         mrst = [
+    #             pool.apply_async(task, (table[i + j],))
+    #             for j in range(nproc if i + nproc < nitems else nitems - i)
+    #         ]
+    #         # [rst.get(timeout=10) for rst in mrst]
+    #         [rst.get() for rst in mrst]
 
         # starmap with unlimited pool size
         # rst = pool.starmap(task, [(buf.fetch_all_fields(),)
@@ -131,11 +202,21 @@ def main():
         # while i < nitems:
         #     while i < nitems and j < nproc:
         #         patient = table[i]
-        #         buffer.append((patient,))
+        #
+        #         metadata = {
+        #             key: patient[key] for key in
+        #             ["pn", "pid", "descr", "timestamp", "hsformat", "target"]
+        #         }
+        #         hsidata =  patient["hsidata"]
+        #         wavelen = patient["wavelen"]
+        #         mask = patient["mask"]
+        #         buffer.append((patient, hsidata, wavelen, mask))
+        #
+        #         # buffer.append((patient,))
         #         i += 1
         #         j += 1
         #
-        #     rst = pool.starmap(task, buffer)
+        #     rst = pool.starmap(task_split, buffer)
         #     buffer.clear()
         #     j = 0
 
