@@ -178,7 +178,7 @@ hsimageTable = h5file.create_table(
 patientEntry = patientTable.row  # get a pointer to the Row
 hsimageEntry = hsimageTable.row
 for index, entry in patientData.iterrows():
-    if index > 200:
+    if index > 2:
         break
 
     print("Process index %d ..." % entry["pn"])

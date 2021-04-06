@@ -10,6 +10,7 @@ import logging
 
 from timeit import default_timer as timer
 import multiprocessing
+import pathos.multiprocessing as mp
 
 from multiprocessing import Process, Pipe
 
@@ -98,6 +99,12 @@ def main():
     nproc = 7
     nitems = table.nrows
     print("Items: ", nitems)
+
+    # pool = mp.ProcessingPool(nodes=7)
+    # for rst in pool.imap(task, [table[i] for i in range(nitems)]):
+    #     pass
+
+
     with multiprocessing.Pool(processes=nproc) as pool:
 
         # apply_async with unlimited pool size
