@@ -1,8 +1,8 @@
 6	Kopfzeilen		Stand 25.03.2019																						
 																									
-Zusammenstellung der Parameter für die Nutzung des Programmes Phantom Builder ab Version 2.4 B.H.Herrmann 2018																									
+Zusammenstellung der Parameter fuer die Nutzung des Programmes Phantom Builder ab Version 2.4 B.H.Herrmann 2018
 																									
-a Melamin	b Melanin	Wellenlänge	µa H2O	Wellenlänge	µa Fett	Wellenlänge	µa HbO2	Wellenlänge	µa Hb	Wellenlänge	µa metHb	Wellenlänge	µa COHb	Wellenlänge	µa SHb	Wellenlänge	ext Bilirubin	Wellenlänge	ext Beta-Carotin	Wellenlänge	g	Wellenlänge	Chlorophyll A	Wellenlänge	Xyz
+a Melamin	b Melanin	Wellenlaenge	ua H2O	Wellenlaenge	ua Fett	Wellenlaenge	ua HbO2	Wellenlaenge	ua Hb	Wellenlaenge	ua metHb	Wellenlaenge	ua COHb	Wellenlaenge	ua SHb	Wellenlaenge	ext Bilirubin	Wellenlaenge	ext Beta-Carotin	Wellenlaenge	g	Wellenlaenge	Chlorophyll A	Wellenlaenge	Xyz
 Faktor	Exponent	nm	cm-1	nm	cm-1	nm	cm-1	nm	cm-1	nm	cm-1	nm	cm-1	nm	cm-1	nm	Koeffizient	nm	Koeffizient	nm	Faktor	nm	cm-1*	nm	cm-1
 5.19E+02	-3.75	200	0.0307	429	0.0828	250	568.3161302	250	603.7930419	450	203.4093631	450	49.26690604	450	110.6188415	239.75	17201	219.75	860668	380	0.48	220	50.71428571	0	0
 		210	0.0199	430	0.08216	252	565.3168744	252	603.7930419	455	192.4661386	455	43.51512191	455	94.8448517	240	16068	220	866938	400	0.55	230	42.85714286	1000	0

@@ -38,7 +38,7 @@ particle = table.row
 # fill table
 for i in range(10):
     # particle['name']  = f'Pßarticle: {i:6d}'
-    particle['name'] = b'Pßarticle'
+    particle['name'] = b'Particle'
     particle['TDCcount'] = i % 256
     particle['ADCcount'] = (i * 256) % (1 << 16)
     particle['grid_i'] = i

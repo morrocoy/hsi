@@ -11,7 +11,7 @@ import logging
 from timeit import default_timer as timer
 import time
 import multiprocessing
-import pathos.multiprocessing as mp
+# import pathos.multiprocessing as mp
 
 from multiprocessing import Process, Pipe
 
@@ -30,65 +30,6 @@ from hsi.log import logmanager
 
 logger = logmanager.getLogger(__name__)
 
-
-# def task(patient, hsidata):
-#     """Example task applied on each entry.
-#
-#     Parameters
-#     ----------
-#     patient : pd.Series
-#         Metadata of the record.
-#     spectra :  numpy.ndarray
-#         The spectral data.
-#     wavelen :  numpy.ndarray
-#         The wavelengths at which the spectral data are sampled.
-#     masks :  numpy.ndarray
-#         Masks to be applied on the hyperspectral image.
-#
-#     Returns
-#     -------
-#     numpy.ndarray : Array of values for validation.
-#
-#     """
-#     hsformat = HSFormatFlag.fromStr(patient["hsformat"].decode())
-#
-#     print("%8d | %8d | %-20s | %-20s | %-10s | %3d |" % (
-#         patient["pn"],
-#         patient["pid"],
-#         patient["descr"].decode(),
-#         patient["timestamp"].decode(),
-#         hsformat.key,
-#         patient["target"]
-#     ))
-#
-#     # hsImage = HSImage(spectra=spectra, wavelen=wavelen, format=hsformat)
-#     hsImage = HSImage(spectra=hsidata["hsidata"], wavelen=hsidata["wavelen"], format=hsformat)
-#     image = hsImage.getRGBValue()
-#
-#     keys = [
-#         "tissue",
-#         "critical wound region",
-#         "wound region",
-#         "wound and proximity",
-#         "wound proximity"
-#     ]
-#     # masks = {key: val for (key, val) in zip(keys, masks)}
-#     masks = {key: val for (key, val) in zip(keys, hsidata["masks"])}
-#
-#     fileName = "PN_%03d_PID_%07d_Date_%s_Masks.jpg" % (
-#         patient["pn"], patient["pid"], patient["timestamp"].decode())
-#     plotMasks(fileName, image, masks)
-#
-#     analysis = HSTivita(format=HSIntensity)
-#     analysis.setData(hsImage.spectra, hsImage.wavelen, format=hsformat)
-#     analysis.evaluate(mask=masks["tissue"])
-#     param = analysis.getSolution(unpack=True, clip=True)
-#     # param = None
-#     fileName = "PN_%03d_PID_%07d_Date_%s_Tivita.jpg" % (
-#         patient["pn"], patient["pid"], patient["timestamp"].decode())
-#     plotParam(fileName, param)
-#
-#     return param
 
 
 def task(args):
@@ -112,8 +53,10 @@ def task(args):
     """
     patient = args[0]
     hsidata = args[1]
+    masks = args[2]
 
-    hsformat = HSFormatFlag.fromStr(patient["hsformat"].decode())
+    # hsformat = HSFormatFlag.fromStr(patient["hsformat"].decode())
+    hsformat = HSFormatFlag.fromStr(hsidata["hsformat"].decode())
 
     print("%8d | %8d | %-20s | %-20s | %-10s | %3d |" % (
         patient["pn"],
@@ -125,7 +68,7 @@ def task(args):
     ))
 
     # hsImage = HSImage(spectra=spectra, wavelen=wavelen, format=hsformat)
-    hsImage = HSImage(spectra=hsidata["hsidata"], wavelen=hsidata["wavelen"], format=hsformat)
+    hsImage = HSImage(spectra=hsidata["spectra"], wavelen=hsidata["wavelen"], format=hsformat)
     image = hsImage.getRGBValue()
 
     keys = [
@@ -135,9 +78,8 @@ def task(args):
         "wound and proximity",
         "wound proximity"
     ]
-    # masks = {key: val for (key, val) in zip(keys, masks)}
-    masks = {key: val for (key, val) in zip(keys, hsidata["masks"])}
 
+    masks = {name: masks[name] for name in masks.dtype.names}
     fileName = "PN_%03d_PID_%07d_Date_%s_Masks.jpg" % (
         patient["pn"], patient["pid"], patient["timestamp"].decode())
     # plotMasks(fileName, image, masks)
@@ -161,9 +103,16 @@ def main():
 
     start = timer()
 
-    fileName = "rostock_suedstadt_2018-2020_3.h5"
+    fileName = "rostock_suedstadt_2018-2020_4.h5"
     filePath = os.path.join(dirPaths['data'], fileName)
-    with HSDataset.open(filePath, mode="r") as dataset:
+    with HSDataset.open(filePath, mode="r", path="/records") as dataset:
+
+        dataset.attacheTable("patient")
+        dataset.attacheTable("hsimage")
+        dataset.attacheTable("masks")
+
+        print(dataset.getTableNames())
+        print(len(dataset))
 
         # serial evaluation
         # for entry in iter(dataset):

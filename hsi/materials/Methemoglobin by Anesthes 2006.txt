@@ -1,7 +1,7 @@
 Quelldaten aus Anesthes. 2006;105(5):892-897		
 Abgelesene Werte:		Skalierung mittels Grafik auf Basis 630nm Hb und 658nm Meth
 		
-Lambda in nm	Extinktionskoeff.in cm-1Mol-1)	µa [cm-1]
+Lambda in nm	Extinktionskoeff.in cm-1Mol-1)	a [cm-1]
 600	2,823499278	77,8608161
 604	2,685795594	74,06349929
 608	2,685795594	74,06349929

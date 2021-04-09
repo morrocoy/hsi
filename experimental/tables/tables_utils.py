@@ -16,9 +16,10 @@ from hsi import HSImage
 from hsi import genHash
 
 
-_rootPath = os.path.join("d:", os.sep, "projects", "hyperlimit", "amputation",
+# _rootPath = os.path.join("d:", os.sep, "projects", "hyperlimit", "amputation",
+#                          "data", "Rostock_Suedstadt_2018-2020")
+_rootPath = os.path.join(os.path.expanduser("~"), "projects", "hyperlimit", "amputation",
                          "data", "Rostock_Suedstadt_2018-2020")
-
 
 cmap = cm.tivita()
 

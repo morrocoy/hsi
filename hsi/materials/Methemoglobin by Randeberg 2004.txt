@@ -13,7 +13,7 @@
 % Original data source:
 %     L. Randeberg, J. Bonesronning, M. Dalaker, J. Nelson, L. Svaasand,
 %     Methemoglobin formation during laser induced photothermolysis of 
-%     vascular skin lesions. Lasers in Surgery and Medicine 34 (2004), 414–419.
+%     vascular skin lesions. Lasers in Surgery and Medicine 34 (2004), 414-419.
 % 
 %
 % ***********************************************************************

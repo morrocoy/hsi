@@ -5,9 +5,14 @@ Created on Wed Mar  3 12:53:04 2021
 @author: kpapke
 """
 import os.path
+import pathlib
+
 import re
+
 import numpy as np
+import numpy.lib.recfunctions as rfn
 import pandas as pd
+
 import h5py
 import tables
 
@@ -17,10 +22,10 @@ from ..misc import getPkgDir
 
 logger = logmanager.getLogger(__name__)
 
-__all__ = ['HSDataset']
+__all__ = ["HSDataset", "HSPatientInfo"]
 
 
-class PatientInfo(tables.IsDescription):
+class HSPatientInfo(tables.IsDescription):
     pn = tables.Int64Col()  # Signed 64-bit integer
     pid = tables.Int64Col()  # Signed 64-bit integer
     name = tables.StringCol(32)  # 32-byte character string (utf-8)
@@ -29,17 +34,17 @@ class PatientInfo(tables.IsDescription):
     hsformat = tables.StringCol(32)  # 32-byte character String (utf-8)
     target = tables.Int32Col()  # Signed 32-bit integer
 
-
 class HSImageData(tables.IsDescription):
-    wavelen = tables.Float64Col(shape=(100, ))  # array of 64-bit floats
-    spectra = tables.Float32Col(shape=(100, 480, 640))  # array of 32-bit floats
+    wavelen = tables.Float64Col(shape=(100,))  # array of 64-bit floats
+    spectra = tables.Float32Col(
+        shape=(100, 480, 640))  # array of 32-bit floats
     masks = tables.Int8Col(shape=(5, 480, 640))  # array of bytes
 
 
 class HSDataset:
     """Class to to iterate through the patient and hsidata tables"""
 
-    def __init__(self, fname, node="/records", mode="r"):
+    def __init__(self, fname, mode="r", path="/", descr=None):
         """Constructor.
 
         Parameters
@@ -52,10 +57,11 @@ class HSDataset:
         self.file = None  # file handle
         self.mode = mode  # opening mode
         self.owner = False  # ownership of the underlying file
-        self.node = node  # node in hdf5 file
+        self.path = path  # path within the hdf5 file
 
-        self.patientInfo = None
-        self.hsImageData = None
+        self.tables = {}  # dictionary of tables
+        # self.patientInfo = None
+        # self.hsImageData = None
 
         self._index = 0
 
@@ -64,22 +70,33 @@ class HSDataset:
         # self.targets = []
         self.targetNames = ["not healed", "healed"]
 
-        # underlying dataset file already open
-        if hasattr(fname, "read") and hasattr(fname, "mode"):
-            self.file = fname
-            self.mode = fname.mode
-            self.owner = False  # no ownership of the underlying file
 
         # open underlying dataset file
-        else:
+        if isinstance(fname, (str, pathlib.Path)):
             logger.debug("Open file object {} in mode {}.".format(fname, mode))
             self.file = tables.open_file(fname, mode)
             self.mode = mode
             self.owner = True  # has ownership of the underlying file
-            if self.mode in ("r", "rb"):
-                self.load()
-            elif self.mode in ("w", "wb"):
-                self.file.create_group(self.node)
+
+        # underlying dataset file already open
+        elif isinstance(fname, tables.file.File):
+            self.file = fname
+            self.mode = fname.mode
+            self.owner = False  # no ownership of the underlying file
+
+        else:
+            raise ValueError("Argument fname must be a file, filepath, or a"
+                             "generator to read or write")
+
+        # check whether internal path to dataset exists in read only mode
+        if self.mode in ("r", "rb") and not self.file.__contains__(self.path):
+            raise("Path {} to dataset does not exist.".format(self.path))
+
+        # create internal path for dataset if not available in any write mode
+        elif self.mode in ("w", "wb", "a", "r+"):
+            node = self.mkdir(self.path)
+            # description of dataset
+            node._v_attrs.descr = descr if descr is not None else ""
 
 
     def __enter__(self):
@@ -96,10 +113,9 @@ class HSDataset:
 
         # return column of tables if index equals a column name
         if isinstance(index, str):
-            if index in self.patientInfo.keys:
-                return self.patientInfo[index]
-            elif index in self.hsImageData.keys:
-                return self.hsImageData[index]
+            for table in self.tables.values():
+                if index in table.keys:
+                    return table[index]
             else:
                 raise KeyError("Key {} not found in dataset.".format(index))
 
@@ -116,8 +132,9 @@ class HSDataset:
 
 
     def __len__(self):
-        if isinstance(self.patientInfo, tables.Table):
-            return self.patientInfo.nrows
+        if len(self.tables):
+            table = next(iter(self.tables.values()))
+            return table.nrows
         else:
             return 0
 
@@ -130,37 +147,51 @@ class HSDataset:
         raise StopIteration  # end of Iteration
 
 
-    def append(self, info, spectra, wavelen, masks, results=None):
-        if self.mode in ("w", "wb"):
-            patientInfo = self.patientInfo.row  # get a pointer to the Row
-            hsImageData = self.hsImageData.row
+    def attacheTable(self, name):
+        if self.file is None or self.mode in ("w", "wb"):
+            return None
 
-            patientInfo["pn"] = info["pn"]  # i f'Particle: {i:6d}'
-            patientInfo["pid"] = info["pid"]
-            patientInfo["name"] = str.encode("")
-            patientInfo["descr"] = str.encode(info["descr"])
-            patientInfo["timestamp"] = str.encode(info["timestamp"])
-            patientInfo["hsformat"] = str.encode(info["hsformat"])
-            patientInfo["target"] = info["target"]
-            patientInfo.append()  # writes record to the table I/O buffer
+        keys = [node.name for node in self.file.iter_nodes(
+            self.path, classname='Table')]
+        if name in keys:
+            table = self.file.get_node(self.path + "/" + name)
+            self.tables[name] = table
+            return table
+        else:
+            logger.debug("Table {} not found.".format(name))
+            return None
 
-            hsImageData["spectra"] = spectra.astype(np.float32)  # float32
-            hsImageData["wavelen"] = wavelen.astype(np.float64)  # float64
-            hsImageData["masks"] = masks.astype(np.int8)  # signed byte,
-            hsImageData.append()  # writes record to the table I/O buffer
 
-            # flush the table’s I/O buffer to write all this data to disk
-            self.patientInfo.flush()
-            self.hsImageData.flush()
+    # def append(self, info, spectra, wavelen, masks, results=None):
+    #     if self.mode in ("w", "wb"):
+    #         patientInfo = self.patientInfo.row  # get a pointer to the Row
+    #         hsImageData = self.hsImageData.row
+    #
+    #         patientInfo["pn"] = info["pn"]  # i f'Particle: {i:6d}'
+    #         patientInfo["pid"] = info["pid"]
+    #         patientInfo["name"] = str.encode("")
+    #         patientInfo["descr"] = str.encode(info["descr"])
+    #         patientInfo["timestamp"] = str.encode(info["timestamp"])
+    #         patientInfo["hsformat"] = str.encode(info["hsformat"])
+    #         patientInfo["target"] = info["target"]
+    #         patientInfo.append()  # writes record to the table I/O buffer
+    #
+    #         hsImageData["spectra"] = spectra.astype(np.float32)  # float32
+    #         hsImageData["wavelen"] = wavelen.astype(np.float64)  # float64
+    #         hsImageData["masks"] = masks.astype(np.int8)  # signed byte,
+    #         hsImageData.append()  # writes record to the table I/O buffer
+    #
+    #         # flush the table’s I/O buffer to write all this data to disk
+    #         self.patientInfo.flush()
+    #         self.hsImageData.flush()
 
 
     def clear(self):
         """Clear any loaded data. """
         logger.debug("Clear head.")
-        self.filePath = None
+
         self.descr = None
-        # self.metadata = None
-        # self.groups.clear()
+        self.tables.clear()
 
 
     def close(self):
@@ -171,52 +202,96 @@ class HSDataset:
         self.clear()
 
 
-    def initTables(self, node="/records", descr=None, expectedrows=None):
-        if self.file is None and self.mode in ("w", "wb"):
-            h5file = tables.open_file(self.filePath, mode="w")
+    def createTable(self, name, dtype, title=None, expectedrows=None,
+                    chunkshape=None):
+        if self.file is None or self.mode in ("r", "rb"):
+            return None
 
-            # Create a new group
-            group = h5file.create_group("/", "records")
-            group._v_attrs.descr = descr  # description of dataset
-
-            # Creating a new table
-            self.patientInfo = h5file.create_table(
-                group,
-                name="patient",
-                description=PatientInfo,
-                title="Patient information",
-                # chunkshape=None,
-            )
-
-            self.hsImageData = h5file.create_table(
-                group,
-                name="hsidata",
-                description=HSImageData,
-                title="Hyperspectral image data",
-                expectedrows=expectedrows,
-                # chunkshape=None,
-            )
-
-            self.file = h5file
+        table = self.file.create_table(
+            self.path, name=name, description=dtype, title=title,
+            expectedrows=expectedrows, chunkshape=chunkshape,
+        )
+        self.tables[name] = table
+        return table
 
 
-    def load(self):
-        self.patientInfo = self.file.get_node(self.node + "/patient")
-        self.hsImageData = self.file.get_node(self.node + "/hsidata")
+    def detachTable(self, name):
+        if name in self.tables.keys():
+            self.tables.pop(name)
+
+
+    def getTable(self, name):
+        return self.tables.get(name, None)
+
+
+    def getTableNames(self):
+        return self.tables.keys()
+
+
+    # def initTables(self, node="/records", descr=None, expectedrows=None):
+    #     if self.file is None and self.mode in ("w", "wb"):
+    #         h5file = tables.open_file(self.filePath, mode="w")
+    #
+    #         # Create a new group
+    #         group = h5file.create_group("/", "records")
+    #         group._v_attrs.descr = descr  # description of dataset
+    #
+    #         # Creating a new table
+    #         self.patientInfo = h5file.create_table(
+    #             group,
+    #             name="patient",
+    #             description=PatientInfo,
+    #             title="Patient information",
+    #             # chunkshape=None,
+    #         )
+    #
+    #         self.hsImageData = h5file.create_table(
+    #             group,
+    #             name="hsidata",
+    #             description=HSImageData,
+    #             title="Hyperspectral image data",
+    #             expectedrows=expectedrows,
+    #             # chunkshape=None,
+    #         )
+    #
+    #         self.file = h5file
+
+
+    # def load(self):
+    #     self.patientInfo = self.file.get_node(self.path + "/patient")
+    #     self.hsImageData = self.file.get_node(self.path + "/hsidata")
+
+
+    def mkdir(self, path, createparents=True):
+        if not self.file.__contains__(path):
+            parent, nodename = path.rsplit("/", 1)
+            if parent == "":
+                parent = "/"
+            node = self.file.create_group(
+                parent, nodename, createparents=createparents)
+
+            return node
+        else:
+            return None
 
 
     def select(self, index):
         """Retrieve information and hyperspectral image data of a patient.
         """
         if index < self.__len__():
-            return (
-                self.patientInfo[index], self.hsImageData[index])
+            return [table[index] for table in self.tables.values()]
+
+            # return (
+            #     self.patientInfo[index], self.hsImageData[index])
+            # return rfn.merge_arrays(
+            #     [self.patientInfo[index], self.hsImageData[index]],
+            #     flatten = True, usemask = False)[0]
         else:
             raise Exception("Index Error: {}.".format(index))
 
 
     @staticmethod
-    def open(filePath, node="/records", mode='r'):
+    def open(filePath, mode='r', path="/records", descr=None):
         """ Creates a new mch File object and reads metadata, leaving the file
         open to allow reading data chunks
 
@@ -227,7 +302,7 @@ class HSDataset:
         mode : str, optional
             The mode in which the file is opened. Default is 'r'.
         """
-        return HSDataset(filePath, node=node, mode=mode)
+        return HSDataset(filePath, mode=mode, path=path, descr=descr)
 
 
 

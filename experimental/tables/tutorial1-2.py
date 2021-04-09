@@ -27,6 +27,7 @@ for group in h5file.walk_groups(where="/"):  # / - root tree
 # print all arrays in the tree by walking through nodes (classname filter)
 for array in h5file.walk_nodes(where="/", classname="Array"):
     print(array)
+        
 
 # access table object through the standard attribute attrs in Leaf nodes
 table = h5file.root.detector.readout
