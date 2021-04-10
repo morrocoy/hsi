@@ -82,7 +82,7 @@ def task(args):
     masks = {name: masks[name] for name in masks.dtype.names}
     fileName = "PN_%03d_PID_%07d_Date_%s_Masks.jpg" % (
         patient["pn"], patient["pid"], patient["timestamp"].decode())
-    # plotMasks(fileName, image, masks)
+    plotMasks(fileName, image, masks)
 
     analysis = HSTivita(format=HSIntensity)
     analysis.setData(hsImage.spectra, hsImage.wavelen, format=hsformat)
@@ -91,7 +91,7 @@ def task(args):
     # param = None
     fileName = "PN_%03d_PID_%07d_Date_%s_Tivita.jpg" % (
         patient["pn"], patient["pid"], patient["timestamp"].decode())
-    # plotParam(fileName, param)
+    plotParam(fileName, param)
 
     return param
 

@@ -2,7 +2,7 @@
 """
 Created on Mon Feb  1 07:55:39 2021
 
-@author: papkai
+@author: kpapke
 """
 import os.path
 import re

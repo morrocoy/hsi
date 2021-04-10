@@ -2,7 +2,7 @@
 """
 Created on Wed Oct 21 10:05:42 2020
 
-@author: papkai
+@author: kpapke
 """
 import os
 import numpy as np
@@ -33,12 +33,12 @@ class HSImage:
     Attributes
     ----------
     format :  :obj:`HSFormatFlag<hsi.HSFormatFlag>`, optional
-            The output format for the hyperspectral data. Should be one of:
+        The output format for the hyperspectral data. Should be one of:
 
-                - :class:`HSIntensity<hsi.HSIntensity>`
-                - :class:`HSAbsorption<hsi.HSAbsorption>`
-                - :class:`HSExtinction<hsi.HSExtinction>`
-                - :class:`HSRefraction<hsi.HSRefraction>`
+            - :class:`HSIntensity<hsi.HSIntensity>`
+            - :class:`HSAbsorption<hsi.HSAbsorption>`
+            - :class:`HSExtinction<hsi.HSExtinction>`
+            - :class:`HSRefraction<hsi.HSRefraction>`
 
     spectra :  numpy.ndarray
         The hyperspectral image in raw data format.
@@ -336,7 +336,7 @@ class HSImage:
     def load(self, filePath, rotation=True, ndim=3, dtype=np.float32):
         """Load data cube from binary file.
 
-        Note: wavelength information not included in *.dat files. It is fixed
+        Note: wavelength information not included in files. It is fixed
         to the range: 500, 505, ..., 955 nm.
 
         Parameters

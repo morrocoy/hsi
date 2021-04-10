@@ -61,6 +61,8 @@ def main():
 
     fileName = "rostock_suedstadt_2018-2020_4.h5"
     filePath = os.path.join(dirPaths['data'], fileName)
+
+    print(filePath)
     with HSDataset.open(
             filePath, mode="w", path="/records", descr=__doc__) as dataset:
         rows = len(patientData.index)
