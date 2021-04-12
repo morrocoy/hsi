@@ -13,7 +13,7 @@ import hashlib
 import numpy as np
 
 import hsi
-from hsi import HSDataset, genHash
+from hsi import HSStore, genHash
 from hsi import HSIntensity, HSAbsorption, HSRefraction
 from hsi.log import logmanager
 
@@ -68,7 +68,7 @@ def main():
     # fileName = "rostock_suedstadt_2018-2020_zip"
     filePath = os.path.join(data_path, fileName+".h5")
 
-    with HSDataset(filePath) as dataset:
+    with HSStore(filePath) as dataset:
         print(dataset.descr)
         print("\nFound %d groups in File" % len(dataset.groups))
         print("---------------------------------")

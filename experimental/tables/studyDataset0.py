@@ -17,7 +17,7 @@ import h5py
 import matplotlib.pyplot as plt
 
 import hsi
-from hsi import HSDataset, genHash, HSImage
+from hsi import HSStore, genHash, HSImage
 
 from tables_utils import getDirPaths, plotMasks, plotParam
 
@@ -74,7 +74,7 @@ def task(patient, hsidata, wavelen, mask):
 
     fileName = "PN_%03d_PID_%07d_Date_%s_Masks.jpg" % (
         patient["pn"], patient["pid"], patient["timestamp"])
-    plotMasks(fileName, image, mask)
+    plotMasks(fileName, mask, image)
 
     # analysis ................................................................
     analysis = HSTivita(format=HSIntensity)

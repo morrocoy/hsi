@@ -57,7 +57,7 @@ def task(patient):
 
     fileName = "PN_%03d_PID_%07d_Date_%s_Masks.jpg" % (
         patient["pn"], patient["pid"], patient["timestamp"])
-    plotMasks(fileName, image, mask)
+    plotMasks(fileName, mask, image)
 
     analysis = HSTivita(format=HSIntensity)
     analysis.setData(hsImage.spectra, hsImage.wavelen, format=hsformat)

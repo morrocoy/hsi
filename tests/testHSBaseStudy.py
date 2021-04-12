@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import hsi
-from hsi import HSDataset, HSImage
+from hsi import HSStore, HSImage
 from hsi import cm, HSFormatFlag, HSIntensity
 from hsi.analysis import HSBaseStudy
 from hsi.log import logmanager
@@ -37,7 +37,7 @@ def main():
 
 
     # load dataset
-    with HSDataset(filepath) as dataset:
+    with HSStore(filepath) as dataset:
         print(dataset.descr)
         print("\nFound %d of %d groups in File" % (
             len(dataset.groups), len(dataset)))

@@ -38,7 +38,7 @@ from timeit import default_timer as timer
 
 from tables_utils import getDirPaths, loadPatientData, loadHSData
 import hsi
-from hsi import HSIntensity, HSDataset
+from hsi import HSIntensity, HSStore
 from hsi.log import logmanager
 
 logger = logmanager.getLogger(__name__)
@@ -60,7 +60,7 @@ def main():
 
     fileName = "rostock_suedstadt_2018-2020_3.h5"
     filePath = os.path.join(dirPaths['data'], fileName)
-    with HSDataset.open(filePath, mode="w") as dataset:
+    with HSStore.open(filePath, mode="w") as dataset:
         npatient = len(patientData.index)
         dataset.initTables("/records", descr=__doc__, expectedrows=npatient)
 

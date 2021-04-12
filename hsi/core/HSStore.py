@@ -22,17 +22,16 @@ from ..misc import getPkgDir
 
 logger = logmanager.getLogger(__name__)
 
-__all__ = ["HSDataset", "HSPatientInfo"]
+__all__ = ["HSStore", "HSPatientInfo"]
 
 
-class HSPatientInfo(tables.IsDescription):
-    pn = tables.Int64Col()  # Signed 64-bit integer
-    pid = tables.Int64Col()  # Signed 64-bit integer
-    name = tables.StringCol(32)  # 32-byte character string (utf-8)
-    descr = tables.StringCol(64)  # 64-byte character String (utf-8)
-    timestamp = tables.StringCol(32)  # 32-byte character String (utf-8)
-    hsformat = tables.StringCol(32)  # 32-byte character String (utf-8)
-    target = tables.Int32Col()  # Signed 32-bit integer
+# class HSPatientInfo(tables.IsDescription):
+#     pn = tables.Int64Col()  # Signed 64-bit integer
+#     pid = tables.Int64Col()  # Signed 64-bit integer
+#     name = tables.StringCol(32)  # 32-byte character string (utf-8)
+#     descr = tables.StringCol(64)  # 64-byte character String (utf-8)
+#     timestamp = tables.StringCol(32)  # 32-byte character String (utf-8)
+#     target = tables.Int32Col()  # Signed 32-bit integer
 
 class HSImageData(tables.IsDescription):
     wavelen = tables.Float64Col(shape=(100,))  # array of 64-bit floats
@@ -41,7 +40,17 @@ class HSImageData(tables.IsDescription):
     masks = tables.Int8Col(shape=(5, 480, 640))  # array of bytes
 
 
-class HSDataset:
+HSPatientInfo = np.dtype([
+    ('pn', '<i8'),
+    ('pid', '<i8'),
+    ('name', 'S32'),
+    ('descr', 'S64'),
+    ('timestamp', 'S32'),
+    ('target', '<i4'),
+])
+
+
+class HSStore:
     """Class to to iterate through the patient and hsidata tables"""
 
     def __init__(self, fname, mode="r", path="/", descr=None):
@@ -96,7 +105,8 @@ class HSDataset:
         elif self.mode in ("w", "wb", "a", "r+"):
             node = self.mkdir(self.path)
             # description of dataset
-            node._v_attrs.descr = descr if descr is not None else ""
+            if descr is not None:
+                node._v_attrs.descr = descr
 
 
     def __enter__(self):
@@ -160,6 +170,20 @@ class HSDataset:
         else:
             logger.debug("Table {} not found.".format(name))
             return None
+
+    def removeTable(self, name):
+        if self.file is None or self.mode in ("r", "rb"):
+            logger.debug(f"Cannot remove table {name} due to read only mode.")
+            return
+
+        keys = [node.name for node in self.file.iter_nodes(
+            self.path, classname='Table')]
+        if name in keys:
+            table = self.file.get_node(self.path + "/" + name)
+            table.remove()
+        else:
+            logger.debug("Table {} not found.".format(name))
+
 
 
     # def append(self, info, spectra, wavelen, masks, results=None):
@@ -271,8 +295,9 @@ class HSDataset:
                 parent, nodename, createparents=createparents)
 
             return node
+
         else:
-            return None
+            return self.file.get_node(path)
 
 
     def select(self, index):
@@ -302,7 +327,7 @@ class HSDataset:
         mode : str, optional
             The mode in which the file is opened. Default is 'r'.
         """
-        return HSDataset(filePath, mode=mode, path=path, descr=descr)
+        return HSStore(filePath, mode=mode, path=path, descr=descr)
 
 
 

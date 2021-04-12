@@ -18,7 +18,7 @@ from ..log import logmanager
 from ..misc import genHash, getPkgDir
 
 from ..core.formats import HSFormatFlag, HSFormatDefault, convert
-from ..core.HSDataset import HSDataset
+from ..core.HSStore import HSStore
 from ..core.HSImage import HSImage
 from ..core.cm import cm
 
@@ -227,7 +227,7 @@ class HSBaseStudy(object):
 
 
     def run(self, dataset, ):
-        if not isinstance(dataset, HSDataset):
+        if not isinstance(dataset, HSStore):
             return
 
         self.mkdirFor(dataset.filePath)

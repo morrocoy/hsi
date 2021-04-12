@@ -23,7 +23,7 @@ import tables
 from tables_utils import getDirPaths, plotMasks, plotParam
 
 import hsi
-from hsi import HSDataset
+from hsi import HSStore
 from hsi import HSImage, HSIntensity, HSAbsorption, HSFormatFlag
 from hsi.analysis import HSTivita
 from hsi.log import logmanager
@@ -77,7 +77,7 @@ logger = logmanager.getLogger(__name__)
 #
 #     fileName = "PN_%03d_PID_%07d_Date_%s_Masks.jpg" % (
 #         patient["pn"], patient["pid"], patient["timestamp"].decode())
-#     plotMasks(fileName, image, masks)
+#     plotMasks(fileName, masks, image)
 #
 #     analysis = HSTivita(format=HSIntensity)
 #     analysis.setData(hsImage.spectra, hsImage.wavelen, format=hsformat)
@@ -163,7 +163,7 @@ def main():
 
     fileName = "rostock_suedstadt_2018-2020_3.h5"
     filePath = os.path.join(dirPaths['data'], fileName)
-    with HSDataset.open(filePath, mode="r") as dataset:
+    with HSStore.open(filePath, mode="r") as dataset:
 
         # serial evaluation
         # for entry in iter(dataset):

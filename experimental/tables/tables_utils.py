@@ -4,6 +4,7 @@ Created on Tue Mar 30 10:38:20 2021
 
 @author: kpapke
 """
+import sys
 import os.path
 from timeit import default_timer as timer
 
@@ -15,11 +16,17 @@ from hsi import cm, HSIntensity, HSAbsorption
 from hsi import HSImage
 from hsi import genHash
 
+# windows system
+if sys.platform == "win32":
+    _rootPath = os.path.join(
+        "d:", os.sep, "projects", "hyperlimit", "amputation",
+        "data", "Rostock_Suedstadt_2018-2020")
 
-# _rootPath = os.path.join("d:", os.sep, "projects", "hyperlimit", "amputation",
-#                          "data", "Rostock_Suedstadt_2018-2020")
-_rootPath = os.path.join(os.path.expanduser("~"), "projects", "hyperlimit", "amputation",
-                         "data", "Rostock_Suedstadt_2018-2020")
+# linux system
+else:
+    _rootPath = os.path.join(
+        os.path.expanduser("~"), "projects", "hyperlimit", "amputation",
+        "data", "Rostock_Suedstadt_2018-2020")
 
 cmap = cm.tivita()
 
@@ -123,7 +130,7 @@ def loadPatientData(filePath, sheet_name=0, columns=None,
     return df
 
 
-def plotMasks(fileName, image, masks):
+def plotMasks(fileName, masks, image=None):
     """Create masked plots of the original rgb image.
 
     Parameters
@@ -141,21 +148,36 @@ def plotMasks(fileName, image, masks):
     d, m =  divmod(len(masks), 2)
     cols = d
     rows = d + m
-    for i, (label, mask) in enumerate(masks.items()):
-        mimage = image.copy()
-        red = mimage[:, :, 0]
-        green = mimage[:, :, 1]
-        blue = mimage[:, :, 2]
 
-        idx = np.nonzero(mask == 0)  # gray out region out of mask
-        gray = 0.2989 * red[idx] + 0.5870 * green[idx] + 0.1140 * blue[idx]
-        red[idx] = gray
-        green[idx] = gray
-        blue[idx] = gray
+    if isinstance(masks, dict):
+        keys = masks.keys()
+    elif isinstance(masks, np.void):
+        keys = masks.dtype.names
+    else:
+        raise ValueError("Mask must be either dict or numpy.void")
 
-        ax = fig.add_subplot(cols, rows, i+1)
-        plt.imshow(mimage)
-        ax.set_title(label)
+    if image is None:
+        for i, key in enumerate(keys):
+            ax = fig.add_subplot(cols, rows, i + 1)
+            plt.imshow(masks[key], cmap="gray", vmin=0, vmax=1)
+            ax.set_title(key)
+
+    else:
+        for i, key in enumerate(keys):
+            mimage = image.copy()
+            red = mimage[:, :, 0]
+            green = mimage[:, :, 1]
+            blue = mimage[:, :, 2]
+
+            idx = np.nonzero(masks[key] == 0)  # gray out region out of mask
+            gray = 0.2989 * red[idx] + 0.5870 * green[idx] + 0.1140 * blue[idx]
+            red[idx] = gray
+            green[idx] = gray
+            blue[idx] = gray
+
+            ax = fig.add_subplot(cols, rows, i+1)
+            plt.imshow(mimage)
+            ax.set_title(key)
 
     ext = fileName[fileName.rfind('.')+1:]
     filepath = os.path.join(_rootPath, "pictures", fileName)
@@ -176,16 +198,23 @@ def plotParam(fileName, param):
     param :  dict
         A dictionarry of the parameter arrays.
     """
+    if isinstance(param, dict):
+        keys = param.keys()
+    elif isinstance(param, np.void):
+        keys = param.dtype.names
+    else:
+        raise ValueError("Mask must be either dict or numpy.void")
+
     fig = plt.figure()
     fig.set_size_inches(10, 8)
 
     d, m =  divmod(len(param), 2)
     cols = d
     rows = d + m
-    for i, (key, val) in enumerate(param.items()):
+    for i, key in enumerate(keys):
         ax = fig.add_subplot(cols, rows, i + 1)
 
-        pos = plt.imshow(val, cmap=cmap, vmin=0, vmax=1)
+        pos = plt.imshow(param[key], cmap=cmap, vmin=0, vmax=1)
         fig.colorbar(pos, ax=ax)
         ax.set_title(key)
 

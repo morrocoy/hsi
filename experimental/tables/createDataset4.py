@@ -38,7 +38,7 @@ import numpy as np
 
 from tables_utils import getDirPaths, loadPatientData, loadHSData
 import hsi
-from hsi import HSIntensity, HSDataset, HSPatientInfo
+from hsi import HSIntensity, HSStore, HSPatientInfo
 from hsi.log import logmanager
 
 
@@ -60,10 +60,11 @@ def main():
     start = timer()
 
     fileName = "rostock_suedstadt_2018-2020_4.h5"
+    # fileName = "rostock_suedstadt_2018-2020_4_test.h5"
     filePath = os.path.join(dirPaths['data'], fileName)
 
     print(filePath)
-    with HSDataset.open(
+    with HSStore.open(
             filePath, mode="w", path="/records", descr=__doc__) as dataset:
         rows = len(patientData.index)
 
@@ -128,7 +129,7 @@ def main():
             entryMasks["tissue"] = masks[0].astype("<i1")
             entryMasks["critical"] = masks[1].astype("<i1")
             entryMasks["wound"] = masks[2].astype("<i1")
-            entryMasks["proximity"] = masks[3].astype("<i1")
+            entryMasks["proximity"] = masks[4].astype("<i1")
             entryMasks.append()
 
         tablePatient.flush()
