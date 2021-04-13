@@ -171,6 +171,7 @@ class HSStore:
             logger.debug("Table {} not found.".format(name))
             return None
 
+
     def removeTable(self, name):
         if self.file is None or self.mode in ("r", "rb"):
             logger.debug(f"Cannot remove table {name} due to read only mode.")
@@ -231,6 +232,7 @@ class HSStore:
         if self.file is None or self.mode in ("r", "rb"):
             return None
 
+        self.removeTable(name)  # remove table if already defined
         table = self.file.create_table(
             self.path, name=name, description=dtype, title=title,
             expectedrows=expectedrows, chunkshape=chunkshape,

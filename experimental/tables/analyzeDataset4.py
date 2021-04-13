@@ -130,16 +130,16 @@ def main():
                 # features[key][i] = np.mean(values)
                 features[key][i] = np.percentile(values, q=50)
 
-        print(patients)
-        print(features)
+    print(patients)
+    print(features)
 
-        keys1 = ["oxy", "oxy", "oxy"]
-        keys2 = ["nir", "thi", "twi"]
-        target = patients["target"]
+    keys1 = ["oxy", "oxy", "oxy"]
+    keys2 = ["nir", "thi", "twi"]
+    target = patients["target"]
 
-        filePath = os.path.join(dirPaths["pictures"], "%s_Study_%s_mean.png" % (
-        dataset, study))
-        plotMultipleXY(filePath, features, target, keys1, keys2)
+    filePath = os.path.join(dirPaths["pictures"], "%s_Study_%s_mean.png" % (
+    dataset, study))
+    plotMultipleXY(filePath, features, target, keys1, keys2)
 
 
     print("\nElapsed time: %f sec" % (timer() - start))

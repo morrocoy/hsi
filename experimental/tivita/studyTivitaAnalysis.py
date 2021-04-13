@@ -25,8 +25,8 @@ logger = logmanager.getLogger(__name__)
 
 def main():
 
-    data_path = os.path.join(os.getcwd(), "..", "data")
-    pict_path = os.path.join(os.getcwd(), "..", "pictures")
+    data_path = os.path.join(os.getcwd(), "..", "..", "data")
+    pict_path = os.path.join(os.getcwd(), "..", "..", "pictures")
 
     # load spectra from file .................................................
     with HSComponentFile("basevectors_1.txt") as file:

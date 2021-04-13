@@ -95,7 +95,7 @@ def testComponents():
 
         filePath = os.path.join(
             pict_path, "test_tissue_compound_%s" % key)
-        plt.savefig(filePath + ".%s" % fig_options['format'], **fig_options)
+        # plt.savefig(filePath + ".%s" % fig_options['format'], **fig_options)
         plt.show()
         plt.close(fig)
 
@@ -153,7 +153,7 @@ def testCompound(fileName):
         ax.set_ylabel("residual")
 
         filePath = os.path.join(pict_path, "%s_%s" % (fileName[:icut], key))
-        plt.savefig(filePath + ".%s" % fig_options['format'], **fig_options)
+        # plt.savefig(filePath + ".%s" % fig_options['format'], **fig_options)
         plt.show()
         plt.close(fig)
 

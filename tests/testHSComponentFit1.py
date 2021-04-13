@@ -44,18 +44,26 @@ def main():
 
 
     # plot normalized basis spectra ..........................................
+    corr = 0.408
+
     fig = plt.figure()
+    fig.set_size_inches(6, 5)
     ax = fig.add_subplot(1, 1, 1)
 
     for key, vec in tissue.baseVectors.items():
-        ax.plot(vec.xIntpData*1e9, vec.yIntpData, label=vec.label,
-                marker='s', markersize=3, markeredgewidth=0.3,
-                markerfacecolor='none', markevery=5)
+        ax.plot(vec.xIntpData*1e9, vec.yIntpData, marker='s', markersize=3,
+                markeredgewidth=0.3, markerfacecolor='none', markevery=5,
+                label="%s (%g%%)" % (vec.label, vec.weight*100)
+        )
 
     ax.set_xlabel("wavelength [nm]")
-    ax.set_ylabel("rel absorbtion")
+    ax.set_ylabel("absorption [-lg(%.3f remission)]" % corr)
     ax.legend()
+
+    plt.savefig(os.path.join(pict_path, "BaseSpectra.png"),
+                format="png", dpi=300)
     plt.show()
+
 
 
     # modify constraints .....................................................
