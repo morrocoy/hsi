@@ -15,5 +15,6 @@ Contents:
     hsimage
     hsfile
     hscomponentfile
+    hsstore
 
 

@@ -106,13 +106,19 @@ autodoc_mock_imports = [
 ]
 
 # Specifying targets for intersphinx
-intersphinx_mapping = {
-    'python': ('http://docs.python.org/2', None),
-    'numpy': ('http://docs.scipy.org/doc/numpy', None),
-    # 'numpy': ('https://numpy.org/doc/stable/reference', None),
-    'scipy': ('http://docs.scipy.org/doc/scipy/reference', None),
-    'matplotlib': ('http://matplotlib.sourceforge.net', None),
-}
+intersphinx_mapping = dict(
+    matplotlib=('https://matplotlib.org/', None),
+    # matplotlib=('http://matplotlib.sourceforge.net', None),
+    numpy=('https://docs.scipy.org/doc/numpy/', None),
+    # numpy=('https://numpy.org/doc/stable/reference', None),
+    pandas=('http://pandas.pydata.org/pandas-docs/stable/', None),
+    python=('https://docs.python.org/3', None),
+    scipy=('https://docs.scipy.org/doc/scipy/reference/', None),
+    sklearn=('https://scikit-learn.org/stable/', None),
+    # tables=('https://pytables.readthedocs.io/en/stable/', None),
+    # tables=('https://www.pytables.org/usersguide/libref', None),
+
+)
 
 
 # -- Options for HTML output -------------------------------------------------

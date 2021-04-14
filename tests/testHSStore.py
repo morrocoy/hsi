@@ -43,7 +43,7 @@ import matplotlib.pyplot as plt
 
 import hsi
 from hsi import HSImage, HSFormatFlag, HSIntensity, HSAbsorption
-from hsi import HSStore, HSPatientInfo
+from hsi import HSStore
 from hsi.analysis import HSTivita, HSOpenTivita
 from hsi.log import logmanager
 
@@ -51,6 +51,17 @@ logger = logmanager.getLogger(__name__)
 
 data_path = os.path.join(os.getcwd(), "..", "data")
 pict_path = os.path.join(os.getcwd(), "..", "pictures")
+
+# define columns for the patient info table
+HSPatientInfo = np.dtype([
+    ("pn", '<i8'),
+    ("pid", '<i8'),
+    ("name", 'S32'),
+    ("descr", 'S64'),
+    ("timestamp", 'S32'),
+    ("target", '<i4'),
+])
+
 
 def createDataset(fileName, path, descr=None):
 
