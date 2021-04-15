@@ -485,12 +485,12 @@ class HSStore:
             A flag to automatically create the parent directories.
         """
         if not self.file.__contains__(path):
-            parent, nodename = path.rsplit("/", 1)
+            parent, node_name = path.rsplit("/", 1)
             if parent == "":
                 parent = "/"
-            logger.debug(f"Create node {nodename} in {parent}.")
+            logger.debug(f"Create node {node_name} in {parent}.")
             node = self.file.create_group(
-                parent, nodename, createparents=createparents)
+                parent, node_name, createparents=createparents)
 
             return node
 

@@ -93,6 +93,8 @@ from .core.HSComponent import HSComponent
 from .core.HSFile import HSFile
 from .core.HSComponentFile import HSComponentFile
 from .core.HSStore import HSStore, HSPatientInfo
+from .core.HSTivitaStore import HSTivitaStore
+
 
 # tissues
 from .tissue.HSTissueComponent import HSTissueComponent
@@ -110,7 +112,7 @@ __all__ = [
     # hyperspectral data representation
     "HSImage", "HSComponent",
     # File IO
-    "HSFile", "HSComponentFile", "HSStore", "HSPatientInfo",
+    "HSFile", "HSComponentFile", "HSStore", "HSTivitaStore", "HSPatientInfo",
     # tissues
     "HSTissueComponent", "HSTissueCompound",
     # miscellaneous
