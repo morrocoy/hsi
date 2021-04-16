@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 # from tables_utils import getDirPaths, loadPatientData, loadHSData
 import hsi
-from hsi import HSIntensity, HSTivitaStore
+from hsi import HSFormatFlag, HSIntensity, HSImage, HSTivitaStore
 from hsi.log import logmanager
 
 
@@ -40,16 +40,64 @@ def getDirPaths():
         'results': os.path.join(_rootPath, "results"),
     }
 
-# define columns for the patient info table
-HSPatientInfo = np.dtype([
-    ("pn", '<i8'),
-    ("pid", '<i8'),
-    ("name", 'S32'),
-    ("descr", 'S64'),
-    ("timestamp", 'S32'),
-    ("target", '<i4'),
-    # ("path", 'S32'),
-])
+
+
+def plotMasks(fileName, masks, image=None):
+    """Create masked plots of the original rgb image.
+
+    Parameters
+    ----------
+    filepath : str,
+        The full path to the output file.
+    image : np.ndarray
+        The rgb image.
+    mask :  dict
+        A dictionarry of the mask arrays.
+    """
+    fig = plt.figure()
+    fig.set_size_inches(10, 8)
+
+    d, m =  divmod(len(masks), 2)
+    cols = d
+    rows = d + m
+
+    if isinstance(masks, dict):
+        keys = masks.keys()
+    elif isinstance(masks, np.void):
+        keys = masks.dtype.names
+    else:
+        raise ValueError("Mask must be either dict or numpy.void")
+
+    if image is None:
+        for i, key in enumerate(keys):
+            ax = fig.add_subplot(cols, rows, i + 1)
+            plt.imshow(masks[key], cmap="gray", vmin=0, vmax=1)
+            ax.set_title(key)
+
+    else:
+        for i, key in enumerate(keys):
+            mimage = image.copy()
+            red = mimage[:, :, 0]
+            green = mimage[:, :, 1]
+            blue = mimage[:, :, 2]
+
+            idx = np.nonzero(masks[key] == 0)  # gray out region out of mask
+            gray = 0.2989 * red[idx] + 0.5870 * green[idx] + 0.1140 * blue[idx]
+            red[idx] = gray
+            green[idx] = gray
+            blue[idx] = gray
+
+            ax = fig.add_subplot(cols, rows, i+1)
+            plt.imshow(mimage)
+            ax.set_title(key)
+
+    ext = fileName[fileName.rfind('.')+1:]
+    filepath = os.path.join(_rootPath, "pictures", fileName)
+
+    fig.savefig(filepath, format=ext)
+    # plt.show()
+    plt.close()
+
 
 
 logger = logmanager.getLogger(__name__)
@@ -57,57 +105,75 @@ logger = logmanager.getLogger(__name__)
 dirPaths = getDirPaths()
 
 
-# def main():
+def main():
+    infile = "rostock_suedstadt_2018-2020.xlsx"
+    outfile = "rostock_suedstadt_2018-2020.h5"
 
-# fileName = "181022_rostock_suedstadt.xlsx"
-# filePath = os.path.join(data_path, fileName)
+    # define columns for the patient info table
+    HSPatientInfo = np.dtype([
+        ("pn", '<i8'),
+        ("pid", '<i8'),
+        ("name", 'S32'),
+        ("descr", 'S64'),
+        ("timestamp", 'S32'),
+        ("target", '<i4'),
+        # ("path", 'S32'),
+    ])
 
-# load metadata
-# fileName = "181022_Resektionsgrenze_Südstadt_Auswertung_27.10.2020.xlsx"
-# filePath = os.path.join(dirPaths['results'], fileName)
-# project = "rostock"
-# hsformat = HSIntensity
-#
-# patientData = loadPatientData(filePath, sheet_name=0, skiprows=1)
-# patientData['hsformat'] = hsformat.key
+    filePath = os.path.join(dirPaths['data'], infile)
+    start = timer()
+    with HSTivitaStore.open(filePath, path="/") as store:
 
-# create output file
-start = timer()
+        # configure store
+        store.skipNameColumn = True
+        store.markerColor = [100, 255, 0]
+        store.overwriteMasks = True
 
-fileName = "rostock_suedstadt_2018-2020.xlsx"
-# fileName = "rostock_suedstadt_2018-2020_4_test.h5"
-filePath = os.path.join(dirPaths['data'], fileName)
+        # attach table with patien info from underlying excel file
+        store.attacheTable(
+            name="patient",
+            dtype=HSPatientInfo,
+            sheet_name=0,
+            usecols=[3, 4, 5, 6, 8, 7],
+            skiprows=1,
+        )
 
-print(filePath)
-with HSTivitaStore.open(filePath, path="/") as store:
-    store.attacheTable(
-        name="patient",
-        dtype=HSPatientInfo,
-        sheet_name=0,
-        usecols=[3,4,5,6,8,7],
-        skiprows=1,
-    )
-    
-    table = store.getTable("patient")
-    print(len(store))
-    
-    patient, hsimage, masks = store[0]
-
-# df.astype(HSPatientInfo)
-# df.astype(HSPatientInfo)
-# df[0]["pid"]
-# df.iloc[0]["name"]
-
-# df.astype(HSPatientInfo)
-# df.to_numpy()
-#
-# xl = pd.ExcelFile(filePath)
-# df = xl.parse(0)  # sheet name
+        filePath = os.path.join(dirPaths['data'], outfile)
 
 
-# if __name__ == '__main__':
-#     if __name__ == '__main__':
-#         logmanager.setLevel(logging.DEBUG)
-#         logger.info("Python executable: {}".format(sys.executable))
-#         logger.info("Python hsi version: {}".format(hsi.__version__))
-#         main()
+        store.to_hdf(filePath, "/records", "Hallo Welt")
+
+    print("\nElapsed time for processing dataset: %f sec" % (timer() - start))
+
+        # print(f"Number of entries: {len(store)}")
+        # for patient, hsimage, masks in iter(store):
+        #     # patient, hsimage, masks = reader[0]
+        #
+        #     hsformat = HSFormatFlag.fromStr(hsimage["hsformat"].decode())
+        #
+        #     print("%8d | %8d | %-20s | %-20s | %-10s | %3d |" % (
+        #         patient["pn"],
+        #         patient["pid"],
+        #         patient["descr"].decode(),
+        #         patient["timestamp"].decode(),
+        #         hsformat.key,
+        #         patient["target"]
+        #     ))
+        #
+        #     hsImage = HSImage(spectra=hsimage["spectra"],
+        #                       wavelen=hsimage["wavelen"], format=hsformat)
+        #     image = hsImage.getRGBValue()
+        #
+        #     fileName = "PN_%03d_PID_%07d_Date_%s_Masks.jpg" % (
+        #         patient["pn"], patient["pid"], patient["timestamp"].decode())
+        #     # plotMasks(fileName, masks, image)
+
+
+
+
+if __name__ == '__main__':
+    if __name__ == '__main__':
+        # logmanager.setLevel(logging.DEBUG)
+        # logger.info("Python executable: {}".format(sys.executable))
+        # logger.info("Python hsi version: {}".format(hsi.__version__))
+        main()

@@ -270,7 +270,7 @@ class HSImage:
         ndimage.binary_fill_holes(mask, output=mask)
         ndimage.binary_opening(mask, structure=np.ones((3, 3)), output=mask)
 
-        return mask
+        return mask.astype('<i1')
 
 
 
@@ -333,7 +333,7 @@ class HSImage:
         return image
 
 
-    def load(self, filePath, rotation=True, ndim=3, dtype=np.float32):
+    def load(self, filePath, rotation=True, ndim=3, dtype=">f4"):
         """Load data cube from binary file.
 
         Note: wavelength information not included in files. It is fixed
@@ -358,18 +358,18 @@ class HSImage:
         size = np.dtype(dtype).itemsize
 
         with open(filePath, 'rb') as file:
-            dtypeShape = np.dtype(np.int32)
-            dtypeShape = dtypeShape.newbyteorder('>')
             buffer = file.read(size * ndim)
-            shape = np.frombuffer(buffer, dtype=dtypeShape)
+            shape = np.frombuffer(buffer, dtype='>i4')
 
-            dtypeImg = np.dtype(dtype)
-            dtypeImg = dtypeImg.newbyteorder('>')
+            # dtypeImg = np.dtype(dtype)
+            # dtypeImg = dtypeImg.newbyteorder('>')
             buffer = file.read()
-            spectra = np.frombuffer(buffer, dtype=dtypeImg)
+            spectra = np.frombuffer(buffer, dtype=dtype)
+
+        new_dtype = np.dtype(dtype).newbyteorder('<')
 
         # reshape spectral data to three-dimensional array
-        spectra = spectra.reshape(shape, order='C')
+        spectra = spectra.reshape(shape, order='C').astype(new_dtype)
         # correct orientation for axisOrder row-major
         if rotation:
             spectra = np.rot90(spectra)
