@@ -443,7 +443,7 @@ class HSTivitaStore:
             raise Exception("Index Error: {}.".format(index))
 
 
-    def to_hdf(self, fname, path="/", descr=None):
+    def to_hdf(self, fname, path="/", descr=None, nrows=None):
         """ Export attached table and associated data to an hdf5 file.
 
         Parameters
@@ -456,7 +456,9 @@ class HSTivitaStore:
             A description for the dataset. Only used in writing mode.
         """
         expectedrows = self.__len__()
-        # expectedrows = 3
+        if nrows is not None and nrows <= expectedrows:
+            expectedrows = nrows
+
         if expectedrows <= 0:
             logger.debug(f"Empty table. Nothing to export.")
             return
@@ -498,7 +500,6 @@ class HSTivitaStore:
                 ]),
                 title="Masks applied on image data",
                 expectedrows=expectedrows,
-
             )
 
             entryPatient = tablePatient.row

@@ -50,7 +50,7 @@ def main():
     fig.set_size_inches(6, 5)
     ax = fig.add_subplot(1, 1, 1)
 
-    for key, vec in tissue.baseVectors.items():
+    for key, vec in tissue.components.items():
         ax.plot(vec.xIntpData*1e9, vec.yIntpData, marker='s', markersize=3,
                 markeredgewidth=0.3, markerfacecolor='none', markevery=5,
                 label="%s (%g%%)" % (vec.label, vec.weight*100)

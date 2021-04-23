@@ -35,12 +35,12 @@ else:
 
 class HSComponentFit(HSBaseAnalysis):
     """
-    Class to approximate hyper spectral image data by a weighted sum of base
-    spectra in order to analysize their individual contributions.
+    Class to approximate hyper spectral image data by a weighted sum of
+    component spectra in order to analysize their individual contributions.
 
     Features:
 
-    - load base spectra configuration
+    - load component spectra configuration
     - linear, nonlinear, constrained and unconstrained approximations
 
     Attributes
@@ -49,8 +49,8 @@ class HSComponentFit(HSBaseAnalysis):
         The wavelengths at which the spectral data are sampled.
     spectra :  numpy.ndarray
         The spectral data.
-    baseVectors : dict of HSComponent
-        A dictionary of base vector to represent the spectral data.
+    components : dict of HSComponent
+        A dictionary of component vector to represent the spectral data.
     roi : list of float
         The lower and upper bounds for the wavelength region of interest.
     roiIndex : list of int
@@ -89,8 +89,8 @@ class HSComponentFit(HSBaseAnalysis):
         """
         super(HSComponentFit, self).__init__(spectra, wavelen, format)
 
-        # dict of base vector to represent spectral data
-        self.baseVectors = {}
+        # dict of component vector to represent spectral data
+        self.components = {}
 
         # list of bounds for the region of interest
         self.roi = [None, None]
@@ -109,25 +109,26 @@ class HSComponentFit(HSBaseAnalysis):
 
     def addBaseVector(self, y, x, name=None, label=None, format=None,
                       weight=1., bounds=[None, None]):
-        """Add base vector to represent spectral data
+        """Add component vector to represent spectral data
 
         Forwards all arguments to :class:`hsi.analysis.HSBaseVector`.
         The wavelengths at which the spectral information will be interpolated
         are taken from the internally stored array
-        :attr:`~.HSImageLSAnalysis.xData` that is common to all base vectors.
+        :attr:`~.HSImageLSAnalysis.xData` that is common to all component
+        vectors.
 
         Parameters
         ----------
         y :  numpy.ndarray
-            The base spectral data.
+            The component spectral data.
         x :  numpy.ndarray
-            The wavelengths at which the base spectral data are sampled.
+            The wavelengths at which the component spectral data are sampled.
         name :  str, optional
-            Name of the base spectrum.
+            Name of the component spectrum.
         label :  str, optional
-            Label of the base spectrum.
+            Label of the component spectrum.
         weight :  float, optional
-            The weight for the base spectrum.
+            The weight for the component spectrum.
         bounds :  list or tuple, optional
             The lower and upper bounds for the scaling factor.
         """
@@ -135,26 +136,26 @@ class HSComponentFit(HSBaseAnalysis):
             format = self.format
 
         if self.wavelen is None:
-            raise Exception("Spectral x data are missing for base vector.")
+            raise Exception("Spectral x data are missing for component vector.")
         else:
-            self.baseVectors[name] = HSComponent(
+            self.components[name] = HSComponent(
                 y, x, self.wavelen, name=name, label=label, format=format,
                 weight=weight, bounds=bounds)
             self.keys.append(name)
 
 
     def clear(self):
-        """ Clear all spectral information including base vectors."""
+        """ Clear all spectral information including component vectors."""
         super(HSComponentFit, self).clear()
         self.roiIndex = [None, None]
-        self.baseVectors.clear()
+        self.components.clear()
 
 
     def fit(self, method='gesv', **kwargs):
         """Fit spectral data
 
         A least square problem is solved to Approximate spectral data by a
-        weighted sum of the base vectors
+        weighted sum of the component vectors
 
         Parameters
         ----------
@@ -211,12 +212,12 @@ class HSComponentFit(HSBaseAnalysis):
         **kwargs : dict
             A dictionary of additional solver specific options.
         """
-        if self.spectra is None or not self.baseVectors:
+        if self.spectra is None or not self.components:
             return
 
         il, iu = self.roiIndex
 
-        a = self._anaSysMatrix[il:iu]  # matrix of base vectors
+        a = self._anaSysMatrix[il:iu]  # matrix of component vectors
         b = self._anaTrgVector[il:iu]  # spectra to be fitted
         x = self._anaVarVector.view()  # vector of unknowns
         r = self._anaResVector.view()  # residuals
@@ -341,12 +342,12 @@ class HSComponentFit(HSBaseAnalysis):
         **kwargs : dict
             A dictionary of additional solver specific options.
         """
-        if self.spectra is None or not self.baseVectors:
+        if self.spectra is None or not self.components:
             return
 
         il, iu = self.roiIndex
 
-        a = self._anaSysMatrix[il:iu]  # matrix of base vectors
+        a = self._anaSysMatrix[il:iu]  # matrix of component vectors
         b = self._anaTrgVector[il:iu]  # spectra to be fitted
         x = self._anaVarVector.view()  # vector of unknowns
         r = self._anaResVector.view()  # residuals
@@ -412,7 +413,7 @@ class HSComponentFit(HSBaseAnalysis):
 
 
     def loadtxt(self, filePath, mode='bvec'):
-        """Load the base vectors and spectral data from a file.
+        """Load the component vectors and spectral data from a file.
 
         Parameters
         ----------
@@ -426,7 +427,7 @@ class HSComponentFit(HSBaseAnalysis):
 
         # return empty dictionary if no wavelength information is provided
         if wavelen is None:
-            return self.baseVectors
+            return self.components
 
         # Set spectral test data
         logger.debug("Set spectral test data.")
@@ -435,18 +436,18 @@ class HSComponentFit(HSBaseAnalysis):
             self.wavelen = wavelen
             self.spectra = convert(self.format, format, spectra['spec'], wavelen)
 
-        # set base vectors
+        # set component vectors
         if mode in ('bvec', 'all'):
-            logger.debug("Set loaded base vectors.")
+            logger.debug("Set loaded component vectors.")
             if self.wavelen is None:
                 self.wavelen = wavelen
             for vec in vectors.values():
                 vec.setFormat(self.format)  # adopt format
                 vec.setInterpPnts(self.wavelen)
-            self.baseVectors.update(vectors)
+            self.components.update(vectors)
             self.keys = [key for key in  vectors.keys()]
 
-        return self.baseVectors # return dict of base vectors if no errors occur
+        return self.components # return dict of component vectors if no errors
 
 
     def model(self, format=None):
@@ -466,7 +467,7 @@ class HSComponentFit(HSBaseAnalysis):
     def prepareLSProblem(self):
         """Prepare least square problem for fitting procedure"""
 
-        if self.spectra is None or not self.baseVectors:
+        if self.spectra is None or not self.components:
             self._anaTrgVector = None
             self._anaVarVector = None
             self._anaResVector = None
@@ -476,12 +477,14 @@ class HSComponentFit(HSBaseAnalysis):
 
         else:
 
-            k = len(self.baseVectors)  # number of unknown variables
+            k = len(self.components)  # number of unknown variables
             m = len(self.spectra)  # number of wavelengths
 
             # target vector: spectral data in a reshaped 2-dimensional format
-            self._anaTrgVector = self.spectra.reshape(m, -1)  # (wavelen, spectrum)
-            m, n = self._anaTrgVector.shape  # number of wavelengths, spectra
+            # (wavelen, spectrum)
+            self._anaTrgVector = self.spectra.reshape(m, -1)
+            # number of wavelengths, spectra
+            m, n = self._anaTrgVector.shape
 
             # vector of unknowns for each spectrum
             self._anaVarVector = np.empty((k + 1, n))  # (variable, spectrum)
@@ -489,10 +492,14 @@ class HSComponentFit(HSBaseAnalysis):
             # vector of residuals for each spectrum
             self._anaResVector = np.empty(n)  # (spectrum, )
 
-            self._anaSysMatrix = np.empty((m, k + 1))  # (wavelen, base vector)
-            self._anaVarScales = np.empty((k + 1, 1))  # (variable, )
-            self._anaVarBounds = np.empty((k + 1, 2))  # (variable, bound)
-            for i, vec in enumerate(self.baseVectors.values()):
+            # (wavelen, component vector)
+            self._anaSysMatrix = np.empty((m, k + 1))
+            # (variable, )
+            self._anaVarScales = np.empty((k + 1, 1))
+            # (variable, bound)
+            self._anaVarBounds = np.empty((k + 1, 2))
+
+            for i, vec in enumerate(self.components.values()):
                 self._anaSysMatrix[:, i] = vec.getScaledValue()
                 self._anaVarScales[i, :] = vec.weight * vec.scale
                 self._anaVarBounds[i, :] = vec.getScaledBounds()
@@ -504,8 +511,25 @@ class HSComponentFit(HSBaseAnalysis):
             self._anaVarBounds[-1, :] = [-1e9, 1e9]
 
 
+    def removeComponent(self, name):
+        """Remove a component vector.
+
+        Parameters
+        ----------
+        name :  str
+            The variable name associated with a component vector
+        """
+        if name in self.components.keys():
+            logger.debug(
+                "Remove component '{}'.".format(name))
+            self.components.pop(name)
+            self.keys.remove(name)
+
+            self.prepareLSProblem()
+
+
     def savetxt(self, filePath, title=None, mode='bvec'):
-        """Export the base vectors and spectral data.
+        """Export the component vectors and spectral data.
 
         Parameters
         ----------
@@ -514,13 +538,13 @@ class HSComponentFit(HSBaseAnalysis):
         title : str, optional
             A brief description of the data collection
         mode : {'bvec', 'spec', 'all'}, optional
-            The data which are exported. The option 'bvec' refers to the base
-            vectors, while the option 'spec' refers to the spectral data, only.
-            To export both types of data, use 'all'. Default is 'bvec'.
+            The data which are exported. The option 'bvec' refers to the
+            component vectors, while the option 'spec' refers to the spectral
+            data. To export both types of data, use 'all'. Default is 'bvec'.
         """
 
-        if not self.baseVectors and mode in ('bvec', 'all'):
-            print("No base vectors available to export.")
+        if not self.components and mode in ('bvec', 'all'):
+            print("No component vectors available to export.")
             return
         if self.spectra is None and mode in ('spec', 'all'):
             print("No spectral available to export.")
@@ -528,7 +552,7 @@ class HSComponentFit(HSBaseAnalysis):
 
         with HSComponentFile(filePath, format=self.format, title=title) as file:
             if mode in ('bvec', 'all'):
-                for vec in self.baseVectors.values():
+                for vec in self.components.values():
                     file.buffer(vec)
             if mode in ('spec', 'all'):
                 file.buffer(self.spectra, self.wavelen, label="spec",
@@ -553,8 +577,8 @@ class HSComponentFit(HSBaseAnalysis):
         if x is not None:
             # update lower and upper bound indices for range of interest
             self.updateROIIndex()
-            # update base vectors according to the new wavelength axis
-            for vec in self.baseVectors.values():
+            # update component vectors according to the new wavelength axis
+            for vec in self.components.values():
                 vec.setInterpPnts(self.wavelen)
 
 
@@ -573,7 +597,7 @@ class HSComponentFit(HSBaseAnalysis):
 
         """
         super(HSComponentFit, self).setFormat(format)
-        for vec in self.baseVectors.values():
+        for vec in self.components.values():
             vec.setFormat(self.format)
 
 
@@ -603,14 +627,14 @@ class HSComponentFit(HSBaseAnalysis):
         Parameters
         ----------
         name :  str
-            The variable name associated with a base vector
+            The variable name associated with a component vector
         bounds : list, tuple
             The absolute lower and upper bounds for the variable.
         """
-        if name in self.baseVectors.keys():
+        if name in self.components.keys():
             logger.debug(
                 "Change bounds of '{}' to {}.".format(name, bounds))
-            self.baseVectors[name].setBounds(bounds)
+            self.components[name].setBounds(bounds)
             self.prepareLSProblem()
 
 
