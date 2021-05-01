@@ -346,13 +346,31 @@ class HSStore:
         if self.file is None or self.mode in ("w", "wb"):
             return None
 
-        keys = [node.name for node in self.file.iter_nodes(
-            self.path, classname='Table')]
-        if name in keys:
-            logger.debug(f"Attach table {name}.")
-            table = self.file.get_node(self.path + "/" + name)
-            self.tables[name] = table
-            return table
+        # for node in self.file.iter_nodes(self.path):
+            # node = self.file.get_node(self.path + "/" + name)
+
+        path = self.path + "/" + name
+        if self.file.__contains__(path):
+            node = self.file.get_node(path)
+
+            # direct table
+            if isinstance(node, tables.table.Table) and node.name == name:
+                logger.debug(f"Attach table {name}.")
+                self.tables[name] = node
+                return node
+
+            # link to a table in an external file
+            elif isinstance(node, tables.link.ExternalLink):
+                link = node()
+                if isinstance(link, tables.table.Table) and link.name == name:
+                    logger.debug(f"Attach externally linked table '{name}'.")
+                    self.tables[name] = link
+                    return link
+
+            else:
+                logger.debug(f"Node {name} is not referring to a table.")
+                return None
+
         else:
             logger.debug(f"Table {name} not found.")
             return None
@@ -402,7 +420,7 @@ class HSStore:
         self.clear()
 
 
-    def createTable(self, name, dtype, title=None, expectedrows=None,
+    def createTable(self, name, dtype, title="", expectedrows=10000,
                     chunkshape=None):
         """ Create a new table in the hdf5 file.
 
@@ -431,7 +449,10 @@ class HSStore:
         if self.file is None or self.mode in ("r", "rb"):
             return None
 
-        self.removeTable(name)  # remove table if already defined
+        # remove table if already defined
+        if self.hasTable(name):
+            self.removeTable(name)
+
         logger.debug(f"Create table {name} with columns {dtype}.")
         table = self.file.create_table(
             self.path, name=name, description=dtype, title=title,
@@ -474,6 +495,24 @@ class HSStore:
         return self.tables.keys()
 
 
+    def hasTable(self, name):
+        """ Returns True if
+
+        """
+        path = self.path + "/" + name
+        if self.file.__contains__(path):
+            node = self.file.get_node(path)
+            if isinstance(node, tables.table.Table):
+                return True
+            elif isinstance(
+                    node, (tables.link.ExternalLink, tables.link.SoftLink)):
+                link = node()
+                if isinstance(link, tables.table.Table):
+                    return True
+
+        return False
+
+
     def mkdir(self, path, createparents=True):
         """ Create a directory within the hdf5 file.
 
@@ -496,6 +535,27 @@ class HSStore:
 
         else:
             return self.file.get_node(path)
+
+
+    def link(self, filePath, path="/", tables=None):
+        """provide the dataset with a link to an external file.
+
+        Parameters
+        ----------
+        filePath : str, or pathlib.Path
+            The path to the file to be linked with.
+        path : str, optional
+            The path within the underlying hdf5 file. Default is the root path.
+        tables : list or tuple, optional
+            A list of table names to link. By default all existing tables
+            within 'path' will be linked.
+        """
+        with HSStore(os.path.abspath(filePath), mode="r", path=path) as reader:
+            for node in reader.file.iter_nodes(
+                self.path, classname='Table'):
+                if tables is None or node.name in tables:
+                    self.file.create_external_link(
+                        path, node.name, target=node, createparents=True)
 
 
     def select(self, index):
