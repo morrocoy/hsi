@@ -155,9 +155,17 @@ class HSBaseAnalysis(object):
         if clip:
             lbnd = self._anaVarBounds[:, 0]
             ubnd = self._anaVarBounds[:, 1]
+
+            _lbnd = lbnd.copy()
+            _ubnd = ubnd.copy()
+            _lbnd[np.isnan(_lbnd)] = -np.inf
+            _ubnd[np.isnan(_ubnd)] = np.inf
+
+            # print(self._anaVarScales)
             # np.clip(x, lbnd[:, None], ubnd[:, None], x)
+
             x = self._anaVarScales * np.clip(
-                self._anaVarVector, lbnd[:, None], ubnd[:, None])
+                self._anaVarVector, _lbnd[:, None], _ubnd[:, None])
         else:
             x = self._anaVarScales * self._anaVarVector
 

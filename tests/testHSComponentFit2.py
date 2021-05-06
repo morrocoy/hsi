@@ -79,6 +79,19 @@ def main():
     analysis.loadtxt("basevectors_2.txt", mode='all')
     analysis.setData(spectra, wavelen, format=HSAbsorption)
     analysis.setROI([500e-9, 995e-9])
+
+    # print base component names
+    print(analysis.keys)
+
+    # modify bounds for component weights
+    # analysis.setVarBounds("hhb", [0, np.inf])
+    analysis.setVarBounds("hhb", [0, 0.05])
+    analysis.setVarBounds("hhb", [-np.inf, np.inf])
+    analysis.setVarBounds("ohb", [0, 0.05])
+    analysis.setVarBounds("wat", [0, 2.00])
+    analysis.setVarBounds("fat", [0, 1.00])
+    analysis.setVarBounds("mel", [0, 0.05])
+
     analysis.prepareLSProblem()
 
     start = timer()

@@ -288,9 +288,18 @@ class HSComponentFit(HSBaseAnalysis):
 
         # bounded-variable least-squares algorithm (fortran implementation).
         elif meth == 'bvls_f':
+            _lbnd = lbnd.copy()
+            _ubnd = ubnd.copy()
+            bounds = [_lbnd, _ubnd]
+            # print(bounds)
+            _lbnd[np.isnan(_lbnd)] = -np.inf
+            _ubnd[np.isnan(_ubnd)] = np.inf
+            bounds = [_lbnd, _ubnd]
+            # print(bounds)
             for i in index_mask:
-                x[:, i] = bvls_f(ap, bp[:, i], bounds=(lbnd, ubnd))
+                x[:, i] = bvls_f(ap, bp[:, i], bounds=bounds)
 
+            # print(x)
         # residual vector (squared Euclidean 2-norm)
         # r[:] = np.sum((a @ x - b) ** 2, axis=0)
         r[index_mask] = np.sum((a @ x[:, index_mask] - b[:, index_mask]) ** 2,
@@ -445,7 +454,7 @@ class HSComponentFit(HSBaseAnalysis):
                 vec.setFormat(self.format)  # adopt format
                 vec.setInterpPnts(self.wavelen)
             self.components.update(vectors)
-            self.keys = [key for key in  vectors.keys()]
+            self.keys = [key for key in vectors.keys()]
 
         return self.components # return dict of component vectors if no errors
 
@@ -487,19 +496,20 @@ class HSComponentFit(HSBaseAnalysis):
             m, n = self._anaTrgVector.shape
 
             # vector of unknowns for each spectrum
-            self._anaVarVector = np.empty((k + 1, n))  # (variable, spectrum)
+            self._anaVarVector = np.zeros((k + 1, n))  # (variable, spectrum)
 
             # vector of residuals for each spectrum
-            self._anaResVector = np.empty(n)  # (spectrum, )
+            self._anaResVector = np.zeros(n)  # (spectrum, )
 
             # (wavelen, component vector)
-            self._anaSysMatrix = np.empty((m, k + 1))
+            self._anaSysMatrix = np.zeros((m, k + 1))
             # (variable, )
-            self._anaVarScales = np.empty((k + 1, 1))
+            self._anaVarScales = np.zeros((k + 1, 1))
             # (variable, bound)
-            self._anaVarBounds = np.empty((k + 1, 2))
+            self._anaVarBounds = np.zeros((k + 1, 2))
 
             for i, vec in enumerate(self.components.values()):
+                # print(f"{vec.name} {vec.bounds} {vec.getScaledBounds()}")
                 self._anaSysMatrix[:, i] = vec.getScaledValue()
                 self._anaVarScales[i, :] = vec.weight * vec.scale
                 self._anaVarBounds[i, :] = vec.getScaledBounds()

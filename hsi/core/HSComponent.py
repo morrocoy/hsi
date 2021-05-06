@@ -119,10 +119,10 @@ class HSComponent:
 
         # weight and lower and upper bounds for the weight
         self.weight = weight
-        self.bounds = bounds
+        self.bounds = None
         self.scale = None
-        self.udpdateScale()
 
+        self.setBounds(bounds)
         self.setData(yn, xn, x)
 
 
@@ -265,7 +265,21 @@ class HSComponent:
         if bounds is None:
             self.bounds = [None, None]
         elif type(bounds) in [list, tuple, np.ndarray] and len(bounds) == 2:
-            self.bounds = [bounds[0], bounds[1]]
+            if np.isinf(bounds[0]) or np.isinf(bounds[0]):
+                lbnd = None
+            elif isinstance(bounds[0], (int, float)):
+                lbnd = bounds[0]
+            else:
+                lbnd = None
+
+            if np.isinf(bounds[1]) or np.isinf(bounds[1]):
+                ubnd = None
+            elif isinstance(bounds[1], (int, float)):
+                ubnd = bounds[1]
+            else:
+                ubnd = None
+
+            self.bounds = [lbnd, ubnd]
         else:
             raise ValueError("Argument 'bounds' must be two element list or "
                              "tuple. Got {}".format(bounds))
@@ -324,11 +338,14 @@ class HSComponent:
 
     def udpdateScale(self):
         lbnd, ubnd = self.bounds
+
         if lbnd is None and ubnd is None:
-            self.scale = 1.
+            self.scale = 1. / self.weight
+            # self.scale = 1.
         elif ubnd is None:
             self.scale = abs(self.weight - lbnd) / self.weight
         elif lbnd is None:
             self.scale = (ubnd - self.weight) / self.weight
         else:
             self.scale = (ubnd - lbnd) / self.weight
+

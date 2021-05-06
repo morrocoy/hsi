@@ -28,19 +28,20 @@ def main():
 
     # load spectra and base vectors ..........................................
 
-    tissue = HSComponentFit(format=HSAbsorption)
-    # tissue = HSVectorAnalysis(format=HSIntensity)
-    # tissue = HSVectorAnalysis(format=HSExtinction)
-    # tissue = HSVectorAnalysis(format=HSRefraction)
-    tissue.loadtxt("basevectors_1.txt", mode='all')
+    analysis = HSComponentFit(format=HSAbsorption)
+    # analysis = HSVectorAnalysis(format=HSIntensity)
+    # analysis = HSVectorAnalysis(format=HSExtinction)
+    # analysis = HSVectorAnalysis(format=HSRefraction)
+    analysis.loadtxt("basevectors_1.txt", mode='all')
 
     # alternative approach to load data into the analysis object:
-    # tissue = HSVectorAnalysis(y, x)
-    # tissue.addBaseVector(y1, x1, name=name1, label=label1,
+    # analysis = HSVectorAnalysis(y, x)
+    # analysis.addBaseVector(y1, x1, name=name1, label=label1,
     #                      format=HSAbsorption, weight=w1, bounds=bnds1)
-    # tissue.addBaseVector(y2, x2, name=name2, label=label2,
+    # analysis.addBaseVector(y2, x2, name=name2, label=label2,
     #                      format=HSAbsorption, weight=w2, bounds=bnds2)
     # ...
+
 
 
     # plot normalized basis spectra ..........................................
@@ -50,7 +51,7 @@ def main():
     fig.set_size_inches(6, 5)
     ax = fig.add_subplot(1, 1, 1)
 
-    for key, vec in tissue.components.items():
+    for key, vec in analysis.components.items():
         ax.plot(vec.xIntpData*1e9, vec.yIntpData, marker='s', markersize=3,
                 markeredgewidth=0.3, markerfacecolor='none', markevery=5,
                 label="%s (%g%%)" % (vec.label, vec.weight*100)
@@ -67,50 +68,62 @@ def main():
 
 
     # modify constraints .....................................................
-    tissue.setROI([500e-9, 1000e-9])
+    analysis.setROI([500e-9, 1000e-9])
+    # analysis.setROI([500e-9, 600e-9])
+    # analysis.setROI([700e-9, 800e-9])
+    # analysis.setROI([800e-9, 1000e-9])
 
-    # tissue.setROI([500e-9, 600e-9])
-    # tissue.setROI([700e-9, 800e-9])
-    # tissue.setROI([800e-9, 1000e-9])
+    # print base component names
+    print(analysis.keys)
 
-    # tissue.setVarBounds("blo", 0., 0., 0.)
-    # tissue.setVarBounds("blo", 0.5, 0.5, 0.5)
-    # tissue.setVarBounds("blo", 0.4, 0.4, 0.4)
+    # modify bounds for component weights
+    # analysis.setVarBounds("hhb", [-np.inf, np.inf])
+    analysis.setVarBounds("hhb", [0, np.inf])
+    # analysis.setVarBounds("hhb", [0, 0.05])
+    analysis.setVarBounds("ohb", [0, 0.05])
+    analysis.setVarBounds("wat", [0, 2.00])
+    analysis.setVarBounds("fat", [0, 1.00])
+    analysis.setVarBounds("mel", [0, 0.05])
 
-    # tissue.setVarBounds("oxy", 0, 0, 0)
-    # tissue.setVarBounds("oxy", 0.01, 0.01, 0.01)
-    # tissue.setVarBounds("oxy", 1, 1, 1)
-    # tissue.setVarBounds("oxy", 0.99, 0.99, 0.99)
-    # tissue.setVarBounds("oxy", 0.8, 0.8, 0.8)
-    # tissue.setVarBounds("oxy", 0.94, 0.94, 0.94)
-    # tissue.setVarBounds("oxy", 0.97, 0.97, 0.97)
-    # tissue.setVarBounds("oxy", 0.77, 0.77, 0.77)
-    # tissue.setVarBounds("oxy", 0.76, 0.78, 0.77)
 
-    # tissue.setVarBounds("fat", 0.0, 0.0, 0.0)
-    # tissue.setVarBounds("fat", 0.1, 0.1, 0.1)
+    # analysis.setVarBounds("blo", 0., 0., 0.)
+    # analysis.setVarBounds("blo", 0.5, 0.5, 0.5)
+    # analysis.setVarBounds("blo", 0.4, 0.4, 0.4)
 
-    # tissue.setVarBounds("wat", [0.0, 0.01])
-    # tissue.setVarBounds("wat", 0.65, 0.65, 0.65)
-    # tissue.setVarBounds("wat", 0.5, 0.5, 0.5)
+    # analysis.setVarBounds("oxy", 0, 0, 0)
+    # analysis.setVarBounds("oxy", 0.01, 0.01, 0.01)
+    # analysis.setVarBounds("oxy", 1, 1, 1)
+    # analysis.setVarBounds("oxy", 0.99, 0.99, 0.99)
+    # analysis.setVarBounds("oxy", 0.8, 0.8, 0.8)
+    # analysis.setVarBounds("oxy", 0.94, 0.94, 0.94)
+    # analysis.setVarBounds("oxy", 0.97, 0.97, 0.97)
+    # analysis.setVarBounds("oxy", 0.77, 0.77, 0.77)
+    # analysis.setVarBounds("oxy", 0.76, 0.78, 0.77)
 
-    # tissue.setVarBounds("mel", 2.3, 2.3, 2.3)
-    # tissue.setVarBounds("mel", 2.5, 2.5, 2.5)
-    # tissue.setVarBounds("mel", 2.6, 2.6, 2.6)
-    # tissue.setVarBounds("mel", 2., 2., 2.)
-    # tissue.setVarBounds("mel", 1.95, 1.95, 1.95)
-    # tissue.setVarBounds("mel", 5, 5, 5)
+    # analysis.setVarBounds("fat", 0.0, 0.0, 0.0)
+    # analysis.setVarBounds("fat", 0.1, 0.1, 0.1)
+
+    # analysis.setVarBounds("wat", [0.0, 0.01])
+    # analysis.setVarBounds("wat", 0.65, 0.65, 0.65)
+    # analysis.setVarBounds("wat", 0.5, 0.5, 0.5)
+
+    # analysis.setVarBounds("mel", 2.3, 2.3, 2.3)
+    # analysis.setVarBounds("mel", 2.5, 2.5, 2.5)
+    # analysis.setVarBounds("mel", 2.6, 2.6, 2.6)
+    # analysis.setVarBounds("mel", 2., 2., 2.)
+    # analysis.setVarBounds("mel", 1.95, 1.95, 1.95)
+    # analysis.setVarBounds("mel", 5, 5, 5)
 
 
     # fit spectrum ...........................................................
     start = timer()
 
-    tissue.prepareLSProblem()
+    analysis.prepareLSProblem()
 
     # linear fit
     # tissue.fit(method='gesv') # linear equation (unconstrained)
     # tissue.fit(method='bvls')  # bounded value least square
-    tissue.fit(method='bvls_f')  # bounded value least square (fortran)
+    analysis.fit(method='bvls_f')  # bounded value least square (fortran)
     # tissue.fit(method='CG')  # conjugate gradient algorithm (unconstrained)
 
     # non-linear
@@ -125,7 +138,7 @@ def main():
     print("Elapsed time: %f sec" % (timer() - start))
 
     # param = tissue.getVarVector(unpack=True)
-    param = tissue.getSolution(unpack=True)
+    param = analysis.getSolution(unpack=True)
     param['blo'] = param['hhb'] + param['ohb']
     param['oxy'] = np.zeros(param['blo'].shape)
     idx = np.nonzero(param['blo'])
@@ -142,9 +155,9 @@ def main():
     for key in ['blo', 'oxy', 'wat', 'fat', 'mel']:
         info += "\n%s = %f" % (key, param[key][tissIdx])
 
-    wavelen = tissue.wavelen
-    spec = tissue.spectra[:, tissIdx]
-    specFit = tissue.model()[:, tissIdx]
+    wavelen = analysis.wavelen
+    spec = analysis.spectra[:, tissIdx]
+    specFit = analysis.model()[:, tissIdx]
 
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
