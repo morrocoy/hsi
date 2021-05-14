@@ -313,9 +313,15 @@ class HSTissueCompound:
         logger.debug("Load optical parameters for Melanin from "
                      "{}.".format(filePath))
 
-        # methemoglobin by Hermann:
-        filePath = os.path.join(self.libdir, "Methemoglobin by Hermann.txt")
-        self.addComponentFile(filePath, 'methb', skiprows=4)
+        # # methemoglobin by Hermann:
+        # filePath = os.path.join(self.libdir, "Methemoglobin by Hermann.txt")
+        # self.addComponentFile(filePath, 'methb', skiprows=4)
+        # logger.debug("Load optical parameters for Methemoglobin from "
+        #              "{}.".format(filePath))
+
+        # methemoglobin by Zijistra:
+        filePath = os.path.join(self.libdir, "Methemoglobin by Zijistra.txt")
+        self.addComponentFile(filePath, 'methb', skiprows=7)
         logger.debug("Load optical parameters for Methemoglobin from "
                      "{}.".format(filePath))
 
