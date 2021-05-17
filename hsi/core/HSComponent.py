@@ -265,14 +265,14 @@ class HSComponent:
         if bounds is None:
             self.bounds = [None, None]
         elif type(bounds) in [list, tuple, np.ndarray] and len(bounds) == 2:
-            if np.isinf(bounds[0]) or np.isinf(bounds[0]):
+            if bounds[0] is None or np.isinf(bounds[0]):
                 lbnd = None
             elif isinstance(bounds[0], (int, float)):
                 lbnd = bounds[0]
             else:
                 lbnd = None
 
-            if np.isinf(bounds[1]) or np.isinf(bounds[1]):
+            if bounds[1] is None or np.isinf(bounds[1]):
                 ubnd = None
             elif isinstance(bounds[1], (int, float)):
                 ubnd = bounds[1]

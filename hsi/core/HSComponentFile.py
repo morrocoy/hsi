@@ -345,5 +345,9 @@ class HSComponentFile(HSFile):
             "# No.", "Name", "Label", "Weight", "Lower bound", "Upper bound"))
         fmt = "\n{:<24}  {:<24}  {:<24}  {:<24.16g}  {:<24.16g}  {:.16g}"
         for i, (key, value) in enumerate(vectors.items()):
-            file.write(fmt.format(i, key, *value))
+            label = value[0]
+            weight = value[1]
+            lbnd = value[2] if value[2] is not None else -np.inf
+            ubnd = value[3] if value[3] is not None else np.inf
+            file.write(fmt.format(i, key, label, weight, lbnd, ubnd))
 

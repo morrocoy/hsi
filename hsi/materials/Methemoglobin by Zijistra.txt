@@ -1,5 +1,4 @@
-Absorption Spectra of Human Fetal and Adult Oxyhemoglobin, De-Oxyhemoglobin,
-Carboxyhemoglobin, and Methemoglobin
+Absorption Spectra of Human Fetal and Adult Methemoglobin
 
 W. G. Zijistra, A. Buursma, and W. P. Meeuwsen-van der Roest
 	

@@ -321,7 +321,9 @@ class HSTissueCompound:
 
         # methemoglobin by Zijistra:
         filePath = os.path.join(self.libdir, "Methemoglobin by Zijistra.txt")
-        self.addComponentFile(filePath, 'methb', skiprows=7)
+        # filePath = os.path.join(self.libdir,
+        #                         "Methemoglobin by Zijistra scaled.txt")
+        self.addComponentFile(filePath, 'methb', skiprows=6)
         logger.debug("Load optical parameters for Methemoglobin from "
                      "{}.".format(filePath))
 
