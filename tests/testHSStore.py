@@ -39,18 +39,19 @@ from timeit import default_timer as timer
 import numpy as np
 import pandas as pd
 import tables
+
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 import hsi
 from hsi import HSImage, HSFormatFlag, HSIntensity, HSAbsorption
 from hsi import HSStore
-from hsi.analysis import HSTivita, HSOpenTivita
+from hsi.analysis import HSOpenTivita #, HSTivita
 from hsi.log import logmanager
 
 logger = logmanager.getLogger(__name__)
 
 data_path = os.path.join(os.getcwd(), "..", "data")
-pict_path = os.path.join(os.getcwd(), "..", "pictures")
 
 # define columns for the patient info table
 HSPatientInfo = np.dtype([
@@ -63,9 +64,20 @@ HSPatientInfo = np.dtype([
 ])
 
 
-def createDataset(fileName, path, descr=None):
+def createDataset(file_name, path, descr=None):
+    """create dummy dataset consisting of three tables for patient data,
+    hyperspectral image data and selection masks.
 
-    patientData = pd.DataFrame({
+    Parameters
+    ----------
+    file_name : pd.Series
+        The path to the hdf5 output file.
+    path :  str
+        The path within the hdf5 file.
+    descr :  str, optional
+        A description for the dataset.
+    """
+    patient_data = pd.DataFrame({
         "pn" : [1,2,3],
         "pid": [100001, 100002, 100003],
         "name": ["Smith", "Jones", "Williams"],
@@ -79,20 +91,20 @@ def createDataset(fileName, path, descr=None):
     np.random.seed(29012392)  # for reproducible results
 
     start = timer()
-    filePath = os.path.join(data_path, fileName)
+    filePath = os.path.join(data_path, file_name)
     with HSStore.open(
             filePath, mode="w", path=path, descr=descr) as dataset:
-        rows = len(patientData.index)
+        rows = len(patient_data.index)
 
-        tablePatient = dataset.createTable(
+        patient_table = dataset.createTable(
             name="patient",
             dtype=HSPatientInfo,
             title="Patient information",
             expectedrows=rows,
         )
 
-        tableHSImage = dataset.createTable(
-            name="hsimage",
+        hsidata_table = dataset.createTable(
+            name="hsidata",
             dtype=np.dtype([
                 ("hsformat", "<S32"),
                 ("wavelen", "<f8", (100,)),
@@ -102,7 +114,7 @@ def createDataset(fileName, path, descr=None):
             expectedrows=rows,
         )
 
-        tableMasks = dataset.createTable(
+        masks_table = dataset.createTable(
             name="masks",
             dtype=np.dtype([
                 ("tissue", "<i1", (480, 640)),
@@ -115,44 +127,103 @@ def createDataset(fileName, path, descr=None):
 
         )
 
-        entryPatient = tablePatient.row
-        entryHSImage = tableHSImage.row
-        entryMasks = tableMasks.row
-        for index, info in patientData.iterrows():
+        patient_entry = patient_table.row
+        hsidata_entry = hsidata_table.row
+        masks_entry = masks_table.row
+        for index, info in patient_data.iterrows():
 
             print("Process index %d ..." % info["pn"])
 
-            entryPatient["pn"] = info["pn"]  # i f'Particle: {i:6d}'
-            entryPatient["pid"] = info["pid"]
-            entryPatient["name"] = str.encode(info["name"])
-            entryPatient["descr"] = str.encode(info["descr"])
-            entryPatient["timestamp"] = str.encode(info["timestamp"])
-            entryPatient["target"] = info["target"]
-            entryPatient.append()
+            patient_entry["pn"] = info["pn"]  # i f'Particle: {i:6d}'
+            patient_entry["pid"] = info["pid"]
+            patient_entry["name"] = str.encode(info["name"])
+            patient_entry["descr"] = str.encode(info["descr"])
+            patient_entry["timestamp"] = str.encode(info["timestamp"])
+            patient_entry["target"] = info["target"]
+            patient_entry.append()
 
 
-            entryHSImage["hsformat"] = str.encode(HSIntensity.key)
-            entryHSImage["wavelen"] = wavelen.astype("<f8")
-            entryHSImage["spectra"] = np.random.random(
+            hsidata_entry["hsformat"] = str.encode(HSIntensity.key)
+            hsidata_entry["wavelen"] = wavelen.astype("<f8")
+            hsidata_entry["spectra"] = np.random.random(
                 (100, 480, 640)).astype("<f4")
-            entryHSImage.append()
+            hsidata_entry.append()
 
-            entryMasks["tissue"] = np.random.randint(
+            masks_entry["tissue"] = np.random.randint(
                 2, size=(480, 640), dtype="<i1")
-            entryMasks["critical"] = np.random.randint(
+            masks_entry["critical"] = np.random.randint(
                 2, size=(480, 640), dtype="<i1")
-            entryMasks["wound"] = np.random.randint(
+            masks_entry["wound"] = np.random.randint(
                 2, size=(480, 640), dtype="<i1")
-            entryMasks["proximity"] = np.random.randint(
+            masks_entry["proximity"] = np.random.randint(
                 2, size=(480, 640), dtype="<i1")
-            entryMasks.append()
+            masks_entry.append()
 
-        tablePatient.flush()
-        tableHSImage.flush()
-        tableMasks.flush()
+        patient_table.flush()
+        hsidata_table.flush()
+        masks_table.flush()
 
         print("\nElapsed time for creating dataset: %f sec" % (timer() - start))
 
+
+def processDataset(file_name):
+    """ Evaluate the tivita index values for each record.
+
+    The evaluation is defined in task(args) where args are the entries of the
+    attached tables.
+    """
+    start = timer()
+    file_path = os.path.join(data_path, file_name)
+    with tables.open_file(file_path, "r+") as file:
+        reader = HSStore(file, path="/records")
+        writer = HSStore(file, path="/records")
+
+        reader.attacheTable("patient")
+        reader.attacheTable("hsidata")
+        reader.attacheTable("masks")
+
+        tivita_table = writer.createTable(
+            name="tivita",
+            dtype=np.dtype([
+                ("oxy", "<f8", (480, 640)),
+                ("nir", "<f8", (480, 640)),
+                ("thi", "<f8", (480, 640)),
+                ("twi", "<f8", (480, 640)),
+            ]),
+            title="Tivita Index Values",
+            expectedrows=len(reader),
+        )
+        tivita_entry = tivita_table.row
+
+        print(f"Tables to read: {reader.getTableNames()}")
+        print(f"Tables to write: {writer.getTableNames()}")
+        print(f"Number of entries: {len(reader)}")
+
+        # serial evaluation
+        # for args in iter(reader):
+        #     param = task(args)
+        #     tivita_entry["nir"] = param["nir"]
+        #     tivita_entry["oxy"] = param["oxy"]
+        #     tivita_entry["thi"] = param["thi"]
+        #     tivita_entry["twi"] = param["twi"]
+        #     tivita_entry.append()
+        #
+        # tivita_table.flush()
+
+        # parallel evaluation
+        pool = multiprocessing.Pool(processes=7)
+        for param in pool.imap(task, iter(reader)):  # , chunksize=1):
+            tivita_entry["oxy"] = param["oxy"]
+            tivita_entry["nir"] = param["nir"]
+            tivita_entry["thi"] = param["thi"]
+            tivita_entry["twi"] = param["twi"]
+            tivita_entry.append()
+        pool.close()
+
+        tivita_table.flush()
+
+        print("\nElapsed time for processing dataset: %f sec" %
+              (timer() - start))
 
 
 def task(args):
@@ -194,8 +265,8 @@ def task(args):
         spectra=hsidata["spectra"], wavelen=hsidata["wavelen"], format=hsformat)
     image = hsImage.getRGBValue()
 
-    # analysis = HSOpenTivita(format=HSAbsorption)  # open source algorithms
-    analysis = HSTivita(format=HSIntensity)  # true algorithms
+    analysis = HSOpenTivita(format=HSAbsorption)  # open source algorithms
+    # analysis = HSTivita(format=HSIntensity)  # true algorithms
 
     analysis.setData(hsImage.spectra, hsImage.wavelen, format=hsformat)
     analysis.evaluate(mask=masks["tissue"])
@@ -204,115 +275,11 @@ def task(args):
     return param
 
 
-def processDataset(fileName):
-    """ Evaluate the tivita index values for each record.
-
-    The evaluation is defined in task(args) where args are the entries of the
-    attached tables.
-    """
-    start = timer()
-    filePath = os.path.join(data_path, fileName)
-    with tables.open_file(filePath, "r+") as file:
-        reader = HSStore(file, path="/records")
-        writer = HSStore(file, path="/records")
-
-        reader.attacheTable("patient")
-        reader.attacheTable("hsimage")
-        reader.attacheTable("masks")
-
-        tableTivita = writer.createTable(
-            name="tivita",
-            dtype=np.dtype([
-                ("oxy", "<f8", (480, 640)),
-                ("nir", "<f8", (480, 640)),
-                ("thi", "<f8", (480, 640)),
-                ("twi", "<f8", (480, 640)),
-            ]),
-            title="Tivita Index values",
-            expectedrows=len(reader),
-        )
-        entryTivita = tableTivita.row
-
-        print(f"Tables to read: {reader.getTableNames()}")
-        print(f"Tables to write: {writer.getTableNames()}")
-        print(f"Number of entries: {len(reader)}")
-
-        # serial evaluation
-        # for args in iter(reader):
-        #     param = task(args)
-        #     entryTivita["nir"] = param["nir"]
-        #     entryTivita["oxy"] = param["oxy"]
-        #     entryTivita["thi"] = param["thi"]
-        #     entryTivita["twi"] = param["twi"]
-        #     entryTivita.append()
-        #
-        # tableTivita.flush()
-
-        # parallel evaluation
-        pool = multiprocessing.Pool(processes=7)
-        for param in pool.imap(task, iter(reader)):  # , chunksize=1):
-            entryTivita["oxy"] = param["oxy"]
-            entryTivita["nir"] = param["nir"]
-            entryTivita["thi"] = param["thi"]
-            entryTivita["twi"] = param["twi"]
-            entryTivita.append()
-        pool.close()
-
-        tableTivita.flush()
-
-        print("\nElapsed time for processing dataset: %f sec" %
-              (timer() - start))
-
-
-def plotMultipleXY(fileName, data, target, keys1, keys2):
-    """ Helper function for plotting. """
-
-    ipos = np.where(target == 1)[0]
-    ineg = np.where(target == 0)[0]
-    nmask = 1
-
-    prop_cycle = plt.rcParams['axes.prop_cycle']
-    colors = prop_cycle.by_key()['color']
-
-
-    fig = plt.figure()
-    fig.set_size_inches(3*nmask, 7)
-
-    for iset, (key1, key2) in enumerate(zip(keys1, keys2)):
-        for imask in range(nmask):
-            ax = fig.add_subplot(3, nmask, iset * (nmask) + imask + 1)
-            # ax.set_title(masks[imask])
-            x = data[key1]
-            y = data[key2]
-            ax.plot(
-                x[ipos], y[ipos], label="healed", linestyle='None',
-                marker='o',
-                color=colors[1], markersize=5, markeredgewidth=0.3,
-                markerfacecolor=colors[1])
-            ax.plot(
-                x[ineg], y[ineg], label="not healed", linestyle='None',
-                marker='s',
-                color=colors[0], markersize=5, markeredgewidth=0.3,
-                markerfacecolor=colors[0])
-
-            ax.set_xlabel(key1.upper())
-            ax.set_ylabel(key2.upper())
-            ax.legend()
-
-    # baseName, ext = os.path.split(filePath)
-    _, ext = fileName.rsplit(".")
-    filePath = os.path.join(pict_path, fileName)
-    fig.savefig(filePath, format=ext, dpi=300, bbox_inches='tight',
-                pad_inches=0.03)
-    plt.show()
-    plt.close()
-
-
-def postprocessDataset(fileName, config=None):
+def postprocessDataset(file_name, mask_config=None):
     """ Selective visualization of the results. """
 
-    if config is None:
-        config = {
+    if mask_config is None:
+        mask_config = {
             "oxy": {"mask": "wound"},
             "nir": {"mask": "wound"},
             "thi": {"mask": "proximity"},
@@ -320,8 +287,8 @@ def postprocessDataset(fileName, config=None):
         }
 
     start = timer()
-    filePath = os.path.join(data_path, fileName)
-    with HSStore.open(filePath, mode="r", path="/records") as reader:
+    file_path = os.path.join(data_path, file_name)
+    with HSStore.open(file_path, mode="r", path="/records") as reader:
         # attach tables
         reader.attacheTable("patient")
         reader.attacheTable("masks")
@@ -335,7 +302,7 @@ def postprocessDataset(fileName, config=None):
 
         # features used for classifications
         features = pd.DataFrame(
-            {key: np.zeros(len(reader)) for key in config.keys()})
+            {key: np.zeros(len(reader)) for key in mask_config.keys()})
 
         # fill features by evaluating tivita index values for each record
         for i, (patient, masks, params) in enumerate(reader):
@@ -347,30 +314,24 @@ def postprocessDataset(fileName, config=None):
                 patient["target"]
             ))
 
-            fileName = "PN_%03d_PID_%07d_Date_%s_Masks_test.jpg" % (
-                patient["pn"], patient["pid"], patient["timestamp"].decode())
-            # plotMasks(fileName, masks)
-
-            fileName = "PN_%03d_PID_%07d_Date_%s_Tivita_test.jpg" % (
-                patient["pn"], patient["pid"], patient["timestamp"].decode())
-            # plotParam(fileName, params)
-
-            for key, val in config.items():
+            # evaluate average of parameters over selection mask
+            for key, val in mask_config.items():
                 p = params[key].reshape(-1)
                 mask = masks[val["mask"]]
                 values = p[mask.reshape(-1) == 1]
                 features[key][i] = np.mean(values)
-                # features[key][i] = np.percentile(values, q=50)
 
         print(patients)
         print(features)
 
-        keys1 = ["oxy", "oxy", "oxy"]
-        keys2 = ["nir", "thi", "twi"]
-        target = patients["target"]
+        # plot analysis results
+        data = pd.DataFrame.from_dict({**patients, **features})
+        sns.pairplot(
+            data, hue="target", x_vars=["oxy"], y_vars=["nir", "thi", "twi"],
+            height=3, aspect=1.2,
+        )
+        plt.show()
 
-        baseName, ext = fileName.rsplit(".")
-        plotMultipleXY(baseName+".png", features, target, keys1, keys2)
 
         print("\nElapsed time for preparing results: %f sec" %
               (timer() - start))
@@ -381,12 +342,14 @@ def main():
     logger.info("Python executable: {}".format(sys.executable))
     logger.info("Python hsi version: {}".format(hsi.__version__))
 
-    fileName = "test.h5"
-    filePath = os.path.join(data_path, fileName)
+    file_name = "hsstore_test.h5"
+    file_path = os.path.join(data_path, file_name)
 
-    createDataset(filePath, path="/records", descr=__doc__)
-    processDataset(filePath)
-    postprocessDataset(filePath)
+    createDataset(file_path, path="/records", descr=__doc__)
+    processDataset(file_path)
+    postprocessDataset(file_path)
+
+    os.unlink(file_path)
 
 
 
