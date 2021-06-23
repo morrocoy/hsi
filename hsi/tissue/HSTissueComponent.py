@@ -4,9 +4,7 @@ Created on Tue Feb 23 10:42:17 2021
 
 @author: kpapke
 """
-import sys
-import os.path
-import numpy as np
+import numpy
 
 from scipy.interpolate import interp1d
 
@@ -14,9 +12,8 @@ from ..log import logmanager
 
 logger = logmanager.getLogger(__name__)
 
-
-
 __all__ = ['HSTissueComponent']
+
 
 class HSTissueComponent:
     """
@@ -57,24 +54,22 @@ class HSTissueComponent:
         self.absorption = None  # interpolated absorption coefficient
 
         # set spectral data and
-        self.setData(yn, xn, wavelen)
-
+        self.set_data(yn, xn, wavelen)
 
     def interpolate(self):
         """Realign spectral data according to the interpolation points."""
         if self.wavelen is None or self._interp is None:
-            self.massatt = None
+            self.absorption = None
             logger.debug("Interpolator or interpolation points undefined. "
                          "Skip interpolation")
             return
 
-        if np.array_equal(self.wavelen, self._wavelen):
+        if numpy.array_equal(self.wavelen, self._wavelen):
             self.absorption = self._absorption
         else:
             self.absorption = self._interp(self.wavelen)
 
-
-    def setData(self, yn, xn, wavelen=None):
+    def set_data(self, yn, xn, wavelen=None):
         """Set the spetral data.
 
         Parameters
@@ -88,14 +83,14 @@ class HSTissueComponent:
             interpolated.
         """
         if isinstance(yn, list):
-            yn = np.array(yn)
-        if not isinstance(yn, np.ndarray) or yn.ndim > 1:
+            yn = numpy.array(yn)
+        if not isinstance(yn, numpy.ndarray) or yn.ndim > 1:
             raise Exception(
                 "Nodal y data for base spectrum must be 1D ndarray.")
 
         if isinstance(xn, list):
-            xn = np.array(xn)
-        if not isinstance(xn, np.ndarray) or xn.ndim > 1:
+            xn = numpy.array(xn)
+        if not isinstance(xn, numpy.ndarray) or xn.ndim > 1:
             raise Exception(
                 "Nodal x data for base spectrum must be 1D ndarray.")
 
@@ -103,25 +98,24 @@ class HSTissueComponent:
             raise Exception(
                 "Nodal x and y data for base spectrum must be of same length.")
 
-        self._absorption = yn.view(np.ndarray)
-        self._wavelen = xn.view(np.ndarray)
+        self._absorption = yn.view(numpy.ndarray)
+        self._wavelen = xn.view(numpy.ndarray)
 
         if wavelen is not None:
             if isinstance(wavelen, list):
-                wavelen = np.array(wavelen)
-            if not isinstance(wavelen, np.ndarray) or wavelen.ndim > 1:
+                wavelen = numpy.array(wavelen)
+            if not isinstance(wavelen, numpy.ndarray) or wavelen.ndim > 1:
                 raise Exception("Interpolation x data must be 1D ndarray.")
-            self.wavelen = wavelen.view(np.ndarray)
+            self.wavelen = wavelen.view(numpy.ndarray)
 
         else:
-            self.wavelen = xn.view(np.ndarray)
+            self.wavelen = xn.view(numpy.ndarray)
 
         # set interpolator
-        self.setInterp(kind='linear')
+        self.set_interpolator(kind='linear')
 
-
-    def setInterp(self, kind='linear', bounds_error=None,
-                  fill_value=np.nan, assume_sorted=False):
+    def set_interpolator(self, kind='linear', bounds_error=None,
+                         fill_value=numpy.nan, assume_sorted=False):
         """Set the interpolator for the base spectrum.
 
         Forwards all arguments to :class:`scipy.interpolate.interp1d`.
@@ -134,8 +128,7 @@ class HSTissueComponent:
             bounds_error=bounds_error, assume_sorted=assume_sorted)
         self.interpolate()
 
-
-    def setInterpPnts(self, wavelen):
+    def set_interp_points(self, wavelen):
         """Set interpolation points used to realignment the spectral data.
 
         Parameters
@@ -145,9 +138,9 @@ class HSTissueComponent:
             interpolated.
         """
         if isinstance(wavelen, list):
-            wavelen = np.array(wavelen)
-        if not isinstance(wavelen, np.ndarray) or wavelen.ndim > 1:
+            wavelen = numpy.array(wavelen)
+        if not isinstance(wavelen, numpy.ndarray) or wavelen.ndim > 1:
             raise Exception("Interpolation samples must be 1D ndarray.")
 
-        self.wavelen = wavelen.view(np.ndarray)
+        self.wavelen = wavelen.view(numpy.ndarray)
         self.interpolate()

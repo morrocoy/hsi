@@ -287,7 +287,7 @@ class RegnPlotCtrlItem(pg.GraphicsWidget):
         for item, shadowItem in zip(self.curveItems, self.shadowCurveItems):
             if item is sender:
                 x, y = item.getData()
-                shadowItem.setData(x=x, y=y)
+                shadowItem.set_data(x=x, y=y)
 
         self.updateBounds()
         self.sigPlotChanged.emit(sender)

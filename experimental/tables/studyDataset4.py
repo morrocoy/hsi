@@ -104,12 +104,12 @@ def main():
         reader = HSStore(file, path="/records")
         writer = HSStore(file, path="/records")
 
-        reader.attacheTable("patient")
-        reader.attacheTable("hsimage")
-        reader.attacheTable("masks")
+        reader.attache_table("patient")
+        reader.attache_table("hsimage")
+        reader.attache_table("masks")
 
-        writer.removeTable("tivita")
-        tableTivita = writer.createTable(
+        writer.remove_table("tivita")
+        tableTivita = writer.create_table(
             name="tivita",
             dtype=np.dtype([
                 ("oxy", "<f8", (480, 640)),
@@ -122,8 +122,8 @@ def main():
         )
         entryTivita = tableTivita.row
 
-        print(f"Tables to read: {reader.getTableNames()}")
-        print(f"Tables to write: {writer.getTableNames()}")
+        print(f"Tables to read: {reader.get_table_names()}")
+        print(f"Tables to write: {writer.get_table_names()}")
         print(f"Number of entries: {len(reader)}")
 
         # serial evaluation
@@ -153,11 +153,11 @@ def main():
 
     # with HSStore.open(filePath, mode="r", path="/records") as dataset:
     #
-    #     dataset.attacheTable("patient")
-    #     dataset.attacheTable("hsimage")
-    #     dataset.attacheTable("masks")
+    #     dataset.attache_table("patient")
+    #     dataset.attache_table("hsimage")
+    #     dataset.attache_table("masks")
     #
-    #     print(dataset.getTableNames())
+    #     print(dataset.get_table_names())
     #     print(len(dataset))
     #
     #     # serial evaluation

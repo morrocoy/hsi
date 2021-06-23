@@ -96,14 +96,14 @@ def createDataset(file_name, path, descr=None):
             filePath, mode="w", path=path, descr=descr) as dataset:
         rows = len(patient_data.index)
 
-        patient_table = dataset.createTable(
+        patient_table = dataset.create_table(
             name="patient",
             dtype=HSPatientInfo,
             title="Patient information",
             expectedrows=rows,
         )
 
-        hsidata_table = dataset.createTable(
+        hsidata_table = dataset.create_table(
             name="hsidata",
             dtype=np.dtype([
                 ("hsformat", "<S32"),
@@ -114,7 +114,7 @@ def createDataset(file_name, path, descr=None):
             expectedrows=rows,
         )
 
-        masks_table = dataset.createTable(
+        masks_table = dataset.create_table(
             name="masks",
             dtype=np.dtype([
                 ("tissue", "<i1", (480, 640)),
@@ -178,11 +178,11 @@ def processDataset(file_name):
         reader = HSStore(file, path="/records")
         writer = HSStore(file, path="/records")
 
-        reader.attacheTable("patient")
-        reader.attacheTable("hsidata")
-        reader.attacheTable("masks")
+        reader.attache_table("patient")
+        reader.attache_table("hsidata")
+        reader.attache_table("masks")
 
-        tivita_table = writer.createTable(
+        tivita_table = writer.create_table(
             name="tivita",
             dtype=np.dtype([
                 ("oxy", "<f8", (480, 640)),
@@ -195,8 +195,8 @@ def processDataset(file_name):
         )
         tivita_entry = tivita_table.row
 
-        print(f"Tables to read: {reader.getTableNames()}")
-        print(f"Tables to write: {writer.getTableNames()}")
+        print(f"Tables to read: {reader.get_table_names()}")
+        print(f"Tables to write: {writer.get_table_names()}")
         print(f"Number of entries: {len(reader)}")
 
         # serial evaluation
@@ -290,15 +290,15 @@ def postprocessDataset(file_name, mask_config=None):
     file_path = os.path.join(data_path, file_name)
     with HSStore.open(file_path, mode="r", path="/records") as reader:
         # attach tables
-        reader.attacheTable("patient")
-        reader.attacheTable("masks")
-        reader.attacheTable("tivita")
+        reader.attache_table("patient")
+        reader.attache_table("masks")
+        reader.attache_table("tivita")
 
-        print(f"Tables to read: {reader.getTableNames()}")
+        print(f"Tables to read: {reader.get_table_names()}")
         print(f"Number of entries: {len(reader)}")
 
         # patient data
-        patients = pd.DataFrame.from_records(reader.getTable("patient")[:])
+        patients = pd.DataFrame.from_records(reader.get_table("patient")[:])
 
         # features used for classifications
         features = pd.DataFrame(

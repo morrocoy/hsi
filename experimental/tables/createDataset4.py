@@ -68,14 +68,14 @@ def main():
             filePath, mode="w", path="/records", descr=__doc__) as dataset:
         rows = len(patientData.index)
 
-        tablePatient = dataset.createTable(
+        tablePatient = dataset.create_table(
             name="patient",
             dtype=HSPatientInfo,
             title="Patient information",
             expectedrows=rows,
         )
 
-        tableHSImage = dataset.createTable(
+        tableHSImage = dataset.create_table(
             name="hsimage",
             dtype=np.dtype([
                 ("hsformat", "<S32"),
@@ -86,7 +86,7 @@ def main():
             expectedrows=rows,
         )
 
-        tableMasks = dataset.createTable(
+        tableMasks = dataset.create_table(
             name="masks",
             dtype=np.dtype([
                 ("tissue", "<i1", (480, 640)),

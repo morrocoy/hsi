@@ -418,7 +418,7 @@ class HSImage:
             if len(wavelen) != len(spectra):
                 raise Exception("Spectral x and y data must be of same length.")
 
-            logger.debug("setData: Set spectral data. Update wavelength.")
+            logger.debug("set_data: Set spectral data. Update wavelength.")
             self.wavelen = wavelen.view(np.ndarray)
             self.spectra = convert(self.format, format, spectra, wavelen)
             self.fspectra = self.spectra.copy()
@@ -430,7 +430,7 @@ class HSImage:
             elif len(self.wavelen) != len(spectra):
                 raise Exception("Spectral x and y data must be of same length.")
             else:
-                logger.debug("setData: Set spectral data. Preserve wavelength.")
+                logger.debug("set_data: Set spectral data. Preserve wavelength.")
                 self.spectra = convert(self.format, format, spectra, self.wavelen)
                 self.fspectra = self.spectra.copy()
 

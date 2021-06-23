@@ -73,7 +73,7 @@ class HSBaseAnalysis(object):
             raise Exception("Unknown format '{}'.".format(format))
         self.format = format
 
-        # Forwards data arguments to self.setData() if available
+        # Forwards data arguments to self.set_data() if available
         if spectra is not None:
             self.setData(spectra, wavelen)
 
@@ -216,7 +216,7 @@ class HSBaseAnalysis(object):
             if len(x) != len(y):
                 raise Exception("Spectral x and y data must be of same length.")
 
-            logger.debug("setData: Set spectral data. Update wavelength.")
+            logger.debug("set_data: Set spectral data. Update wavelength.")
             self.spectra = convert(self.format, format, y, x)
             self.wavelen = x.view(np.ndarray)
 
@@ -227,7 +227,7 @@ class HSBaseAnalysis(object):
             elif len(self.wavelen) != len(y):
                 raise Exception("Spectral x and y data must be of same length.")
             else:
-                logger.debug("setData: Set spectral data. Preserve wavelength.")
+                logger.debug("set_data: Set spectral data. Preserve wavelength.")
                 self.spectra = convert(self.format, format, y, self.wavelen)
 
 

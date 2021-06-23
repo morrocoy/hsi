@@ -5,7 +5,7 @@ Created on Tue Feb 23 10:42:17 2021
 @author: kpapke
 """
 import os.path
-import numpy as np
+import numpy
 
 from scipy.interpolate import interp1d
 
@@ -87,11 +87,11 @@ class HSTissueCompound:
             'fat': 0.2,    # fat
             'mel': 0*0.025,  # melanin
         }
-        self.setComposition(portions)
+        self.set_composition(portions)
 
         # set wavelength samples
         if wavelen is None:
-            wavelen = np.linspace(500., 1000., num=100, endpoint=False)
+            wavelen = numpy.linspace(500., 1000., num=100, endpoint=False)
         self.wavelen = wavelen  # wavelength [nm]
 
         # skin type ('epidermis', 'dermis', 'bone', 'musle', 'mucosa')
@@ -111,24 +111,23 @@ class HSTissueCompound:
         self._anisotropy = None
 
         # load mass attenuation coefficient of tissue components
-        self.loadDefaultComponents()
-        self.loadReferenceAnisotropy()
+        self.load_default_components()
+        self.load_reference_anisotropy()
 
         # calculate parameters of tissue compound
         self.evaluate()
 
-
-    def addComponentData(self, wavelen, attcoef, name,
-                         xunit='nm', yunit='cm-1'):
+    def add_component_data(self, wavelen, attcoef, name,
+                           xunit='nm', yunit='cm-1'):
         """Load spectral data for the mass attenuation coefficient from a file.
 
         Parameters
         ----------
-        attcoef :  numpy.ndarray
-            The sampled spectral information for the attenuation coefficient.
         wavelen :  numpy.ndarray
             The wavelengths [nm] at which the spectral information for the
             attenuation coefficient is sampled.
+        attcoef :  numpy.ndarray
+            The sampled spectral information for the attenuation coefficient.
         name : str
             The component name.
         xunit : str, optional
@@ -167,14 +166,13 @@ class HSTissueCompound:
         self.components[name] = HSTissueComponent(
             yscale*attcoef, xscale*wavelen, self.wavelen)
 
-
-    def addComponentFile(self, filepath, name, skiprows=0, usecols=[0, 1],
-                         **options):
+    def add_component_file(self, file_path, name, skiprows=0, usecols=None,
+                           **options):
         """Load spectral data for the mass attenuation coefficient from a file.
 
         Parameters
         ----------
-        filePath : str
+        file_path : str
             The intput file path.
         name : str
             The component name.
@@ -182,14 +180,18 @@ class HSTissueCompound:
             DESCRIPTION. The default is 4.
         usecols : list of int, optional
             DESCRIPTION. The default is [0, 1].
-        **options : dict, optional
+        **options
             Additional options are forwarded to
-            :func:`addComponentData()<TissueCompound.addComponentData>`.
+            :func:`add_component_data()<TissueCompound.add_component_data>`.
         """
-        wavelen, attcoef = np.loadtxt(
-            filepath, skiprows=skiprows, usecols=usecols, unpack=True)
 
-        self.addComponentData(wavelen, attcoef, name, **options)
+        if usecols is None:
+            usecols = [0, 1]
+
+        wavelen, attcoef = numpy.loadtxt(
+            file_path, skiprows=skiprows, usecols=usecols, unpack=True)
+
+        self.add_component_data(wavelen, attcoef, name, **options)
 
     def evaluate(self):
         """Evaluate optical properties of tissue compound."""
@@ -198,8 +200,8 @@ class HSTissueCompound:
         components = self.components
 
         # absorption from blood components
-        absorption = np.zeros(wavelen.shape)
-        rem = 1. # remainder portion
+        absorption = numpy.zeros(wavelen.shape)
+        rem = 1.  # remainder portion
         for key in ('methb', 'cohb', 'shb'):
             absorption += portions[key] * components[key].absorption
             rem -= portions[key]
@@ -213,13 +215,13 @@ class HSTissueCompound:
 
         # anisotropy of scattering
         gref = self._anisotropy(wavelen)  # reference anisotropy
-        anisotropy = np.zeros(wavelen.shape)
+        anisotropy = numpy.zeros(wavelen.shape)
         anisotropy += gref
         anisotropy += (0.98 - gref) * portions['blo']
         anisotropy += (1.00 - gref) * portions['wat']
 
         # reduced scattering
-        rscattering = np.zeros(wavelen.shape)
+        rscattering = numpy.zeros(wavelen.shape)
         rscattering += 22.0 * portions['blo'] * (wavelen / 500) ** -0.660
         rscattering += 13.7 * portions['fat'] * (wavelen / 500) ** -0.385
         # remainder portion
@@ -242,7 +244,7 @@ class HSTissueCompound:
         # a review", Phys. Med. Biol. 58 R37, 2013
         n_dry = 1.514
         n_wat = 1.33
-        refraction = np.ones(wavelen.shape)
+        refraction = numpy.ones(wavelen.shape)
         refraction *= n_dry - (n_dry - n_wat) * portions['wat']
 
         # store optical properties of tissue compound in member variables
@@ -252,8 +254,7 @@ class HSTissueCompound:
         self.rscattering = rscattering
         self.refraction = refraction
 
-
-    def loadDefaultComponents(self):
+    def load_default_components(self):
         """Load attenuation coefficients for default components.
 
         The default components comprise:
@@ -270,102 +271,105 @@ class HSTissueCompound:
         """
 
         # deoxygenated hemoglobin (HHB) by Gratzer et. al.
-        filePath = os.path.join(self.libdir, "Hemoglobin by Gratzer 2.txt")
-        self.addComponentFile(filePath, 'hhb', skiprows=24, usecols=[0, 2])
+        file_path = os.path.join(self.libdir, "Hemoglobin by Gratzer 2.txt")
+        self.add_component_file(file_path, 'hhb', skiprows=24, usecols=[0, 2])
         logger.debug("Load optical parameters for HHB from "
-                     "{}.".format(filePath))
+                     "{}.".format(file_path))
 
         # oxygenated hemoglobin (O2HB) by Gratzer et. al.
-        filePath = os.path.join(self.libdir, "Hemoglobin by Gratzer 2.txt")
-        self.addComponentFile(filePath, 'ohb', skiprows=24, usecols=[0, 1])
+        file_path = os.path.join(self.libdir, "Hemoglobin by Gratzer 2.txt")
+        self.add_component_file(file_path, 'ohb', skiprows=24, usecols=[0, 1])
         logger.debug("Load optical parameters for O2HB from "
-                     "{}.".format(filePath))
+                     "{}.".format(file_path))
 
         # water by Hermann:
-        filePath = os.path.join(self.libdir, "Water by Hermann.txt")
-        self.addComponentFile(filePath, 'wat', skiprows=4)
+        file_path = os.path.join(self.libdir, "Water by Hermann.txt")
+        self.add_component_file(file_path, 'wat', skiprows=4)
         logger.debug("Load optical parameters for Water from "
-                     "{}.".format(filePath))
+                     "{}.".format(file_path))
 
         # water by Segelstein et. al.
-        # filePath = os.path.join(self.libdir, "Water by Segelstein 1981.txt")
-        # data = np.loadtxt(filePath, skiprows=4)
-        # data[:, 1] = 4 * np.pi * data[:, 2] / data[:, 1]  # refractive index to mu_a
-        # self.addComponentData(data[:, 0], data[:, 1], 'wat', xunit='um')
+        # file_path = os.path.join(self.libdir, "Water by Segelstein 1981.txt")
+        # data = numpy.loadtxt(file_path, skiprows=4)
+        # data[:, 1] = 4 * numpy.pi * data[:, 2] / data[:, 1]  # n to mu_a
+        # self.add_component_data(data[:, 0], data[:, 1], 'wat', xunit='um')
         # logger.debug("Load optical parameters for Water from "
-        #              "{}.".format(filePath))
+        #              "{}.".format(file_path))
 
         # fat by van Veen et. al. 2004:
-        filePath = os.path.join(self.libdir, "Fat by van Veen 2004.txt")
-        self.addComponentFile(filePath, 'fat', skiprows=7, yunit='m-1')
+        file_path = os.path.join(self.libdir, "Fat by van Veen 2004.txt")
+        self.add_component_file(file_path, 'fat', skiprows=7, yunit='m-1')
         logger.debug("Load optical parameters for Fat from "
-                     "{}.".format(filePath))
+                     "{}.".format(file_path))
 
         # # melanin by Jaques:
         # filePath = os.path.join(self.libdir, "Melanin by Jaques.txt")
-        # self.addComponentFile(filePath, 'mel', skiprows=4)
+        # self.add_component_file(filePath, 'mel', skiprows=4)
         # logger.debug("Load optical parameters for Melanin from "
         #              "{}.".format(filePath))
 
         # melanin by Hermann:
-        filePath = os.path.join(self.libdir, "Melanin by Hermann.txt")
-        self.addComponentFile(filePath, 'mel', skiprows=4)
+        file_path = os.path.join(self.libdir, "Melanin by Hermann.txt")
+        self.add_component_file(file_path, 'mel', skiprows=4)
         logger.debug("Load optical parameters for Melanin from "
-                     "{}.".format(filePath))
+                     "{}.".format(file_path))
 
         # # methemoglobin by Hermann:
-        # filePath = os.path.join(self.libdir, "Methemoglobin by Hermann.txt")
-        # self.addComponentFile(filePath, 'methb', skiprows=4)
-        # logger.debug("Load optical parameters for Methemoglobin from "
-        #              "{}.".format(filePath))
+        file_path = os.path.join(self.libdir, "Methemoglobin by Hermann.txt")
+        self.add_component_file(file_path, 'methb', skiprows=4)
+        logger.debug("Load optical parameters for Methemoglobin from "
+                     "{}.".format(file_path))
 
         # methemoglobin by Zijistra:
-        filePath = os.path.join(self.libdir, "Methemoglobin by Zijistra.txt")
-        # filePath = os.path.join(self.libdir,
+        # # file_path = os.path.join(self.libdir, "Methemoglobin by Zijistra.txt")
+        # file_path = os.path.join(self.libdir,
         #                         "Methemoglobin by Zijistra scaled.txt")
-        self.addComponentFile(filePath, 'methb', skiprows=6)
-        logger.debug("Load optical parameters for Methemoglobin from "
-                     "{}.".format(filePath))
+        # self.add_component_file(file_path, 'methb', skiprows=6)
+        # logger.debug("Load optical parameters for Methemoglobin from "
+        #              "{}.".format(file_path))
 
         # carboxyhemoglobin by Hermann:
-        filePath = os.path.join(self.libdir, "Carboxyhemoglobin by Hermann.txt")
-        self.addComponentFile(filePath, 'cohb', skiprows=4)
+        file_path = os.path.join(
+            self.libdir, "Carboxyhemoglobin by Hermann.txt")
+        self.add_component_file(file_path, 'cohb', skiprows=4)
         logger.debug("Load optical parameters for Carboxyhemoglobin from "
-                     "{}.".format(filePath))
+                     "{}.".format(file_path))
 
         # sulfhemoglobin  by Hermann
-        filePath = os.path.join(self.libdir, "Sulfhemoglobin by Hermann.txt")
-        self.addComponentFile(filePath, 'shb', skiprows=4)
+        file_path = os.path.join(self.libdir, "Sulfhemoglobin by Hermann.txt")
+        self.add_component_file(file_path, 'shb', skiprows=4)
         logger.debug("Load optical parameters for Sulfhemoglobin from "
-                     "{}.".format(filePath))
+                     "{}.".format(file_path))
 
-
-    def loadReferenceAnisotropy(self, filePath=None, skiprows=4, usecol=[0, 1]):
+    def load_reference_anisotropy(self, file_path=None, skiprows=4,
+                                  usecols=None):
         """Load rereference data for the anisotrop of scattering.
 
         Parameters
         ----------
-        filePath : str, optional
+        file_path : str, optional
             The absolute path to the input file.
         skiprows : int, optional
-            DESCRIPTION. The default is 4.
+            The default is 4.
         usecols : list of int, optional
-            DESCRIPTION. The default is [0, 1].
+            The default is [0, 1].
         """
-        if filePath is None:
-            filePath = os.path.join(self.libdir, "g by Hermann.txt")
+        if file_path is None:
+            file_path = os.path.join(self.libdir, "g by Hermann.txt")
             skiprows = 4
-            usecol = [0, 1]
+            usecols = [0, 1]
 
-        wavelen, anisotropy = np.loadtxt(
-            filePath, skiprows=skiprows, usecols=usecol, unpack=True)
-        self.setReferenceAnisotropy(wavelen, anisotropy, kind='linear')
+        if usecols is None:
+            usecols = [0, 1]
+
+        wavelen, anisotropy = numpy.loadtxt(
+            file_path, skiprows=skiprows, usecols=usecols, unpack=True)
+        self.set_reference_anisotropy(wavelen, anisotropy, kind='linear')
 
         logger.debug("Load reference data for anisotropy of scattering "
-                     "from {}.".format(filePath))
+                     "from {}.".format(file_path))
 
-
-    def setComposition(self, portions):
+    def set_composition(self, portions):
         """Set portions for each tissue component to the compound.
 
         Parameters
@@ -380,8 +384,7 @@ class HSTissueCompound:
                     logger.debug(
                         "Set component portion {} to {}.".format(key, val))
 
-
-    def setReferenceAnisotropy(self, wavelen, anisotropy, **options):
+    def set_reference_anisotropy(self, wavelen, anisotropy, **options):
         """Set the reference data for anisotropy of scattering.
 
         Parameters
@@ -400,8 +403,7 @@ class HSTissueCompound:
         logger.debug("Apply interpolator on reference data for anisotropy of "
                      "scattering.")
 
-
-    def setSkinType(self, skintype):
+    def set_skin_type(self, skintype):
         """Set the skin type
 
         Parameters

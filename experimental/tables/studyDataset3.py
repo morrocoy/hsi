@@ -80,7 +80,7 @@ logger = logmanager.getLogger(__name__)
 #     plotMasks(fileName, masks, image)
 #
 #     analysis = HSTivita(format=HSIntensity)
-#     analysis.setData(hsImage.spectra, hsImage.wavelen, format=hsformat)
+#     analysis.set_data(hsImage.spectra, hsImage.wavelen, format=hsformat)
 #     analysis.evaluate(mask=masks["tissue"])
 #     param = analysis.getSolution(unpack=True, clip=True)
 #     # param = None

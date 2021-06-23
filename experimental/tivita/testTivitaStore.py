@@ -130,7 +130,7 @@ def main():
         store.overwriteMasks = True
 
         # attach table with patien info from underlying excel file
-        store.attacheTable(
+        store.attache_table(
             name="patient",
             dtype=HSPatientInfo,
             sheet_name=0,

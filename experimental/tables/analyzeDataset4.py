@@ -91,15 +91,15 @@ def main():
 
     with HSStore.open(filePath, mode="r", path="/records") as reader:
         # attach tables
-        reader.attacheTable("patient")
-        reader.attacheTable("masks")
-        reader.attacheTable("tivita")
+        reader.attache_table("patient")
+        reader.attache_table("masks")
+        reader.attache_table("tivita")
 
-        print(f"Tables to read: {reader.getTableNames()}")
+        print(f"Tables to read: {reader.get_table_names()}")
         print(f"Number of entries: {len(reader)}")
 
         # patient data
-        patients = pd.DataFrame.from_records(reader.getTable("patient")[:])
+        patients = pd.DataFrame.from_records(reader.get_table("patient")[:])
 
         # features used for classifications
         features = pd.DataFrame(

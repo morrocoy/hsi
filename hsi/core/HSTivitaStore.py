@@ -4,19 +4,19 @@ Created on Wed Mar  3 12:53:04 2021
 
 @author: kpapke
 """
-import sys
+# import sys
 import os.path
 import pathlib
 
-import re
+# import re
 
 import numpy as np
-import numpy.lib.recfunctions as rfn
+# import numpy.lib.recfunctions as rfn
 import pandas as pd
 import cv2
-import tables
+# import tables
 
-from .formats import HSIntensity, HSAbsorption
+from .formats import HSIntensity
 from .HSImage import HSImage
 from .HSStore import HSStore
 
@@ -96,17 +96,13 @@ class HSTivitaStore:
         if not os.path.isdir(self.path):
             raise(f"Path to dataset not found ({path} -> {self.path}).")
 
-
-
     def __enter__(self):
         logger.debug("HSTivitaStore object __enter__().")
         return self
 
-
     def __exit__(self, exception_type, exception_value, traceback):
         logger.debug("HSTivitaStore object __exit__().")
         self.close()
-
 
     def __getitem__(self, index):
         """ Returns the entry of the dataset specified by the index.
@@ -135,13 +131,11 @@ class HSTivitaStore:
         else:
             return None
 
-
     def __iter__(self):
         """ Returns an iterator on the object to iterate through the rows of
         attached tables. """
         self.index = 0
         return self
-
 
     def __len__(self):
         """ Returns the row count of the attached tables comprising the dataset.
@@ -153,7 +147,6 @@ class HSTivitaStore:
         else:
             return 0
 
-
     def __next__(self):
         """ Returns the next entry of the attached tables in an iteration. """
         if self.index < self.__len__():
@@ -163,9 +156,8 @@ class HSTivitaStore:
             return result
         raise StopIteration  # end of Iteration
 
-
-    def attacheTable(self, name, dtype, sheet_name=0, header=0, usecols=None,
-                     skiprows=None, nrows=None):
+    def attache_table(self, name, dtype, sheet_name=0, header=0, usecols=None,
+                      skiprows=None, nrows=None):
         """ Attach an existing table from the excel file.
 
         Parameters
@@ -225,12 +217,10 @@ class HSTivitaStore:
 
         self.tables[name] = table
 
-
     def clear(self):
         """ Clear any loaded data and detach all tables"""
         logger.debug("Clear head and detach all tables.")
         self.tables.clear()
-
 
     def close(self):
         """ Close the underlying hdf5 file and clean up any related data.
@@ -242,36 +232,34 @@ class HSTivitaStore:
             self.file.close()
         self.clear()
 
-
-    def createMasks(self, path):
+    def create_masks(self, path):
         parent, node_name = path.rsplit(os.sep, 1)
         logger.debug(f"Create masks for record {node_name}.")
 
-        filePath = os.path.join(parent, node_name, node_name + "_SpecCube.dat")
-        hsImage = HSImage(filePath)
-        hsImage.setFormat(HSIntensity)
+        file_path = os.path.join(parent, node_name, node_name + "_SpecCube.dat")
+        hsimage = HSImage(file_path)
+        hsimage.setFormat(HSIntensity)
 
         # add gaussian image filter for a cleaner tissue selection mask
-        hsImage.addFilter(mode='image', type='gauss', sigma=1, truncate=4)
-        masks = {"tissue": hsImage.getTissueMask([0.1, 0.9])}  # tissue mask)
+        hsimage.addFilter(mode='image', type='gauss', sigma=1, truncate=4)
+        masks = {"tissue": hsimage.getTissueMask([0.1, 0.9])}  # tissue mask)
 
         # extract remaining masks from userdefined contours in images
-        for name, node_suffix in  self.maskconfig.items():
-            mask, image = self.findMask(os.path.join(
+        for name, node_suffix in self.maskconfig.items():
+            mask, image = self.find_mask(os.path.join(
                 parent, node_name, node_name + node_suffix),
                 self.markerColor,
             )
             masks[name] = mask * masks["tissue"]
 
         # write masks as numpy files
-        filePath = os.path.join(parent, node_name, node_name + "_Masks.npz")
-        logger.debug(f"Write masks for record {node_name} in {filePath}.")
-        np.savez(filePath, **masks)
+        file_path = os.path.join(parent, node_name, node_name + "_Masks.npz")
+        logger.debug(f"Write masks for record {node_name} in {file_path}.")
+        np.savez(file_path, **masks)
 
         return masks
 
-
-    def detachTable(self, name):
+    def detach_table(self, name):
         """ Remove a table from the selected list.
 
         Parameters
@@ -285,26 +273,25 @@ class HSTivitaStore:
         else:
             logger.debug(f"Table {name} not found.")
 
-
     @staticmethod
-    def findMask(filePath, markerColor=[100, 255, 0]):
+    def find_mask(file_path, marker_color=[100, 255, 0]):
         """ Extract a contour from an RGB image and derive a mask from it.
 
         Parameters
         ----------
-        filePath : str, or pathlib.Path
+        file_path : str, or pathlib.Path
             The path to the RGB image.
-        markerColor: tuple, list
+        marker_color: tuple, list
             A 3-element tuple or list describing the RGB color used to select
             the polygon. Default is the Tivita marker color [100, 255, 0].
         """
-        if not os.path.isfile(filePath):
-            logger.debug(f"WARNING: Image file {filePath} not found.")
-            print(f"WARNING: Image file {filePath} not found.")
+        if not os.path.isfile(file_path):
+            logger.debug(f"WARNING: Image file {file_path} not found.")
+            print(f"WARNING: Image file {file_path} not found.")
             return [], []
 
-        logger.debug(f"Read image file {filePath}.")
-        img = cv2.imread(filePath, cv2.IMREAD_COLOR)
+        logger.debug(f"Read image file {file_path}.")
+        img = cv2.imread(file_path, cv2.IMREAD_COLOR)
 
         rows, cols, channels = img.shape
         logger.debug(f"Image shape: {img.shape}.")
@@ -312,16 +299,16 @@ class HSTivitaStore:
             # img = img[27:27+480, 3:3+640]
             img = img[27:27 + 480, 3:3 + 640]
 
-        logger.debug(f"Select outermost polygon of color {markerColor}.")
+        logger.debug(f"Select outermost polygon of color {marker_color}.")
         img_marked = img.copy()
         rows, cols, channels = img.shape
 
         # convert marker color from rgb to bgr
-        markerColor = np.array(markerColor[::-1])
+        marker_color = np.array(marker_color[::-1])
 
         # external (outermost) contours from color
-        maskColor = cv2.inRange(img_marked, markerColor, markerColor)
-        contours, hierarchy = cv2.findContours(maskColor, cv2.RETR_EXTERNAL,
+        mask_color = cv2.inRange(img_marked, marker_color, marker_color)
+        contours, hierarchy = cv2.findContours(mask_color, cv2.RETR_EXTERNAL,
                                                cv2.CHAIN_APPROX_SIMPLE)
 
         # create a single channel black image
@@ -334,8 +321,7 @@ class HSTivitaStore:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         return mask, img
 
-
-    def getTable(self, name):
+    def get_table(self, name):
         """ Retrieve a table object from the selected list if available.
 
         Parameters
@@ -345,14 +331,13 @@ class HSTivitaStore:
         """
         return self.tables.get(name, None)
 
-
-    def getTableNames(self):
+    def get_table_names(self):
         """ Return the list of selected table names.
         """
         return self.tables.keys()
 
-
-    def readHSImage(self, path):
+    @staticmethod
+    def read_hsimage(path):
         """ Internal function to read the hyperspectral data for the selected
         record.
 
@@ -364,12 +349,12 @@ class HSTivitaStore:
         parent, node_name = path.rsplit(os.sep, 1)
         logger.debug(f"Read hyperspectral data for record {node_name}.")
 
-        filePath = os.path.join(parent, node_name, node_name + "_SpecCube.dat")
-        hsImage = HSImage(filePath)
-        nwavelen, rows, cols = hsImage.shape
+        file_path = os.path.join(parent, node_name, node_name + "_SpecCube.dat")
+        hsimage = HSImage(file_path)
+        # nwavelen, rows, cols = hsimage.shape
         hsformat = HSIntensity
 
-        hsImage.setFormat(hsformat)
+        hsimage.setFormat(hsformat)
 
         # create the record array
         # record = np.array(
@@ -382,14 +367,13 @@ class HSTivitaStore:
         # )
 
         record = {
-            "hsformat": str.encode(hsImage.format.key),
-            "wavelen": hsImage.wavelen.astype("<f8"),
-            "spectra": hsImage.spectra.astype("<f4")
+            "hsformat": str.encode(hsimage.format.key),
+            "wavelen": hsimage.wavelen.astype("<f8"),
+            "spectra": hsimage.spectra.astype("<f4")
         }
         return record
 
-
-    def readMasks(self, path):
+    def read_masks(self, path):
         """ Internal function to read the mask file for the selected record.
 
         Parameters
@@ -399,21 +383,20 @@ class HSTivitaStore:
         """
         parent, node_name = path.rsplit(os.sep, 1)
 
-        filePath = os.path.join(parent, node_name, node_name + "_Masks.npz")
+        file_path = os.path.join(parent, node_name, node_name + "_Masks.npz")
 
         # for suffix in ["Mask.npy", "Masks.npz", "Masks2.npz"]:
         #     fpath = os.path.join(parent, node_name, node_name + "_" + suffix)
         #     if os.path.isfile(fpath):
         #         os.unlink(fpath)
 
-        if os.path.isfile(filePath) and not self.overwriteMasks:
+        if os.path.isfile(file_path) and not self.overwriteMasks:
             logger.debug(f"Read selection masks for record {node_name}.")
-            masks = np.load(filePath)
+            masks = np.load(file_path)
             return {name: masks[name] for name in masks.files}
 
         else:
-            return self.createMasks(path)
-
+            return self.create_masks(path)
 
     def select(self, index):
         """ Internal function to access a specific row of all attached tables.
@@ -433,15 +416,14 @@ class HSTivitaStore:
             logger.debug(f"Select record {node_name}.")
 
             # read hyperspectral data
-            hsimage = self.readHSImage(path)
+            hsimage = self.read_hsimage(path)
 
             # read masks
-            masks = self.readMasks(path)
+            masks = self.read_masks(path)
             return (patient, hsimage, masks)
 
         else:
             raise Exception("Index Error: {}.".format(index))
-
 
     def to_hdf(self, fname, path="/", descr=None, nrows=None):
         """ Export attached table and associated data to an hdf5 file.
@@ -454,6 +436,8 @@ class HSTivitaStore:
             The path within the underlying hdf5 file. Default is the root path.
         descr : str, optional
             A description for the dataset. Only used in writing mode.
+        nrows : int, optional
+            The number of rows to be written.
         """
         expectedrows = self.__len__()
         if nrows is not None and nrows <= expectedrows:
@@ -473,7 +457,7 @@ class HSTivitaStore:
         with HSStore(fname, mode="w", path=path, descr=descr) as writer:
 
             # table of patient information
-            tablePatient = writer.createTable(
+            table_patient = writer.create_table(
                 name=table_name,
                 dtype=table.dtype,
                 title="Patient information",
@@ -481,7 +465,7 @@ class HSTivitaStore:
             )
 
             # table of hyperspectral image data
-            tableHSImage = writer.createTable(
+            table_hsimage = writer.create_table(
                 name="hsimage",
                 dtype=np.dtype([
                     ("hsformat", "<S32"),
@@ -493,7 +477,7 @@ class HSTivitaStore:
             )
 
             # table of masks to be applied on the hyperspectral image
-            tableMasks = writer.createTable(
+            table_masks = writer.create_table(
                 name="masks",
                 dtype=np.dtype([
                     (name, "<i1", (rows, cols)) for name in masks.keys()
@@ -502,48 +486,47 @@ class HSTivitaStore:
                 expectedrows=expectedrows,
             )
 
-            entryPatient = tablePatient.row
-            entryHSImage = tableHSImage.row
-            entryMasks = tableMasks.row
+            entry_patient = table_patient.row
+            entry_hsimage = table_hsimage.row
+            entry_masks = table_masks.row
 
             print(f"Number of entries to export: {expectedrows}")
             for i in range(expectedrows):
-                print("Export record %s (%d/%d) ..." % (patient["timestamp"], i+1, expectedrows))
+                print("Export record %s (%d/%d) ..." % (
+                    patient["timestamp"], i+1, expectedrows))
 
                 if i > 0:  # first element already loaded before
                     patient, hsimage, masks = self.select(i)
 
                 # append patient information
                 for column_name in table.dtype.names:
-                    entryPatient[column_name] = patient[column_name]
-                entryPatient.append()
+                    entry_patient[column_name] = patient[column_name]
+                entry_patient.append()
 
                 # append hyperspectral image data
                 for column_name in hsimage.keys():
-                    entryHSImage[column_name] = hsimage[column_name]
-                entryHSImage.append()
+                    entry_hsimage[column_name] = hsimage[column_name]
+                entry_hsimage.append()
 
                 # append masks
                 for column_name in masks.keys():
-                    entryMasks[column_name] = masks[column_name]
-                entryMasks.append()
+                    entry_masks[column_name] = masks[column_name]
+                entry_masks.append()
 
-
-            tablePatient.flush()
-            tableHSImage.flush()
-            tableMasks.flush()
-
+            table_patient.flush()
+            table_hsimage.flush()
+            table_masks.flush()
 
     @staticmethod
-    def open(filePath, path="/"):
+    def open(file_path, path="/"):
         """ Create a new HSTivitaStore object and leave the file open for
         further processing.
 
         Parameters
         ----------
-        fname : str or pathlib.Path
+        file_path : str or pathlib.Path
             The File, filepath, or generator to read.
         path : str, optional
             The path within the underlying hdf5 file. Default is the root path.
         """
-        return HSTivitaStore(filePath, path=path)
+        return HSTivitaStore(file_path, path=path)

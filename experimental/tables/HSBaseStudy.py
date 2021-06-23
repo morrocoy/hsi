@@ -58,7 +58,7 @@ class HSBaseStudy(object):
 
         # set data if defined in arguments
         # if dataset is not None:
-        #     self.setData(dataset)
+        #     self.set_data(dataset)
 
         self.cmap = cm.tivita()
         self.fig_options = {
@@ -347,7 +347,7 @@ class HSBaseStudy(object):
 
         # analysis ............................................................
         analyzer = HSTivita()
-        analyzer.setData(spectra, wavelen, format=hsformat)
+        analyzer.set_data(spectra, wavelen, format=hsformat)
         analyzer.evaluate(mask=masks["tissue"])
 
         param = analyzer.getSolution(unpack=True, clip=True)

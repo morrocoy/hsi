@@ -7,13 +7,13 @@ Created on Wed Mar  3 12:53:04 2021
 import os.path
 import pathlib
 
-import re
+# import re
 
 import numpy as np
-import numpy.lib.recfunctions as rfn
-import pandas as pd
+# import numpy.lib.recfunctions as rfn
+# import pandas as pd
 
-import h5py
+# import h5py
 import tables
 
 
@@ -47,7 +47,6 @@ HSPatientInfo = np.dtype([
     ("timestamp", 'S32'),
     ("target", '<i4'),
 ])
-
 
 
 class HSStore:
@@ -111,7 +110,7 @@ class HSStore:
         with HSStore.open("test.h5", mode="w", path="/records") as store:
 
             # create table in hdf5 file in group /records
-            tablePatient = store.createTable(
+            tablePatient = store.create_table(
                 name="patient",
                 dtype=PatientInfo,
                 title="Patient information",
@@ -164,16 +163,16 @@ class HSStore:
 
 
         if __name__ == '__main__':
-            # open a file in "r+" mode
+            # open an hdf5 file in "r+" mode
             with tables.open_file("test.h5", "r+") as file:
                 reader = HSStore(file, path="/records")
                 writer = HSStore(file, path="/records")
 
                 # attach table for reading
-                reader.attacheTable("patient")
+                reader.attache_table("patient")
 
-                # create table in hdf5 file in group /records providing 10x10pts images
-                table = writer.createTable(
+                # create table in group /records with 10x10pts images
+                table = writer.create_table(
                     name="analysis",
                     dtype=np.dtype([
                         ("oxy", "<f8", (10, 10)),
@@ -183,8 +182,8 @@ class HSStore:
                 )
                 row = table.row
 
-                print(f"Tables to read: {reader.getTableNames()}")
-                print(f"Tables to write: {writer.getTableNames()}")
+                print(f"Tables to read: {reader.get_table_names()}")
+                print(f"Tables to write: {writer.get_table_names()}")
                 print(f"Number of entries: {len(reader)}")
 
                 # serial evaluation
@@ -261,16 +260,13 @@ class HSStore:
                     f"Set description for dataset in directory {self.path}.")
                 node._v_attrs.descr = descr
 
-
     def __enter__(self):
         logger.debug("HSStore object __enter__().")
         return self
 
-
     def __exit__(self, exception_type, exception_value, traceback):
         logger.debug("HSStore object __exit__().")
         self.close()
-
 
     def __getitem__(self, index):
         """ Returns the entry of the attached tables specified by the index.
@@ -301,13 +297,11 @@ class HSStore:
         else:
             return None
 
-
     def __iter__(self):
         """ Returns an iterator on the object to iterate through the rows of
         attached tables. """
         self.index = 0
         return self
-
 
     def __len__(self):
         """ Returns the row count of the attached tables comprising the dataset.
@@ -319,7 +313,6 @@ class HSStore:
         else:
             return 0
 
-
     def __next__(self):
         """ Returns the next entry of the attached tables in an iteration. """
         if self.index < self.__len__():
@@ -329,8 +322,7 @@ class HSStore:
             return result
         raise StopIteration  # end of Iteration
 
-
-    def attacheTable(self, name):
+    def attache_table(self, name):
         """ Attach an existing table in the hdf5 file to the store object.
 
         Parameters
@@ -375,8 +367,7 @@ class HSStore:
             logger.debug(f"Table {name} not found.")
             return None
 
-
-    def removeTable(self, name):
+    def remove_table(self, name):
         """ Remove a table from the underlying hdf5 file if existing.
 
         Note: the file size is not reduced by this operation. The reference to
@@ -402,12 +393,10 @@ class HSStore:
         else:
             logger.debug(f"Table {name} not found.")
 
-
     def clear(self):
         """ Clear any loaded data and detach all tables"""
         logger.debug("Clear head and detach all tables.")
         self.tables.clear()
-
 
     def close(self):
         """ Close the underlying hdf5 file and clean up any related data.
@@ -419,9 +408,8 @@ class HSStore:
             self.file.close()
         self.clear()
 
-
-    def createTable(self, name, dtype, title="", expectedrows=10000,
-                    chunkshape=None):
+    def create_table(self, name, dtype, title="", expectedrows=10000,
+                     chunkshape=None):
         """ Create a new table in the hdf5 file.
 
         Parameters
@@ -450,8 +438,8 @@ class HSStore:
             return None
 
         # remove table if already defined
-        if self.hasTable(name):
-            self.removeTable(name)
+        if self.has_table(name):
+            self.remove_table(name)
 
         logger.debug(f"Create table {name} with columns {dtype}.")
         table = self.file.create_table(
@@ -461,8 +449,7 @@ class HSStore:
         self.tables[name] = table
         return table
 
-
-    def detachTable(self, name):
+    def detach_table(self, name):
         """ Remove a table from the selected list.
 
         Parameters
@@ -476,9 +463,7 @@ class HSStore:
         else:
             logger.debug(f"Table {name} not found.")
 
-
-
-    def getTable(self, name):
+    def get_table(self, name):
         """ Retrieve a table object from the selected list if available.
 
         Parameters
@@ -488,14 +473,12 @@ class HSStore:
         """
         return self.tables.get(name, None)
 
-
-    def getTableNames(self):
+    def get_table_names(self):
         """ Return the list of selected table names.
         """
         return self.tables.keys()
 
-
-    def hasTable(self, name):
+    def has_table(self, name):
         """ Returns True if
 
         """
@@ -511,7 +494,6 @@ class HSStore:
                     return True
 
         return False
-
 
     def mkdir(self, path, createparents=True):
         """ Create a directory within the hdf5 file.
@@ -536,27 +518,24 @@ class HSStore:
         else:
             return self.file.get_node(path)
 
-
-    def link(self, filePath, path="/", tables=None):
+    def link(self, file_path, path="/", table_names=None):
         """provide the dataset with a link to an external file.
 
         Parameters
         ----------
-        filePath : str, or pathlib.Path
+        file_path : str, or pathlib.Path
             The path to the file to be linked with.
         path : str, optional
             The path within the underlying hdf5 file. Default is the root path.
-        tables : list or tuple, optional
+        table_names : list or tuple, optional
             A list of table names to link. By default all existing tables
             within 'path' will be linked.
         """
-        with HSStore(os.path.abspath(filePath), mode="r", path=path) as reader:
-            for node in reader.file.iter_nodes(
-                self.path, classname='Table'):
-                if tables is None or node.name in tables:
+        with HSStore(os.path.abspath(file_path), mode="r", path=path) as reader:
+            for node in reader.file.iter_nodes(self.path, classname='Table'):
+                if table_names is None or node.name in table_names:
                     self.file.create_external_link(
                         path, node.name, target=node, createparents=True)
-
 
     def select(self, index):
         """ Internal function to access a specific row of all attached tables.
@@ -577,15 +556,14 @@ class HSStore:
         else:
             raise Exception("Index Error: {}.".format(index))
 
-
     @staticmethod
-    def open(filePath, mode='r', path="/", descr=None):
+    def open(file_path, mode='r', path="/", descr=None):
         """ Create a new HSStore object and leave the file open for further
         processing.
 
         Parameters
         ----------
-        fname : str or pathlib.Path
+        file_path : str or pathlib.Path
             The File, filepath, or generator to read.
         mode : {'a', 'w', 'r', 'r+'}, optional
             The mode in which the file is opened. Default is 'r'.
@@ -594,181 +572,4 @@ class HSStore:
         descr : str, optional
             A description for the dataset. Only used in writing mode.
         """
-        return HSStore(filePath, mode=mode, path=path, descr=descr)
-
-
-
-# class HSDataset2(object):
-#
-#     def __init__(self, filePath):
-#         """Constructor.
-#
-#         Parameters
-#         ----------
-#         filePath :  str
-#             The absolute path to the input file.
-#
-#         """
-#         # source file
-#         self._file = None
-#
-#         # information of dataset
-#         self.filePath = None  # path to the input file
-#         self.descr = None  # descrption of the dataset
-#         self.groups = []  # groups in the h5 file referring to hs data
-#         self.metadata = None  # dataframe of metadata for all records
-#
-#         # self.pids = []  # patient id
-#         # self.dates = []  # date
-#         # self.hsimages = []  # hyperspectral images
-#         # self.masks = []  # selection masks applied on the image
-#         # self.notes = []  # notes
-#
-#         # hyperspectral image of all records
-#         self.featureNames = None
-#         self.targets = []
-#         self.targetNames = None
-#
-#         # load metadata dataset if file path is defined
-#         self.load(filePath)
-#
-#
-#     def __enter__(self):
-#         logger.debug("HSDataset object __enter__().")
-#         return self
-#
-#
-#     def __exit__(self, exception_type, exception_value, traceback):
-#         logger.debug("HSDataset object __exit__().")
-#         self.close()
-#
-#
-#     def __getitem__(self, index):
-#
-#         # return column of metadata if index is an appropriate key
-#         if isinstance(index, str) and index in self.metadata.columns.values:
-#             return self.metadata[index]
-#
-#         # return entry if index is integer
-#         elif isinstance(index, int):
-#             return self.select(index)
-#         else:
-#             return None
-#
-#
-#     def __len__(self):
-#         if isinstance(self.metadata, pd.DataFrame):
-#             return len(self.metadata.index)
-#         else:
-#             return 0
-#
-#
-#     def clear(self):
-#         """Clear any loaded data. """
-#         logger.debug("Clear head.")
-#         self.filePath = None
-#         self.descr = None
-#         self.metadata = None
-#         self.groups.clear()
-#
-#
-#     def close(self):
-#         """Close the internally loaded file and clean up any related data."""
-#         if self._file is not None:
-#             logger.debug("Close file {}.".format(self.filePath))
-#             self._file.close()
-#         self.clear()
-#
-#
-#     def items(self):
-#         for i in range(len(self.metadata.index)):
-#             yield tuple(self.select(i))
-#
-#
-#     def load(self, filePath):
-#         """Open the source file and load metadata for the dataset and its
-#         entries.
-#
-#         Parameters
-#         ----------
-#         filePath :  str
-#             The absolute path to the input file.
-#         """
-#         self.clear()
-#         if os.path.isfile(filePath):
-#             fpath = filePath
-#         else:
-#             fpath = os.path.join(getPkgDir(), "data", filePath)
-#             if not os.path.isfile(fpath):
-#                 logger.debug("File '%s' not found." % (filePath))
-#                 return
-#
-#         # retrieve pd.dataframe of metadata from file
-#         with pd.HDFStore(fpath, 'r') as store:
-#             if '/metadata' in store.keys():
-#                 logger.debug("Load metadata from {}".format(fpath))
-#                 self.metadata = store['metadata']
-#             else:
-#                 logger.debug("File '%s' does not contain metadata." % (filePath))
-#                 return
-#
-#         # open file for continues use
-#         file = h5py.File(fpath, 'r')
-#
-#         # dataset description
-#         keys = file.keys()
-#         if 'descr' in keys:
-#             self.descr = file['descr'][()]
-#         else:
-#             self.descr = None
-#
-#         # groups containing hyperspectral data (format: yyyy-mm-dd-HH-MM-SS)
-#         pattern = re.compile("^\d{4}(-\d{2}){5}$")
-#         self.groups = [key for key in keys if pattern.match(key)]
-#
-#         # keep reference to file
-#         self.filePath = fpath
-#         self._file = file
-#
-#
-#     def select(self, index):
-#         """Retrieve the hyperspectral data of the selected entry.
-#
-#         """
-#         if index >= len(self.metadata.index):
-#             raise Exception("Index Error: {}.".format(index))
-#
-#         # get series of metadata
-#         df = self.metadata.iloc[index]
-#
-#
-#         key = df['group']
-#         if key not in self.groups:
-#             logger.debug(
-#                 "No data available for entry {}: {}.".format(index, key))
-#             return None, None, None
-#
-#         logger.debug("Load data of entry {}: {}.".format(index, key))
-#         group = self._file[key]
-#         keys = group.keys()
-#         # akeys = group.attrs.keys()
-#
-#         spectra = group['spectra'][()] if 'spectra' in keys else None
-#         wavelen = group['wavelen'][()] if 'wavelen' in keys else None
-#         maskarr = group['masks'][()] if 'masks' in keys else None
-#
-#         masks = {label: maskarr[i] for i, label in enumerate([
-#             "tissue", "critical wound region", "wound region",
-#             "wound and proximity"])}
-#
-#
-#
-#         # sformat = group.attrs['format'] if 'format' in akeys else None
-#         # series of complementary metadata
-#         # df2 = pd.Series(format, index=['format'], dtype=object)
-#         return spectra, wavelen, masks, df
-#
-#
-#     def setTargetNames(self, names):
-#         self.targetNames = names
-
+        return HSStore(file_path, mode=mode, path=path, descr=descr)

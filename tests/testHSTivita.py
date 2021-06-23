@@ -56,7 +56,7 @@ def main():
 
     # open source Tivita algorithms
     # tissue = HSOpenTivita(format=HSAbsorption)
-    # tissue.setData(fspectra, wavelen, format=HSIntensity)
+    # tissue.set_data(fspectra, wavelen, format=HSIntensity)
 
     # evaluate spectral index values according to tivita algorithms ..........
     start = timer()

@@ -36,7 +36,7 @@ fig_options = {
 }
 
 
-def testComponents():
+def test_components():
     # load default tissue components ..........................................
     compound = HSTissueCompound()
     wavelen = compound.wavelen
@@ -44,8 +44,8 @@ def testComponents():
 
     # load reference parameter for validation .................................
     refparam = {}
-    filePath = os.path.join(data_path,
-                            "Phantom builder parameters 2.xlsx")
+    file_path = os.path.join(
+        data_path, "Phantom builder parameters 2.xlsx")
     metadata = {
         'wat': {'sheet': 0, 'cols': [2, 3], 'rows': range(6, 400)},
         'fat': {'sheet': 0, 'cols': [4, 5], 'rows': range(6, 600)},
@@ -59,7 +59,7 @@ def testComponents():
 
     for key, val in metadata.items():
         print(key)
-        data = readExcelTbl(filePath, sheet=val['sheet'], nanchars=['', '-'],
+        data = readExcelTbl(file_path, sheet=val['sheet'], nanchars=['', '-'],
                             rows=val['rows'], cols=val['cols'])
         data = np.array(data)
         idx = np.where(np.isnan(data))[0]  # find possible nan entries
@@ -88,22 +88,21 @@ def testComponents():
                 markerfacecolor='none', markevery=5)
         ax.plot(wavelen, y1, label='%s' % key, linewidth=0.7)
 
-
         ax.set_xlabel("wavelength [nm]")
         ax.set_ylabel("absorbtion coefficient [cm-1]")
         ax.legend()
 
-        filePath = os.path.join(
-            pict_path, "test_tissue_compound_%s" % key)
+        # file_path = os.path.join(
+        #     pict_path, "test_tissue_compound_%s" % key)
         # plt.savefig(filePath + ".%s" % fig_options['format'], **fig_options)
         plt.show()
         plt.close(fig)
 
 
-def testCompound(fileName):
+def test_compound(file_name):
     portions = {}
-    filePath = os.path.join(data_path, fileName)
-    with open(filePath, 'r') as file:
+    file_path = os.path.join(data_path, file_name)
+    with open(file_path, 'r') as file:
         file.readline()  # skip first line
         portions['blo'] = float(file.readline().split()[2].strip(",.:\'"))
         portions['ohb'] = float(file.readline().split()[2].strip(",.:\'"))
@@ -121,7 +120,7 @@ def testCompound(fileName):
 
     compound = HSTissueCompound(portions=portions, skintype=skintype)
 
-    icut = fileName.rfind('.')
+    # icut = fileName.rfind('.')
 
     datasets = {
         'absorption': compound.absorption,
@@ -135,8 +134,8 @@ def testCompound(fileName):
         ax.set_yscale('log')
 
         ax.set_title("Validation with Phantom Builder 2.4")
-        ax.plot(refdata[:, 0], refdata[:, i+1], label='%s ref' % key, linewidth=1,
-                marker='s', markersize=3, markeredgewidth=0.3,
+        ax.plot(refdata[:, 0], refdata[:, i+1], label='%s ref' % key,
+                linewidth=1, marker='s', markersize=3, markeredgewidth=0.3,
                 markerfacecolor='none', markevery=10)
         ax.plot(compound.wavelen, data, label=key)
         ax.set_xlabel("wavelength [nm]")
@@ -152,22 +151,22 @@ def testCompound(fileName):
         ax.set_xlabel("wavelength [nm]")
         ax.set_ylabel("residual")
 
-        filePath = os.path.join(pict_path, "%s_%s" % (fileName[:icut], key))
+        # filePath = os.path.join(pict_path, "%s_%s" % (fileName[:icut], key))
         # plt.savefig(filePath + ".%s" % fig_options['format'], **fig_options)
         plt.show()
         plt.close(fig)
 
 
-
 def main():
     logger.info("Python executable: {}".format(sys.executable))
-    testComponents()
+    test_components()
 
-    testCompound("test_tissue_compound1.txt")
-    testCompound("test_tissue_compound2.txt")
-    testCompound("test_tissue_compound3.txt")
-    testCompound("test_tissue_compound4.txt")
-    testCompound("test_tissue_compound5.txt")
+    test_compound("test_tissue_compound1.txt")
+    test_compound("test_tissue_compound2.txt")
+    test_compound("test_tissue_compound3.txt")
+    test_compound("test_tissue_compound4.txt")
+    test_compound("test_tissue_compound5.txt")
+
 
 if __name__ == '__main__':
     logmanager.setLevel(logging.DEBUG)

@@ -452,7 +452,7 @@ class HSComponentFit(HSBaseAnalysis):
                 self.wavelen = wavelen
             for vec in vectors.values():
                 vec.setFormat(self.format)  # adopt format
-                vec.setInterpPnts(self.wavelen)
+                vec.set_interp_points(self.wavelen)
             self.components.update(vectors)
             self.keys = [key for key in vectors.keys()]
 
@@ -589,7 +589,7 @@ class HSComponentFit(HSBaseAnalysis):
             self.updateROIIndex()
             # update component vectors according to the new wavelength axis
             for vec in self.components.values():
-                vec.setInterpPnts(self.wavelen)
+                vec.set_interp_points(self.wavelen)
 
 
     def setFormat(self, format):
