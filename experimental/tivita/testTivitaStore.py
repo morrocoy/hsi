@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# from tables_utils import getDirPaths, loadPatientData, loadHSData
+# from tables_utils import getDirPaths, loadPatientData, load_hsdata
 import hsi
 from hsi import HSFormatFlag, HSIntensity, HSImage, HSTivitaStore
 from hsi.log import logmanager
@@ -149,7 +149,7 @@ def main():
         # for patient, hsimage, masks in iter(store):
         #     # patient, hsimage, masks = reader[0]
         #
-        #     hsformat = HSFormatFlag.fromStr(hsimage["hsformat"].decode())
+        #     hsformat = HSFormatFlag.from_str(hsimage["hsformat"].decode())
         #
         #     print("%8d | %8d | %-20s | %-20s | %-10s | %3d |" % (
         #         patient["pn"],
@@ -161,8 +161,8 @@ def main():
         #     ))
         #
         #     hsImage = HSImage(spectra=hsimage["spectra"],
-        #                       wavelen=hsimage["wavelen"], format=hsformat)
-        #     image = hsImage.getRGBValue()
+        #                       wavelen=hsimage["wavelen"], hsformat=hsformat)
+        #     image = hsImage.as_rgb()
         #
         #     fileName = "PN_%03d_PID_%07d_Date_%s_Masks.jpg" % (
         #         patient["pn"], patient["pid"], patient["timestamp"].decode())
@@ -174,6 +174,6 @@ def main():
 if __name__ == '__main__':
     if __name__ == '__main__':
         # logmanager.setLevel(logging.DEBUG)
-        # logger.info("Python executable: {}".format(sys.executable))
-        # logger.info("Python hsi version: {}".format(hsi.__version__))
+        # logger.info("Python executable: {}".hsformat(sys.executable))
+        # logger.info("Python hsi version: {}".hsformat(hsi.__version__))
         main()

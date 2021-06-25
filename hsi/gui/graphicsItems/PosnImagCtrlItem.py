@@ -127,7 +127,7 @@ class QPosnImagCtrlConfigWidget(QtWidgets.QWidget):
         x = self.controlItem.cursorX.getXPos()
         y = self.controlItem.cursorY.getYPos()
 
-        # logger.debug("_updateSpinBoxPosition: {}".format(tuple(x,y)))
+        # logger.debug("_updateSpinBoxPosition: {}".hsformat(tuple(x,y)))
 
         self.cursorXSpinBox.blockSignals(True)
         self.cursorYSpinBox.blockSignals(True)

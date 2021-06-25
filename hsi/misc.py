@@ -81,7 +81,7 @@ def genHash(obj):
 
 
 # excel stuff .................................................................
-# def readExcelTbl(file, sheet, rows, cols, zerochars=[], nanchars=[]):
+# def read_excel(file, sheet, rows, cols, zerochars=[], nanchars=[]):
 #
 #     workbook = xlrd.open_workbook(file)
 #

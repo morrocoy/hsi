@@ -10,11 +10,11 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
-    formats
-    hscomponent
-    hsimage
-    hsfile
-    hscomponentfile
-    hsstore
+    hs_formats
+    hs_component
+    hs_image
+    hs_file
+    hs_component_file
+    hs_store
 
 

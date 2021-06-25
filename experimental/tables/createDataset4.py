@@ -19,7 +19,7 @@ Amputation data from the hospital of Rostock Suedstadt between 2018 and 2020
             - pid: Patient ID
             - descr: Description of the wound
             - timestamp: Timestamp as string
-            - format: Spectral format
+            - hsformat: Spectral hsformat
             - hash: checksum of the spectral data using md5 hash
         - numeric predictive:
             - hsidata: Hyperspectral data

@@ -31,15 +31,15 @@ def main():
     # load spectra from file .................................................
     with HSComponentFile("basevectors_1.txt") as file:
         vectors, spectra, wavelen = file.read()
-        format = file.format
+        format = file.hsformat
 
     spectra = spectra['spec']
-    print("Spectral format: %s" % (format.key))
-    tissue = HSTivita(spectra, wavelen, format=format)
+    print("Spectral hsformat: %s" % (format.key))
+    tissue = HSTivita(spectra, wavelen, hsformat=format)
 
-    # tissue = HSTivitaAnalysis(format=HSIntensity)
-    # tissue = HSTivitaAnalysis(format=HSExtinction)
-    # tissue = HSTivitaAnalysis(format=HSRefraction)
+    # tissue = HSTivitaAnalysis(hsformat=HSIntensity)
+    # tissue = HSTivitaAnalysis(hsformat=HSExtinction)
+    # tissue = HSTivitaAnalysis(hsformat=HSRefraction)
 
     # verify oxixenation
     ddspectra = signal.savgol_filter(
@@ -101,7 +101,7 @@ def main():
         'pad_inches': 0.03,
         'dpi': 900,  # high resolution png file
     }
-    # plt.savefig(filePath + ".pdf", format="pdf", **options)
+    # plt.savefig(filePath + ".pdf", hsformat="pdf", **options)
     plt.savefig(os.path.join(pict_path, "HSTivitaAnalysis_OxyCalibration.png"),
                              format="png", **options)
 
@@ -114,7 +114,7 @@ def main():
     # tissue.evaluate()
     # print("Elapsed time: %f sec" % (timer() - start))
 
-    # param = tissue.getSolution(unpack=True, clip=False)
+    # param = tissue.get_solution(unpack=True, clip=False)
     #
     # param['oxy']
     # idx = np.nonzero(param['blo'])

@@ -7,7 +7,7 @@ from ...bindings.Qt import QtWidgets, QtGui, QtCore
 from ...log import logmanager
 from ...misc import getPkgDir
 
-from ...analysis.HSComponentFit import HSComponentFit
+from ...analysis.hs_component_fit import HSComponentFit
 
 from .QParamRegionWidget import QParamRegionWidget
 
@@ -47,11 +47,9 @@ else:
     )
 
 
-
 class QHSComponentFitConfigWidget(QtWidgets.QWidget):
     """ Config widget for hyper spectral images
     """
-
     sigValueChanged = QtCore.Signal(object, bool)
 
     def __init__(self, *args, **kwargs):
@@ -72,7 +70,6 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         # mask for testwise fit
         self.testMask = None
         self.mask = None
-
 
         self.loadButton = QtWidgets.QToolButton(self)
         self.resetParamButton = QtWidgets.QToolButton(self)
@@ -115,7 +112,6 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         # self.spectFilterOrderSpinBox.valueChanged.connect(self.updateLSFit)
         # self.spectFilterDerivSpinBox.valueChanged.connect(self.updateLSFit)
 
-
     def _setupActions(self):
         self.loadAction = QtWidgets.QAction(self)
         self.loadAction.setIconText("...")
@@ -151,7 +147,6 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         self.resetButton.setDefaultAction(self.resetAction)
         self.testButton.setDefaultAction(self.testAction)
         self.updateButton.setDefaultAction(self.updateAction)
-
 
     def _setupViews(self, *args, **kwargs):
         self.mainLayout = QtWidgets.QFormLayout()
@@ -238,7 +233,6 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         layout.addWidget(self.updateButton)
         self.mainLayout.addRow(layout)
 
-
     def _updateROI(self, name, bounds):
         """Update the region of interest for the wavelength in the analyzer.
 
@@ -251,9 +245,8 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
             The absolute lower and upper bounds for the wavelength.
         """
         logger.debug("Update ROI bounds to {}.".format(bounds))
-        self.hsVectorAnalysis.setROI(bounds)
+        self.hsVectorAnalysis.set_roi(bounds)
         self._updateVectorFit(enableTest=True)
-
 
     def _updateSettings(self):
         """Update variable settings for the analyzer."""
@@ -278,14 +271,12 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
 
         self._updateVectorFit(enableTest=True)
 
-
     def _updateVarBounds(self, name, bounds):
         """Update variable settings for the analyzer."""
         logger.debug(
             "Update bounds for the variable '{}' to {}.".format(name, bounds))
-        self.hsVectorAnalysis.setVarBounds(name, bounds)
+        self.hsVectorAnalysis.set_var_bounds(name, bounds)
         self._updateVectorFit(enableTest=True)
-
 
     def _updateVectorFit(self, enableTest=False):
         """Fit the spectral data using the base vectors."""
@@ -309,22 +300,18 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
 
         self.sigValueChanged.emit(self, enableTest)
 
-
     def finalize(self):
         """ Should be called manually before object deletion
         """
         logger.debug("Finalizing: {}".format(self))
         super(QHSComponentFitConfigWidget, self).finalize()
 
-
     def getROI(self):
         return self.wavRegionWidget.value()
 
-
-    def getSpectra(self, format=None):
+    def getSpectra(self, hsformat=None):
         """Get the spectral fits."""
-        return self.hsVectorAnalysis.model(format)
-
+        return self.hsVectorAnalysis.model(hsformat)
 
     def getSolution(self):
         """Get the solution vectors of the least square fit for the entire
@@ -334,10 +321,9 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         """
         meth = self.methodComboBox.currentText()
         if meth in ("gesv", "lstsq", "cg", "nelder-mead"):  # unconstrained
-            return self.hsVectorAnalysis.getSolution(unpack=True, clip=False)
+            return self.hsVectorAnalysis.get_solution(unpack=True, clip=False)
         else:  # constrained
-            return self.hsVectorAnalysis.getSolution(unpack=True, clip=True)
-
+            return self.hsVectorAnalysis.get_solution(unpack=True, clip=True)
 
     def loadFile(self, filePath):
         """Load hyper spectral image file.
@@ -364,7 +350,7 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
             return  # return if no base vectors were found in file
 
         # prepare least square problem
-        self.hsVectorAnalysis.prepareLSProblem()
+        self.hsVectorAnalysis.prepare_ls_problem()
 
         # update line edit with valid file path
         self.fileLineEdit.setText(filePath)
@@ -388,7 +374,6 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         self.wavRegionWidget.setValue([lbnd, ubnd])
         self.wavRegionWidget.setSingleStep(1)
 
-
     def onLoadFile(self):
         """Load hyper spectral image file using a dialog box. """
         filter = "Normal text file (*.txt)"
@@ -400,7 +385,6 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         if filePath != "":
             self.fileLineEdit.setText(filePath)
             self.loadFile(filePath)
-
 
     def reset(self):
         """Set the default fitting configuration."""
@@ -417,7 +401,6 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         # triggers a test fit using either of the methods 'gesv' or 'bvls_f'
         self.wavRegionWidget.reset()
 
-
     def resetParam(self):
         """Set the default values for the parameter bounds."""
         for widget in self.lsVarRegionWidgets:
@@ -425,13 +408,12 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
             widget.reset()
             widget.blockSignals(False)
             bounds = widget.value()
-            self.hsVectorAnalysis.setVarBounds(widget.name, bounds)
+            self.hsVectorAnalysis.set_var_bounds(widget.name, bounds)
             logger.debug(
                 "Reset bounds for {} to {}".format(widget.name, bounds))
         self._updateVectorFit(enableTest=True)
 
-
-    def setData(self, y, x=None, format=None):
+    def setData(self, y, x=None, hsformat=None):
         """Set the spectral data to be fitted.
 
         The Data will be automatically fitted if either of the `fast` methods
@@ -452,8 +434,8 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
             data are available an error is raised.
         """
         logger.debug("Set spectral data.")
-        self.hsVectorAnalysis.setData(y, x, format)
-        self.hsVectorAnalysis.prepareLSProblem()
+        self.hsVectorAnalysis.set_data(y, x, hsformat)
+        self.hsVectorAnalysis.prepare_ls_problem()
 
         # update region of interest if new x axis
         if x is not None:
@@ -476,10 +458,8 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         if self.testMask is None and len(shape):
             self.testMask = [0]*len(shape)
 
-
-    def setFormat(self, format):
-        self.hsVectorAnalysis.setFormat(format)
-
+    def setFormat(self, hsformat):
+        self.hsVectorAnalysis.set_format(hsformat)
 
     def setMethod(self, method):
         """Set method for least square fit.
@@ -507,7 +487,6 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
                 "Set the method for the ls problem to: {}.".format(method))
             self.methodComboBox.setCurrentText(method)
 
-
     def setNormalEnabled(self, enableNormal):
         """Filter applied to the output data.
 
@@ -518,7 +497,6 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
             \mathbf{A}\mathbf{x} = \mathbf{A}^{\mathsf{T}} \mathbf{b}`.
         """
         self.normalCheckBox.setChecked(enableNormal)
-
 
     def setROI(self, bounds):
         """Set the region of interest for the wavelength in the widget.
@@ -531,7 +509,6 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         logger.debug("Set ROI for the wavelength to {}".format(bounds))
         self.wavRegionWidget.setValue(bounds)
 
-
     def setBounds(self, bounds):
         """Set the region of interest for the wavelength in the widget.
 
@@ -542,7 +519,6 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         """
         logger.debug("Set ROI bounds for the wavelength to {}".format(bounds))
         self.wavRegionWidget.setBounds(bounds)
-
 
     def setMask(self, mask):
         """Set the general mask for fitting procedures.
@@ -560,7 +536,6 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         self.mask = mask
         logger.debug("Set general mask for fitting procedures.")
 
-
     def setTestMask(self, mask):
         """Set the test mask for fitting procedures.
 
@@ -576,7 +551,6 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
 
         self.testMask = mask
         logger.debug("Set test mask to {}".format(mask))
-
 
     def toggleParamView(self):
         """Toggel parameters view."""

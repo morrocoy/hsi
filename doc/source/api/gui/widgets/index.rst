@@ -10,6 +10,6 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
-    hsimageconfig
-    hscomponentfitconfig
+    QHSImageConfigWidget
+    QHSComponentFitConfigWidget
 

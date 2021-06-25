@@ -78,8 +78,8 @@ class HDFStore:
         **kwargs,
     ):
 
-        if "format" in kwargs:
-            raise ValueError("format is not a defined argument for HDFStore")
+        if "hsformat" in kwargs:
+            raise ValueError("hsformat is not a defined argument for HDFStore")
 
         tables = import_optional_dependency("tables")
 
@@ -302,7 +302,7 @@ class HDFStore:
         Retrieve pandas object stored in file, optionally based on where criteria.
         .. warning::
            Pandas uses PyTables for reading and writing HDF5 files, which allows
-           serializing object-dtype data with pickle when using the "fixed" format.
+           serializing object-dtype data with pickle when using the "fixed" hsformat.
            Loading pickled data received from untrusted sources can be unsafe.
            See: https://docs.python.org/3/library/pickle.html for more.
         Parameters
@@ -368,7 +368,7 @@ class HDFStore:
         return the selection as an Index
         .. warning::
            Pandas uses PyTables for reading and writing HDF5 files, which allows
-           serializing object-dtype data with pickle when using the "fixed" format.
+           serializing object-dtype data with pickle when using the "fixed" hsformat.
            Loading pickled data received from untrusted sources can be unsafe.
            See: https://docs.python.org/3/library/pickle.html for more.
         Parameters
@@ -396,7 +396,7 @@ class HDFStore:
         select an indexable
         .. warning::
            Pandas uses PyTables for reading and writing HDF5 files, which allows
-           serializing object-dtype data with pickle when using the "fixed" format.
+           serializing object-dtype data with pickle when using the "fixed" hsformat.
            Loading pickled data received from untrusted sources can be unsafe.
            See: https://docs.python.org/3/library/pickle.html for more.
         Parameters
@@ -434,7 +434,7 @@ class HDFStore:
         Retrieve pandas objects from multiple tables.
         .. warning::
            Pandas uses PyTables for reading and writing HDF5 files, which allows
-           serializing object-dtype data with pickle when using the "fixed" format.
+           serializing object-dtype data with pickle when using the "fixed" hsformat.
            Loading pickled data received from untrusted sources can be unsafe.
            See: https://docs.python.org/3/library/pickle.html for more.
         Parameters
@@ -561,13 +561,13 @@ class HDFStore:
         format : 'fixed(f)|table(t)', default is 'fixed'
             Format to use when storing object in HDFStore. Value can be one of:
             ``'fixed'``
-                Fixed format.  Fast writing/reading. Not-appendable, nor searchable.
+                Fixed hsformat.  Fast writing/reading. Not-appendable, nor searchable.
             ``'table'``
-                Table format.  Write as a PyTables Table structure which may perform
+                Table hsformat.  Write as a PyTables Table structure which may perform
                 worse but allow more flexible operations like searching / selecting
                 subsets of the data.
         append : bool, default False
-            This will force Table format, append the input data to the existing.
+            This will force Table hsformat, append the input data to the existing.
         data_columns : list, default None
             List of columns to create as data columns, or True to use all columns.
             See `here
@@ -675,7 +675,7 @@ class HDFStore:
     ):
         """
         Append to Table in file. Node must already exist and be Table
-        format.
+        hsformat.
         Parameters
         ----------
         key : str
@@ -683,7 +683,7 @@ class HDFStore:
         format : 'table' is the default
             Format to use when storing object in HDFStore.  Value can be one of:
             ``'table'``
-                Table format. Write as a PyTables Table structure which may perform
+                Table hsformat. Write as a PyTables Table structure which may perform
                 worse but allow more flexible operations like searching / selecting
                 subsets of the data.
         append       : bool, default True
@@ -862,7 +862,7 @@ class HDFStore:
             return
 
         if not isinstance(s, Table):
-            raise TypeError("cannot create table index on a Fixed format store")
+            raise TypeError("cannot create table index on a Fixed hsformat store")
         s.create_index(columns=columns, optlevel=optlevel, kind=kind)
 
     def groups(self):
@@ -1007,15 +1007,15 @@ class HDFStore:
     #     if not self.is_open:
     #         raise ClosedFileError(f"{self._path} file is not open!")
     #
-    # def _validate_format(self, format: str) -> str:
+    # def _validate_format(self, hsformat: str) -> str:
     #     """ validate / deprecate formats """
     #     # validate
     #     try:
-    #         format = _FORMAT_MAP[format.lower()]
+    #         hsformat = _FORMAT_MAP[hsformat.lower()]
     #     except KeyError as err:
-    #         raise TypeError(f"invalid HDFStore format specified [{format}]") from err
+    #         raise TypeError(f"invalid HDFStore hsformat specified [{hsformat}]") from err
     #
-    #     return format
+    #     return hsformat
 
 
 

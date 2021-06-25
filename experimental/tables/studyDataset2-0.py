@@ -51,7 +51,7 @@ def task(patient, hsidata):
     numpy.ndarray : Array of values for validation.
 
     """
-    hsformat = HSFormatFlag.fromStr(patient["hsformat"].decode())
+    hsformat = HSFormatFlag.from_str(patient["hsformat"].decode())
 
     print("%8d | %8d | %-20s | %-20s | %-10s | %3d |" % (
         patient["pn"],
@@ -62,9 +62,9 @@ def task(patient, hsidata):
         patient["target"]
     ))
 
-    # hsImage = HSImage(spectra=spectra, wavelen=wavelen, format=hsformat)
-    hsImage = HSImage(spectra=hsidata["hsidata"], wavelen=hsidata["wavelen"], format=hsformat)
-    image = hsImage.getRGBValue()
+    # hsImage = HSImage(spectra=spectra, wavelen=wavelen, hsformat=hsformat)
+    hsImage = HSImage(spectra=hsidata["hsidata"], wavelen=hsidata["wavelen"], hsformat=hsformat)
+    image = hsImage.as_rgb()
 
     keys = [
         "tissue",
@@ -80,10 +80,10 @@ def task(patient, hsidata):
         patient["pn"], patient["pid"], patient["timestamp"].decode())
     # plotMasks(fileName, masks, image)
 
-    analysis = HSTivita(format=HSIntensity)
-    analysis.setData(hsImage.spectra, hsImage.wavelen, format=hsformat)
+    analysis = HSTivita(hsformat=HSIntensity)
+    analysis.set_data(hsImage.spectra, hsImage.wavelen, hsformat=hsformat)
     analysis.evaluate(mask=masks["tissue"])
-    param = analysis.getSolution(unpack=True, clip=True)
+    param = analysis.get_solution(unpack=True, clip=True)
     # param = None
     fileName = "PN_%03d_PID_%07d_Date_%s_Tivita.jpg" % (
         patient["pn"], patient["pid"], patient["timestamp"].decode())
@@ -114,7 +114,7 @@ def task1(args):
     patient = args[0]
     hsidata = args[1]
 
-    hsformat = HSFormatFlag.fromStr(patient["hsformat"].decode())
+    hsformat = HSFormatFlag.from_str(patient["hsformat"].decode())
 
     print("%8d | %8d | %-20s | %-20s | %-10s | %3d |" % (
         patient["pn"],
@@ -125,9 +125,9 @@ def task1(args):
         patient["target"]
     ))
 
-    # hsImage = HSImage(spectra=spectra, wavelen=wavelen, format=hsformat)
-    hsImage = HSImage(spectra=hsidata["hsidata"], wavelen=hsidata["wavelen"], format=hsformat)
-    image = hsImage.getRGBValue()
+    # hsImage = HSImage(spectra=spectra, wavelen=wavelen, hsformat=hsformat)
+    hsImage = HSImage(spectra=hsidata["hsidata"], wavelen=hsidata["wavelen"], hsformat=hsformat)
+    image = hsImage.as_rgb()
 
     keys = [
         "tissue",
@@ -143,10 +143,10 @@ def task1(args):
         patient["pn"], patient["pid"], patient["timestamp"].decode())
     # plotMasks(fileName, image, masks)
 
-    analysis = HSTivita(format=HSIntensity)
-    analysis.setData(hsImage.spectra, hsImage.wavelen, format=hsformat)
+    analysis = HSTivita(hsformat=HSIntensity)
+    analysis.set_data(hsImage.spectra, hsImage.wavelen, hsformat=hsformat)
     analysis.evaluate(mask=masks["tissue"])
-    param = analysis.getSolution(unpack=True, clip=True)
+    param = analysis.get_solution(unpack=True, clip=True)
     # param = None
     fileName = "PN_%03d_PID_%07d_Date_%s_Tivita.jpg" % (
         patient["pn"], patient["pid"], patient["timestamp"].decode())
@@ -215,12 +215,12 @@ def main():
     # p = multiprocessing.Pool()
     # start = time.time()
     # for x in p.imap(func, range(3)):
-    #     print("{} (Time elapsed: {}s)".format(x, int(time.time() - start)))
+    #     print("{} (Time elapsed: {}s)".hsformat(x, int(time.time() - start)))
     # for x in p.imap(func2, [(1, 4), (2, 5), (3, 6)]):
-    #     print("{} (Time elapsed: {}s)".format(x, int(time.time() - start)))
+    #     print("{} (Time elapsed: {}s)".hsformat(x, int(time.time() - start)))
 
     # for x in p.imap(func2, zip(range(3), range(3, 6))):
-    #     print("{} (Time elapsed: {}s)".format(x, int(time.time() - start)))
+    #     print("{} (Time elapsed: {}s)".hsformat(x, int(time.time() - start)))
 
     # pool = mp.ProcessingPool(nodes=7)
     # for i in pool.imap(func3, [table[i] for i in range(nitems)]):

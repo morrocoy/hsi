@@ -276,27 +276,22 @@ class RegnPlotCtrlItem(pg.GraphicsWidget):
 
         item.sigPlotChanged.connect(self.plotChangedEvent)
 
-
     def getRegion(self):
         xmin, xmax = self.regionItem.getRegion()
         return xmin , xmax
 
-
     def plotChangedEvent(self, sender):
-
         for item, shadowItem in zip(self.curveItems, self.shadowCurveItems):
             if item is sender:
                 x, y = item.getData()
-                shadowItem.set_data(x=x, y=y)
+                shadowItem.setData(x=x, y=y)
 
         self.updateBounds()
         self.sigPlotChanged.emit(sender)
 
-
     def rangeChangeEvent(self, window, viewRange):
         rgn = viewRange[0]
         self.regionItem.setRegion(rgn)
-
 
     def regionChangeEvent(self):
         self.regionItem.setZValue(10)
@@ -305,10 +300,8 @@ class RegnPlotCtrlItem(pg.GraphicsWidget):
 
         self.sigRegionChanged.emit(self)
 
-
     def regionChangeFinishedEvent(self):
         self.sigRegionChangeFinished.emit(self)
-
 
     def updateBounds(self):
         if len(self.curveItems):
@@ -332,22 +325,15 @@ class RegnPlotCtrlItem(pg.GraphicsWidget):
 
         self.setBounds(limits)
 
-
-
     def setBounds(self, limits):
         lbnd = limits[0]
         ubnd = limits[1]
         self.regionItem.setBounds([lbnd, ubnd])
 
-
     def setRegion(self, limits):
         xmin = limits[0]
         xmax = limits[1]
         self.regionItem.setRegion([xmin, xmax])
-
-
-
-
 
 
 class DemoWindow(QtWidgets.QMainWindow):
@@ -356,7 +342,6 @@ class DemoWindow(QtWidgets.QMainWindow):
         super(DemoWindow, self).__init__(parent=parent)
 
         self._setupViews()
-
 
     def _setupViews(self):
         """ Creates the UI widgets.
@@ -387,35 +372,7 @@ class DemoWindow(QtWidgets.QMainWindow):
         self.controlItem1.addItem(self.crv2)
         self.controlItem1.addItem(self.crv3)
 
-
         self.graphicsLayoutWidget = pg.GraphicsLayoutWidget()
         self.graphicsLayoutWidget.addItem(self.controlItem1, 0, 0)
 
-
         self.mainLayout.addWidget(self.graphicsLayoutWidget)
-
-
-def main():
-
-    logger.info("Python executable: {}".format(sys.executable))
-    logger.info("Python version: {}".format(sys.version))
-    logger.info("PyQt bindings: {}".format(pg.Qt.QT_LIB))
-    logger.info("PyQtGraph version: {}".format(pg.__version__))
-
-    app = QtWidgets.QApplication([])
-
-
-    cmap = pg.ColorMap([0, 0.25, 0.75, 1], [[0, 0, 0, 255], [255, 0, 0, 255], [255, 255, 0, 255], [255, 255, 255, 255]])
-    win = DemoWindow()
-
-    win.setGeometry(400, 100, 800, 500)
-    win.setWindowTitle('PgColorbar Demo')
-    win.show()
-    app.exec_()
-
-
-if __name__ == '__main__':
-    LOG_FMT = '%(asctime)s %(filename)25s:%(lineno)-4d : %(levelname)-7s: %(message)s'
-    logging.basicConfig(level='DEBUG', format=LOG_FMT)
-
-    main()

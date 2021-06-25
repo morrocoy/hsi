@@ -10,7 +10,7 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
-    tissuecomponent
-    tissuecompound
+    hs_tissue_component
+    hs_tissue_compound
 
 

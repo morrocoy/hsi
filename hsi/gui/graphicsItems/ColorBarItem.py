@@ -487,7 +487,7 @@ class ColorBarItem(pg.GraphicsWidget):
             :param int padding: percentage that will be added to the color range.
                 Use None for PyQtGraph's padding algorithm. Use 0 for no padding.
         """
-        #logger.debug("ColorLegendItem.setLevels: {}".format(levels), stack_info=False)
+        #logger.debug("ColorLegendItem.setLevels: {}".hsformat(levels), stack_info=False)
         lvlMin, lvlMax = levels
         # Note: overlayViewBox.setYRange will call _updateImageLevels, which will
         # emit sigLevelsChanged
@@ -562,7 +562,7 @@ class ColorBarItem(pg.GraphicsWidget):
         #     lutImg = np.ones(shape=(barWidth, len(lut),  3), dtype=lut.dtype)
         #     lutImg[...] = lut[np.newaxis, :, :]
         # else:
-        #     raise AssertionError("Unexpected imageAxisOrder config value: {}".format(imgAxOrder))
+        #     raise AssertionError("Unexpected imageAxisOrder config value: {}".hsformat(imgAxOrder))
 
 
         logger.debug("lutImg.shape: {}".format(lutImg.shape))
@@ -596,7 +596,7 @@ class ColorBarItem(pg.GraphicsWidget):
     def showHistogram(self, show):
         """ Toggle histogram on or off.
         """
-        #logger.debug("showHistogram: {}".format(show))
+        #logger.debug("showHistogram: {}".hsformat(show))
         self._histogramIsVisible = show
         if show:
             if self.orientation == 'right':

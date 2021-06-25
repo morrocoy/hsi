@@ -9,7 +9,7 @@ import xlrd
 
 
 # excel stuff .................................................................
-def readExcelTbl(file, sheet, rows, cols, zerochars=[], nanchars=[]):
+def read_excel(file, sheet, rows, cols, zerochars=None, nanchars=None):
 
     workbook = xlrd.open_workbook(file)
 
@@ -17,6 +17,11 @@ def readExcelTbl(file, sheet, rows, cols, zerochars=[], nanchars=[]):
         worksheet = workbook.sheet_by_index(sheet)
     else:
         worksheet = workbook.sheet_by_name(sheet)
+
+    if zerochars is None:
+        zerochars = []
+    if nanchars is None:
+        nanchars = []
 
     data = []
     for i in (range(len(rows))):
@@ -45,12 +50,3 @@ def readExcelTbl(file, sheet, rows, cols, zerochars=[], nanchars=[]):
                 line.append(readout)
         data.append(line)
     return data
-
-
-
-
-
-
-
-
-

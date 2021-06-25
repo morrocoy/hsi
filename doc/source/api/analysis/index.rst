@@ -10,7 +10,7 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
-    hsbaseanalysis
-    hscomponentfit
-    hsopentivita
+    hs_base_analysis
+    hs_component_fit
+    hs_open_tivita
 

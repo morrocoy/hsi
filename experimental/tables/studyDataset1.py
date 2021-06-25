@@ -31,7 +31,7 @@ logger = logmanager.getLogger(__name__)
 
 
 def task(patient):
-    hsformat = HSFormatFlag.fromStr(patient["hsformat"].decode())
+    hsformat = HSFormatFlag.from_str(patient["hsformat"].decode())
 
     print("%8d | %8d | %-20s | %-20s | %-10s | %3d |" % (
         patient["pn"],
@@ -43,8 +43,8 @@ def task(patient):
     ))
 
     hsImage = HSImage(
-        spectra=patient["hsidata"], wavelen=patient["wavelen"], format=hsformat)
-    image = hsImage.getRGBValue()
+        spectra=patient["hsidata"], wavelen=patient["wavelen"], hsformat=hsformat)
+    image = hsImage.as_rgb()
 
     keys = [
         "tissue",
@@ -59,10 +59,10 @@ def task(patient):
         patient["pn"], patient["pid"], patient["timestamp"])
     plotMasks(fileName, mask, image)
 
-    analysis = HSTivita(format=HSIntensity)
-    analysis.setData(hsImage.spectra, hsImage.wavelen, format=hsformat)
+    analysis = HSTivita(hsformat=HSIntensity)
+    analysis.set_data(hsImage.spectra, hsImage.wavelen, hsformat=hsformat)
     analysis.evaluate(mask=mask["tissue"])
-    param = analysis.getSolution(unpack=True, clip=True)
+    param = analysis.get_solution(unpack=True, clip=True)
     # param = None
     fileName = "PN_%03d_PID_%07d_Date_%s_Tivita.jpg" % (
         patient["pn"], patient["pid"], patient["timestamp"])

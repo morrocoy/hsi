@@ -12,5 +12,5 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
-    hsvectoranalysis
+    hs_component_analysis
 

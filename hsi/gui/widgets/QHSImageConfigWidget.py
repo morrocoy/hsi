@@ -2,10 +2,10 @@ import os
 
 from ...bindings.Qt import QtWidgets, QtGui, QtCore
 from ...log import logmanager
-from ...core.HSImage import HSImage
+from ...core.hs_image import HSImage
 
-from ...core.formats import HSFormatFlag, HSFormatDefault
-from ...core import functions as fn
+from ...core.hs_formats import HSFormatFlag, HSFormatDefault
+from ...core import hs_functions as fn
 
 from .QParamRegionWidget import QParamRegionWidget
 
@@ -125,7 +125,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         label.setIndent(5)
         label.setMinimumWidth(50)
 
-        keys = [flag.key for flag in HSFormatFlag.getFlags()]  # available fmts
+        keys = [flag.key for flag in HSFormatFlag.get_flags()]  # available fmts
         self.spectFormatComboBox.addItems(keys)
         self.spectFormatComboBox.setCurrentText(HSFormatDefault.key)
         self.spectFormatComboBox.setMinimumWidth(90)
@@ -383,14 +383,14 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         if self.hsImage.shape is None:
             return
 
-        self.hsImage.clearFilter()
+        self.hsImage.clear_filter()
 
         mode = 'image'
         type =  self.imageFilterTypeComboBox.currentText()
         if type != 'none':
             size = int(self.imageFilterSizeSpinBox.value())
             sigma = self.imageFilterSigmaSpinBox.value()
-            self.hsImage.addFilter(mode, type, size=size, sigma=sigma)
+            self.hsImage.add_filter(mode, type, size=size, sigma=sigma)
 
             logger.debug("Update image filter with arguments {}"
                          .format((type, size, sigma)))
@@ -402,8 +402,8 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
             sigma = self.spectFilterSigmaSpinBox.value()
             order = int(self.spectFilterOrderSpinBox.value())
             deriv = int(self.spectFilterDerivSpinBox.value())
-            self.hsImage.addFilter(mode, type, size=size, sigma=sigma,
-                                   order=order, deriv=deriv)
+            self.hsImage.add_filter(mode, type, size=size, sigma=sigma,
+                                    order=order, deriv=deriv)
 
             logger.debug("Update spectral filter with arguments {}"
                          .format((type, size, sigma, order, deriv)))
@@ -412,28 +412,28 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
 
 
     def updateFormat(self):
-        """Retrieve spectral data according to the current format setting
+        """Retrieve spectral data according to the current hsformat setting
         """
         sformat = self.spectFormatComboBox.currentText()
-        format = HSFormatFlag.fromStr(sformat)
-        self.hsImage.setFormat(format)
+        format = HSFormatFlag.from_str(sformat)
+        self.hsImage.set_format(format)
 
-        logger.debug("Change spectral format to '{}'.".format(sformat))
+        logger.debug("Change spectral hsformat to '{}'.".format(sformat))
 
         if self.hsImage.shape is not None:
             self.sigValueChanged.emit(self, False)
 
     def getMask(self):
         thresh = self.maskThreshRegionWidget.value()
-        return self.hsImage.getTissueMask(thresholds=thresh)
+        return self.hsImage.get_tissue_mask(thresholds=thresh)
 
     def getImage(self, *args, **kwargs):
         """Retrieve the rgb image from hyperspectral data.
 
         Forwards all arguments to
-        :func:`getRGBValue <hsi.core.HSImage.getRGBValue>`.
+        :func:`as_rgb <hsi.core.HSImage.as_rgb>`.
         """
-        return self.hsImage.getRGBValue(*args, **kwargs)
+        return self.hsImage.as_rgb(*args, **kwargs)
 
 
     def getSpectra(self, filter=True):
@@ -461,17 +461,17 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
 
 
     def getFormat(self):
-        """Get the format of hyperspectral data."""
-        return self.hsImage.format
+        """Get the hsformat of hyperspectral data."""
+        return self.hsImage.hsformat
 
 
     def setFormat(self, format):
-        """Set the format for the hyperspectral data.
+        """Set the hsformat for the hyperspectral data.
 
         Parameters
         ----------
         format :  :obj:`HSFormatFlag<hsi.HSFormatFlag>`, optional
-            The format for the hyperspectral data. Should be one of:
+            The hsformat for the hyperspectral data. Should be one of:
 
                 - :class:`HSIntensity<hsi.HSIntensity>`
                 - :class:`HSAbsorption<hsi.HSAbsorption>`
@@ -480,9 +480,9 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
 
 
         """
-        # check format, if not previously defined also set the format
-        if not HSFormatFlag.hasFlag(format):
-            logger.debug("Unknown format '{}'.".format(format))
+        # check hsformat, if not previously defined also set the hsformat
+        if not HSFormatFlag.has_flag(format):
+            logger.debug("Unknown hsformat '{}'.".format(format))
             return
 
         self.spectFormatComboBox.setCurrentText(format.key)

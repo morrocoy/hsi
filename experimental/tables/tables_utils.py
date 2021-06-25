@@ -58,10 +58,10 @@ def loadHSData(pathName, baseName, hsformat):
     hsImage = HSImage(filePath)
     nwavelen, rows, cols = hsImage.shape
 
-    hsImage.setFormat(hsformat)
+    hsImage.set_format(hsformat)
 
     # add gaussian image filter for a cleaner tissue selection mask
-    hsImage.addFilter(mode='image', type='gauss', sigma=1, truncate=4)
+    hsImage.add_filter(mode='image', filter_type='gauss', sigma=1, truncate=4)
 
     # tissue and selection masks
     mask_labels = [
@@ -74,7 +74,7 @@ def loadHSData(pathName, baseName, hsformat):
 
     nmask = 5
     masks = np.zeros((nmask, rows, cols), dtype=np.int8)
-    masks[0, ...] = hsImage.getTissueMask([0.1, 0.9])  # tissue mask
+    masks[0, ...] = hsImage.get_tissue_mask([0.1, 0.9])  # tissue mask
 
     filePath = os.path.join(pathName, baseName + "_Masks.npz")
     maskfile = np.load(filePath)
@@ -125,7 +125,7 @@ def loadPatientData(filePath, sheet_name=0, columns=None,
     df = df.astype(converters)
 
     # retrieve timestamp from group name
-    # df['timestamp'] = pd.to_datetime(df['group'], format="%Y-%m-%d-%H-%M-%S")
+    # df['timestamp'] = pd.to_datetime(df['group'], hsformat="%Y-%m-%d-%H-%M-%S")
 
     return df
 

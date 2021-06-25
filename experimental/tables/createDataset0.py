@@ -19,7 +19,7 @@ Amputation data from the hospital of Rostock Suedstadt between 2018 and 2020
             - pid: Patient ID
             - descr: Description of the wound
             - timestamp: Timestamp of the record as string
-            - format: Spectral format
+            - hsformat: Spectral hsformat
             - hash: checksum of the spectral data using md5 hash
         - numeric predictive:
             - hsidata: Hyperspectral data
@@ -50,7 +50,7 @@ hsformat = HSIntensity
 dfMetadata = loadPatientData(filePath, sheet_name=0, skiprows=1)
 dfMetadata['hsformat'] = hsformat.key
 # dfHSImages = dfMetadata.apply(lambda x: loadHSImage(x['timestamp']), axis=1)
-# dfData = dfMetadata['timestamp'].apply(loadHSData)
+# dfData = dfMetadata['timestamp'].apply(load_hsdata)
 
 # create output file .........................................................
 fileName = "rostock_suedstadt_2018-2020_0.h5"

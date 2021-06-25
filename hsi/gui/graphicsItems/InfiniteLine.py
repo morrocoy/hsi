@@ -643,7 +643,7 @@ class InfLineLabel(TextItem):
         self.updatePosition()
 
     def setFormat(self, text):
-        """Set the text format string for this label.
+        """Set the text hsformat string for this label.
 
         May optionally contain "{value}" to include the lines current value
         (the text will be reformatted whenever the line is moved).

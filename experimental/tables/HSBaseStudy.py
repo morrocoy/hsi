@@ -41,7 +41,7 @@ class HSBaseStudy(object):
         dataset : :obj:`HSDataset<hsi.HSDataset>`, optional
             The dataset to by evaluated.
         format : :obj:`HSFormatFlag<hsi.HSFormatFlag>`, optional
-            The spectral format to be set. Should be one of:
+            The spectral hsformat to be set. Should be one of:
 
                 - :class:`HSIntensity<hsi.HSIntensity>`
                 - :class:`HSAbsorption<hsi.HSAbsorption>`
@@ -196,14 +196,14 @@ class HSBaseStudy(object):
         df = series.to_frame()
         # else:
         #     df = metadata.replace(
-        #         {'pid': 44, 'hash': hash, 'format': self.hsformat})
+        #         {'pid': 44, 'hash': hash, 'hsformat': self.hsformat})
 
         # metadata.replace({'hash', hash})
         # if self.hsformat is not None:
-        #     metadata.replace({'format',  self.hsformat.key})
+        #     metadata.replace({'hsformat',  self.hsformat.key})
 
         # with pd.HDFStore(filePath, 'a') as store:
-        #     store.append('metadata', df, format='table', data_columns=True)
+        #     store.append('metadata', df, hsformat='table', data_columns=True)
 
         with h5py.File(filePath, 'r+') as store:
             group = store.create_group(metadata['group'])
@@ -222,7 +222,7 @@ class HSBaseStudy(object):
         #     index = df.index[df['pn'] == pn]
         #     df.loc[index, 'hash'] = hash
         #     if self.hsformat is not None:
-        #         df.loc[index, 'format'] = self.hsformat.key
+        #         df.loc[index, 'hsformat'] = self.hsformat.key
         #     df.loc[index, 'pid'] = 44
 
 
@@ -237,7 +237,7 @@ class HSBaseStudy(object):
         with h5py.File(filePath, 'w') as store:
             store['descr'] = dataset.descr
         # with pd.HDFStore(filePath, 'w') as store:
-        #     store.append('metadata', dataset.metadata, format='table',
+        #     store.append('metadata', dataset.metadata, hsformat='table',
         #                  data_columns=True)
 
         # run study in serial mode
@@ -282,12 +282,12 @@ class HSBaseStudy(object):
 
 
     def setFormat(self, format):
-        """Set the format for the hyperspectral data.
+        """Set the hsformat for the hyperspectral data.
 
         Parameters
         ----------
         format : :obj:`HSFormatFlag<hsi.HSFormatFlag>`
-            The spectral format to be set. Should be one of:
+            The spectral hsformat to be set. Should be one of:
 
                 - :class:`HSIntensity<hsi.HSIntensity>`
                 - :class:`HSAbsorption<hsi.HSAbsorption>`
@@ -295,8 +295,8 @@ class HSBaseStudy(object):
                 - :class:`HSRefraction<hsi.HSRefraction>`
 
         """
-        if not HSFormatFlag.hasFlag(format):
-            raise Exception("Unknown format '{}'.".format(format))
+        if not HSFormatFlag.has_flag(format):
+            raise Exception("Unknown hsformat '{}'.".format(format))
         self.hsformat = format
 
 
@@ -334,23 +334,23 @@ class HSBaseStudy(object):
         msg = "pn {:10} | spectra {:<10.6f} | hash {} {}".format(
             metadata['pn'], np.mean(spectra), hash, state)
 
-        # adapt format of spectral data if predefined .........................
-        hsformat = HSFormatFlag.fromStr(metadata['format'])  # source format
+        # adapt hsformat of spectral data if predefined .........................
+        hsformat = HSFormatFlag.from_str(metadata['hsformat'])  # source hsformat
         if self.hsformat is not None:
             spectra = convert(self.hsformat, hsformat, spectra, wavelen)
             hsformat = self.hsformat
 
         # image visualization .................................................
         hsImage = HSImage(spectra, wavelen, hsformat)
-        image = hsImage.getRGBValue()
+        image = hsImage.as_rgb()
         self.plotMasks(basename + "_Masks.jpg", image, masks)
 
         # analysis ............................................................
         analyzer = HSTivita()
-        analyzer.set_data(spectra, wavelen, format=hsformat)
+        analyzer.set_data(spectra, wavelen, hsformat=hsformat)
         analyzer.evaluate(mask=masks["tissue"])
 
-        param = analyzer.getSolution(unpack=True, clip=True)
+        param = analyzer.get_solution(unpack=True, clip=True)
         self.plotParam(basename + "_Param.jpg", param)
 
         # return array of only selected parameters and masks
