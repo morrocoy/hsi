@@ -55,7 +55,8 @@ def main():
                 label="%s (%g%%)" % (vec.label, vec.weight*100))
 
     ax.set_xlabel("wavelength [nm]")
-    ax.set_ylabel("absorption [-lg(%.3f remission)]" % corr)
+    # ax.set_ylabel("absorption [-ln(%.3f remission)]" % corr)
+    ax.set_ylabel("absorption")
     ax.legend()
 
     plt.savefig(os.path.join(pict_path, "BaseSpectra.png"),

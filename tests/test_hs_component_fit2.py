@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 import hsi
 from hsi import cm
-from hsi import HSAbsorption
+from hsi import HSAbsorption, HSIntensity, convert
 from hsi import HSImage
 from hsi.analysis import HSComponentFit
 # from hsi.analysis import HSComponentFit2 as HSComponentFit
@@ -42,8 +42,12 @@ def main():
     # load hyperspectral data
     # subfolder = "thyroid"
     # timestamp = "2019_11_14_08_59_25"
-    subfolder = "occlusion"
-    timestamp = "2016_11_02_16_48_30"
+    # subfolder = "occlusion"
+    # timestamp = "2016_11_02_16_48_30"
+
+    subfolder = "2021-06-29_aufnahmen_arm"
+    timestamp = "2021_07_06_16_04_59"
+
     file_path = os.path.join(data_path, subfolder, timestamp, timestamp)
 
     hsimage = HSImage(file_path + "_SpecCube.dat")
@@ -125,6 +129,27 @@ def main():
 
     file_path = os.path.join(pict_path, "componentfit_param")
     fig.savefig("%s.%s" % (file_path, fig_options['format']), **fig_options)
+    plt.show()
+
+    wavelen = analysis.wavelen
+    spectra = analysis.spectra[:, 220, 520]
+    spectra_fitted = analysis.model()[:, 220,520]
+
+    spectra_int = convert(HSIntensity, HSAbsorption, spectra, wavelen)
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+
+    ax.plot(wavelen * 1e9, spectra, label="spec %d" % 1,
+            marker='s', markersize=3, markeredgewidth=0.3,
+            markerfacecolor='none', markevery=5)
+    ax.plot(wavelen * 1e9, spectra_fitted, label="fit",
+            marker='s', markersize=3, markeredgewidth=0.3,
+            markerfacecolor='none', markevery=5)
+
+    # ax.text(0.02, 0.02, info, transform=ax.transAxes, va='bottom', ha='left')
+    ax.set_xlabel("wavelength [nm]")
+    ax.set_ylabel("rel absorbtion")
+    ax.legend()
     plt.show()
 
 

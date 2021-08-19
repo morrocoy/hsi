@@ -27,14 +27,17 @@ logger = logmanager.getLogger(__name__)
 
 
 def main():
-    data_path = os.path.join(os.getcwd(), "../doc", "data")
-    # pict_path = os.path.join(os.getcwd(), "../doc", "pictures")
+    data_path = os.path.join(os.getcwd(), "..", "data")
+    # pict_path = os.path.join(os.getcwd(), "..", "pictures")
 
     # load hyperspectral image
     # subfolder = "thyroid"
     # timestamp = "2019_11_14_08_59_25"
-    subfolder = "occlusion"
-    timestamp = "2016_11_02_16_48_30"
+    # subfolder = "occlusion"
+    # timestamp = "2016_11_02_16_48_30"
+    subfolder = "2021-06-29_aufnahmen_arm"
+    timestamp = "2021_07_06_16_04_59"
+
     file_path = os.path.join(data_path, subfolder, timestamp, timestamp)
 
     hsimage = HSImage(file_path + "_SpecCube.dat")
@@ -79,10 +82,10 @@ def main():
     analysis.set_var_bounds("ohb", [0, 0.05])
     analysis.set_var_bounds("wat", [0, 2.00])
     analysis.set_var_bounds("fat", [0, 1.00])
-    analysis.set_var_bounds("mel", [0, 0.05])
+    analysis.set_var_bounds("mel", [0, 0.2])
 
     # remove components
-    # analysis.remove_component("mel")
+    analysis.remove_component("mel")
     print(analysis.keys)
 
     analysis.prepare_ls_problem()
@@ -103,7 +106,8 @@ def main():
     b = analysis._anaTrgVector  # spectra to be fitted
     x = analysis._anaVarVector  # vector of unknowns
 
-    res = b - a[:, :-1] @ x[:-1, :]
+    # res = b - a[:, :-1] @ x[:-1, :]
+    res = b - a[:, :] @ x[:, :]
     res = res.reshape(hsimage.shape)
 
     wavelen = analysis.components["hhb"].xIntpData
@@ -139,6 +143,36 @@ def main():
         fig.colorbar(pos, ax=ax)
         ax.set_title(labels[i])
 
+    plt.show()
+
+    row = 220
+    col = 520
+    # plot residual at specific coordinates
+    wavelen = analysis.wavelen
+    spectra = analysis.spectra[:, row, col]
+    spectra_fitted = analysis.model()[:, row, col]
+
+    spectra_int = convert(HSIntensity, HSAbsorption, spectra, wavelen)
+
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(4.5, 7))
+    plt.subplots_adjust(hspace=0.1)
+
+
+    ax1.plot(wavelen * 1e9, spectra, label="spec %d" % 1,
+            marker='s', markersize=3, markeredgewidth=0.3,
+            markerfacecolor='none', markevery=5)
+    ax1.plot(wavelen * 1e9, spectra_fitted, label="fit",
+            marker='s', markersize=3, markeredgewidth=0.3,
+            markerfacecolor='none', markevery=5)
+
+    ax2.plot(wavelen * 1e9, res[:, row, col])
+
+    # ax.text(0.02, 0.02, info, transform=ax.transAxes, va='bottom', ha='left')
+    ax1.set_xlabel("wavelength [nm]")
+    ax1.set_ylabel("absorbtion")
+
+    ax2.set_ylabel("residual")
+    ax1.legend()
     plt.show()
 
 

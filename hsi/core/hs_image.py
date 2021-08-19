@@ -81,12 +81,13 @@ class HSImage:
         hsiRaw = hsImage.spectra
 
         # add gaussian image filter, enable filter, and get current data
-        hsImage.add_filter(mode='image', type='gauss', sigma=1, truncate=4)
+        hsImage.add_filter(mode='image', filter_type='gauss', sigma=1,
+                           truncate=4)
         hsiGauss = hsImage.fspectra
 
         # add polynomial filter to spectra and get current data
-        hsImage.add_filter(mode='spectra', type='savgol', size=7, order=2,
-                           deriv=0)
+        hsImage.add_filter(mode='spectra', filter_type='savgol', size=7,
+                           order=2, deriv=0)
         hsiSGF = hsImage.fspectra
 
         # plot rgb image

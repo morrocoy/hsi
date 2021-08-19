@@ -136,7 +136,7 @@ def convert(target_format, source_format, spec, wavelen=None):
     if isinstance(spec, list):
         spec = numpy.array(spec)
     if isinstance(wavelen, list):
-        wavelen = numpy.array(spec)
+        wavelen = numpy.array(wavelen)
 
     if not isinstance(spec, numpy.ndarray):
         raise Exception("convert: Argument 'spec' must be ndarray.")
@@ -171,10 +171,13 @@ def convert(target_format, source_format, spec, wavelen=None):
     if target_format is HSIntensity and source_format is HSIntensity:
         return spec
     if target_format is HSAbsorption and source_format is HSIntensity:
+        spec[spec == 0] = 1e-15
         return -numpy.log(numpy.abs(spec))
     if target_format is HSExtinction and source_format is HSIntensity:
+        spec[spec == 0] = 1e-15
         return -numpy.log10(numpy.abs(spec))
     if target_format is HSRefraction and source_format is HSIntensity:
+        spec[spec == 0] = 1e-15
         return -numpy.log(numpy.abs(spec)) * (rwavelen * wscale) / (
                 4 * numpy.pi)
 
