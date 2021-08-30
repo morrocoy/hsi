@@ -110,6 +110,8 @@ class HSTissueCompound:
         # interpolator on reference data for anisotropy of scattering
         self._anisotropy = None
 
+        self.length_scale = 1.  # lengths in cm by default
+
         # load mass attenuation coefficient of tissue components
         self.load_default_components()
         self.load_reference_anisotropy()
@@ -118,7 +120,7 @@ class HSTissueCompound:
         self.evaluate()
 
     def add_component_data(self, wavelen, attcoef, name,
-                           xunit='nm', yunit='cm-1'):
+                           wavelen_unit='nm', att_unit='cm-1'):
         """Load spectral data for the mass attenuation coefficient from a file.
 
         Parameters
@@ -130,37 +132,37 @@ class HSTissueCompound:
             The sampled spectral information for the attenuation coefficient.
         name : str
             The component name.
-        xunit : str, optional
+        wavelen_unit : str, optional
             The unit for wavelength. Can be either of ('pm', 'nm', 'um', 'mm',
             'm'). The default is 'nm'.
-        yunit : str, optional
+        att_unit : str, optional
             The unit for mass attenuation coefficient. Can be either of
             ('mm-1', 'cm-1', 'm-1'). The default is 'cm-1'.
         """
 
         # convert units to nm and cm-1
-        if xunit == 'pm':
+        if wavelen_unit == 'pm':
             xscale = 1e-3
-        elif xunit == 'nm':
+        elif wavelen_unit == 'nm':
             xscale = 1
-        elif xunit == 'um':
+        elif wavelen_unit == 'um':
             xscale = 1e3
-        elif xunit == 'mm':
+        elif wavelen_unit == 'mm':
             xscale = 1e6
-        elif xunit == 'm':
+        elif wavelen_unit == 'm':
             xscale = 1e9
         else:
-            logger.debug("Unknown xunit {}.".format(xunit))
+            logger.debug("Unknown wavelen_unit {}.".format(wavelen_unit))
             return
 
-        if yunit == 'm-1':
+        if att_unit == 'm-1':
             yscale = 1e-2
-        elif yunit == 'cm-1':
+        elif att_unit == 'cm-1':
             yscale = 1
-        elif yunit == 'mm-1':
+        elif att_unit == 'mm-1':
             yscale = 10
         else:
-            logger.debug("Unknown yunit {}.".format(yunit))
+            logger.debug("Unknown att_unit {}.".format(att_unit))
             return
 
         self.components[name] = HSTissueComponent(
@@ -248,10 +250,10 @@ class HSTissueCompound:
         refraction *= n_dry - (n_dry - n_wat) * portions['wat']
 
         # store optical properties of tissue compound in member variables
-        self.absorption = absorption
+        self.absorption = absorption / self.length_scale
         self.anisotropy = anisotropy
-        self.scattering = rscattering / (1. - anisotropy)
-        self.rscattering = rscattering
+        self.scattering = rscattering / (1. - anisotropy) / self.length_scale
+        self.rscattering = rscattering / self.length_scale
         self.refraction = refraction
 
     def load_default_components(self):
@@ -292,13 +294,14 @@ class HSTissueCompound:
         # file_path = os.path.join(self.libdir, "Water by Segelstein 1981.txt")
         # data = numpy.loadtxt(file_path, skiprows=4)
         # data[:, 1] = 4 * numpy.pi * data[:, 2] / data[:, 1]  # n to mu_a
-        # self.add_component_data(data[:, 0], data[:, 1], 'wat', xunit='um')
+        # self.add_component_data(
+        #     data[:, 0], data[:, 1], 'wat', wavelen_unit='um')
         # logger.debug("Load optical parameters for Water from "
         #              "{}.".hsformat(file_path))
 
         # fat by van Veen et. al. 2004:
         file_path = os.path.join(self.libdir, "Fat by van Veen 2004.txt")
-        self.add_component_file(file_path, 'fat', skiprows=7, yunit='m-1')
+        self.add_component_file(file_path, 'fat', skiprows=7, att_unit='m-1')
         logger.debug("Load optical parameters for Fat from "
                      "{}.".format(file_path))
 
@@ -321,7 +324,8 @@ class HSTissueCompound:
                      "{}.".format(file_path))
 
         # methemoglobin by Zijistra:
-        # # file_path = os.path.join(self.libdir, "Methemoglobin by Zijistra.txt")
+        # file_path = os.path.join(self.libdir,
+        #                          "Methemoglobin by Zijistra.txt")
         # file_path = os.path.join(self.libdir,
         #                         "Methemoglobin by Zijistra scaled.txt")
         # self.add_component_file(file_path, 'methb', skiprows=6)
@@ -369,6 +373,49 @@ class HSTissueCompound:
         logger.debug("Load reference data for anisotropy of scattering "
                      "from {}.".format(file_path))
 
+    @property
+    def mua(self):
+        return self.absorption
+
+    @property
+    def mus(self):
+        return self.scattering
+
+    @property
+    def g(self):
+        return self.anisotropy
+
+    @property
+    def n(self):
+        return self.refraction
+
+    def set_length_unit(self, lunit):
+        """ Set the length unit for optical output parameters.
+
+        Parameters
+        ----------
+        lunit : str
+            A string to specify the length unit. Available options are
+            'm', 'cm', 'mm', 'um'.
+        """
+        if lunit == 'm':
+            length_scale = 0.01
+        elif lunit == 'cm':
+            length_scale = 1.
+        elif lunit == 'mm':
+            length_scale = 10.
+        elif lunit == 'um':
+            length_scale = 10000.
+        else:
+            raise(f"Error: Length Unit '{lunit}' is not supported.")
+
+        rescale = length_scale / self.length_scale
+        self.absorption /= rescale
+        self.scattering /= rescale
+        self.rscattering /= rescale
+
+        self.length_scale = length_scale
+
     def set_composition(self, portions):
         """Set portions for each tissue component to the compound.
 
@@ -378,11 +425,15 @@ class HSTissueCompound:
             A dictionary of portions for each component to the compound.
         """
         if isinstance(portions, dict):
-            for key, val in portions.items():
-                if key in self.portions:
-                    self.portions[key] = val
+            for key, val in self.portions.items():
+                if key in portions:
+                    self.portions[key] = portions[key]
                     logger.debug(
                         "Set component portion {} to {}.".format(key, val))
+                else:
+                    self.portions[key] = 0.
+                    logger.debug(
+                        "Set component portion {} to 0.".format(key))
 
     def set_reference_anisotropy(self, wavelen, anisotropy, **options):
         """Set the reference data for anisotropy of scattering.
