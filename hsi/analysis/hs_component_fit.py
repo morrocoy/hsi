@@ -87,14 +87,14 @@ class HSComponentFit(HSBaseAnalysis):
                 - :class:`HSExtinction<hsi.HSExtinction>`
                 - :class:`HSRefraction<hsi.HSRefraction>`
         """
-        super(HSComponentFit, self).__init__(spectra, wavelen, hsformat)
-
         # dict of component vector to represent spectral data
         self.components = {}
 
         # list of bounds for the region of interest
         self.roi = [None, None]
         self.roiIndex = [None, None]
+
+        super(HSComponentFit, self).__init__(spectra, wavelen, hsformat)
 
         # adopt roi bounds and corresponing indices
         self.set_roi(bounds)
