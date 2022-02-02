@@ -5,11 +5,13 @@ import os.path
 from .hs_base_analysis import HSBaseAnalysis
 from .hs_component_fit import HSComponentFit
 from .hs_open_tivita import HSOpenTivita
+from .hs_fat import HSFat
 
 __all__ = [
     "HSBaseAnalysis",
     "HSComponentFit",
     "HSOpenTivita",
+    "HSFat",
 ]
 
 if os.path.isfile(os.path.join(os.path.dirname(__file__),
