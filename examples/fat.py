@@ -76,7 +76,7 @@ def main():
         "Fat index 2: NDI 925/875 nm",
         "Fat 2nd Derivative @ 925 nm",
     ]
-    keys = ['fat0', 'fat1', 'fat2', 'fat3']
+    keys = ['li0', 'li1', 'li2', 'li3']
 
     fig = plt.figure()
     # fig.set_size_inches(12, 8)

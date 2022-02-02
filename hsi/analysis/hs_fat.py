@@ -63,7 +63,7 @@ class HSFat(HSBaseAnalysis):
                 - :class:`HSRefraction<hsi.HSRefraction>`
         """
         super(HSFat, self).__init__(spectra, wavelen, hsformat)
-        self.keys = ['fat0', 'fat1', 'fat2', 'fat3']
+        self.keys = ['li0', 'li1', 'li2', 'li3']
         self.labels = [
             "Fat Angle across 900-920 nm",
             "Fat index 1: NDI 925/960 nm",
