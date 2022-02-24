@@ -19,7 +19,7 @@ import pyqtgraph as pg
 
 import hsi
 
-from hsi import HSAbsorption
+from hsi import HSAbsorption, HSIntensity
 
 from hsi.gui import QHSImageConfigWidget
 from hsi.gui import QHSComponentFitConfigWidget
@@ -29,7 +29,9 @@ from hsi.gui import HistImagCtrlItem
 from hsi.gui import PosnImagCtrlItem
 from hsi.gui import RegnPlotCtrlItem
 
-from hsi.analysis import HSOpenTivita
+# from hsi.analysis import HSOpenTivita
+from hsi.analysis import HSTivita
+
 
 from hsi.log import logmanager
 
@@ -50,11 +52,11 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         # image, 2D histogram and spectral attenuation plots
         self.imagCtrlItems = {
             'rgb': PosnImagCtrlItem("RGB Image"),
-            'nir': HistImagCtrlItem("NIR Perfusion Index", cbarWidth=10),
-            'oxy': HistImagCtrlItem("Oxygenation", cbarWidth=10),
-            'thi': HistImagCtrlItem("Tissue Hemoglobin Index", cbarWidth=10),
-            'twi': HistImagCtrlItem("Tissue Water Index", cbarWidth=10),
-            'mel': HistImagCtrlItem("Melanin", cbarWidth=10),
+            'nir': HistImagCtrlItem("NIR", cbarWidth=10),
+            'oxy': HistImagCtrlItem("StO2", cbarWidth=10),
+            'thi': HistImagCtrlItem("THI", cbarWidth=10),
+            'twi': HistImagCtrlItem("TWI", cbarWidth=10),
+            # 'mel': HistImagCtrlItem("Melanin", cbarWidth=10),
         }
 
         self.spectViewer = RegnPlotCtrlItem(
@@ -74,11 +76,12 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
 
         # config widgets
         self.hsImageConfig = QHSImageConfigWidget()
-        self.hsComponentFitConfig = QHSComponentFitConfigWidget(
-            hsformat=HSAbsorption)
-        self.hsComponentFitConfig.setEnabled(False)
+        # self.hsComponentFitConfig = QHSComponentFitConfigWidget(
+        #     hsformat=HSAbsorption)
+        # self.hsComponentFitConfig.setEnabled(False)
 
-        self.hsTivitaAnalysis = HSOpenTivita(hsformat=HSAbsorption)
+        # self.hsTivitaAnalysis = HSOpenTivita(hsformat=HSAbsorption)
+        self.hsTivitaAnalysis = HSTivita(hsformat=HSIntensity)
 
         # set view
         self._setupViews(*args, **kwargs)
@@ -111,9 +114,9 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         self.graphicsLayoutWidget.addItem(self.imagCtrlItems['rgb'], 0, 0)
         self.graphicsLayoutWidget.addItem(self.imagCtrlItems['nir'], 0, 1)
         self.graphicsLayoutWidget.addItem(self.imagCtrlItems['oxy'], 0, 2)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['thi'], 1, 0)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['twi'], 1, 1)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['mel'], 1, 2)
+        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['thi'], 1, 1)
+        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['twi'], 1, 2)
+        # self.graphicsLayoutWidget.addItem(self.imagCtrlItems['mel'], 1, 2)
         self.graphicsLayoutWidget.addItem(self.spectViewer, 0, 3, rowspan=2)
         # qGraphicsGridLayout = self.graphicsLayoutWidget.ci.layout
         # qGraphicsGridLayout.setColumnStretchFactor(0, 1)
@@ -121,9 +124,10 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         self.mainLayout.addWidget(self.graphicsLayoutWidget)
 
         # user config widgets
-        self.hsImageConfig.setMaximumWidth(200)
+        self.hsImageConfig.setMaximumWidth(220)
+        # self.hsComponentFitConfig.setMaximumWidth(220)
         self.hsImageConfig.setFormat(HSAbsorption)
-        self.hsComponentFitConfig.setMaximumWidth(200)
+        self.hsImageConfig.imageFilterTypeComboBox.setCurrentIndex(0)
 
         layout = QtGui.QVBoxLayout()
         layout.addWidget(self.hsImageConfig)
@@ -133,12 +137,12 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         line.setFrameShadow(QtGui.QFrame.Sunken)
         layout.addWidget(line)
 
-        layout.addWidget(self.hsComponentFitConfig)
+        # layout.addWidget(self.hsComponentFitConfig)
 
-        line = QtGui.QFrame()
-        line.setFrameShape(QtGui.QFrame.HLine)
-        line.setFrameShadow(QtGui.QFrame.Sunken)
-        layout.addWidget(line)
+        # line = QtGui.QFrame()
+        # line.setFrameShape(QtGui.QFrame.HLine)
+        # line.setFrameShadow(QtGui.QFrame.Sunken)
+        # layout.addWidget(line)
 
         layout.addStretch()
         self.mainLayout.addLayout(layout)
@@ -152,7 +156,7 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
             item.sigCursorPositionChanged.connect(self.updateCursorPosition)
 
         self.hsImageConfig.sigValueChanged.connect(self.setHSImage)
-        self.hsComponentFitConfig.sigValueChanged.connect(self.onComponentFitChanged)
+        # self.hsComponentFitConfig.sigValueChanged.connect(self.onComponentFitChanged)
         # self.spectViewer.sigRegionChanged.connect(self.onRegionChanged)
         self.spectViewer.sigRegionChangeFinished.connect(
             self.onRegionChangeFinished)
@@ -180,7 +184,7 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
 
     def onRegionChangeFinished(self, item):
         reg = item.getRegion()
-        self.hsComponentFitConfig.setROI(reg)
+        # self.hsComponentFitConfig.setROI(reg)
 
     def updateCursorPosition(self):
         sender = self.sender()
@@ -226,16 +230,18 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
 
         # forward hsformat of hyperspectral image to the vector analyzer
         hsformat = self.hsImageConfig.getFormat()
-        self.hsComponentFitConfig.setFormat(hsformat)
-        self.hsComponentFitConfig.setMask(mask)
+        # self.hsComponentFitConfig.setFormat(hsformat)
+        # self.hsComponentFitConfig.setMask(mask)
 
+        # self.hsTivitaAnalysis.set_data(
+        #     self.spectra, self.wavelen, hsformat=hsformat)
         self.hsTivitaAnalysis.set_data(
             self.fspectra, self.wavelen, hsformat=hsformat)
         self.hsTivitaAnalysis.evaluate(mask=mask)
 
         if newFile:
             # update spectra and wavelength for analysis
-            self.hsComponentFitConfig.setData(self.fspectra, self.wavelen)
+            # self.hsComponentFitConfig.setData(self.fspectra, self.wavelen)
 
             # autorange image plots and cursor reset
             self.imagCtrlItems['rgb'].autoRange()
@@ -247,10 +253,17 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
             self.spectViewer.setRegion(bounds)
         else:
             # update only spectra for analysis (keep wavelength)
-            self.hsComponentFitConfig.setData(self.fspectra)
+            # self.hsComponentFitConfig.setData(self.fspectra)
+            pass
 
-        # self.updateSpectViewer()
         # data = hsImageConfig.value()
+
+        # update index plots and spectral viewer
+        param = self.hsTivitaAnalysis.get_solution(unpack=True)
+        keys = ['nir', 'oxy', 'thi', 'twi']
+        for key in keys:
+            self.imagCtrlItems[key].setImage(param[key])
+        self.updateSpectralView()
 
     def onComponentFitChanged(self, analyzer, enableTest=False):
         if self.hsImageConfig.isEmpty():
@@ -290,7 +303,7 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         self.curveItems['fil'].setData(wavelen, self.fspectra[:, row, col])
         self.curveItems['mod'].setData(wavelen, self.mspectra[:, row, col])
 
-        self.hsComponentFitConfig.setTestMask([row, col])
+        # self.hsComponentFitConfig.setTestMask([row, col])
 
 
 def main():
@@ -303,7 +316,7 @@ def main():
 
     win = QHSTivitaAnalyzerWidget()
     # win.setGeometry(300, 30, 1200, 500)
-    win.setGeometry(290, 30, 1630, 900)
+    win.setGeometry(290, 30, 1800, 800)
     win.setWindowTitle("Hyperspectral Image Analysis")
     win.show()
     app.exec_()

@@ -72,7 +72,7 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
         # config widgets
         self.hsImageConfig = QHSImageConfigWidget()
         self.hsComponentFitConfig = QHSComponentFitConfigWidget(
-            format=HSAbsorption)
+            hsformat=HSAbsorption)
 
         # set view
         self._setupViews(*args, **kwargs)
