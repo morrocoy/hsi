@@ -38,6 +38,11 @@ def main():
     subfolder = "2021-06-29_aufnahmen_arm"
     timestamp = "2021_07_06_16_04_59"
 
+
+    subfolder = "wetransfer_2021_09_20_15_13_41_2022-02-23_2049"
+    # timestamp = "2021_09_20_15_13_41"
+    timestamp = "2021_09_27_15_42_49"
+
     file_path = os.path.join(data_path, subfolder, timestamp, timestamp)
 
     hsimage = HSImage(file_path + "_SpecCube.dat")
@@ -72,7 +77,7 @@ def main():
 
     analysis.loadtxt("basevectors_3.txt", mode='all')
     analysis.set_data(spectra, wavelen, hsformat=HSAbsorption)
-    analysis.set_roi([500e-9, 995e-9])
+    analysis.set_roi([650e-9, 995e-9])
 
     # print base component names
     print(analysis.keys)
@@ -82,7 +87,7 @@ def main():
     analysis.set_var_bounds("ohb", [0, 0.05])
     analysis.set_var_bounds("wat", [0, 2.00])
     analysis.set_var_bounds("fat", [0, 1.00])
-    analysis.set_var_bounds("mel", [0, 0.2])
+    analysis.set_var_bounds("mel", [0, 0.5])
 
     # remove components
     analysis.remove_component("mel")
@@ -173,7 +178,7 @@ def main():
 
     ax2.set_ylabel("residual")
     ax1.legend()
-    plt.show()
+    # plt.show()
 
 
 if __name__ == '__main__':

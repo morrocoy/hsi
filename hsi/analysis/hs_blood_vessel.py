@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb  2 15:22:49 2022
+Created on Tue Mar  8 13:09:21 2022
 
 @author: kpapke
 """
@@ -9,7 +9,8 @@ from scipy import ndimage, signal
 from skimage.exposure import rescale_intensity
 
 from ..core.hs_formats import convert
-from ..core.hs_formats import HSIntensity
+from ..core.hs_formats import HSIntensity, HSAbsorption
+from ..core.hs_functions import snv
 from ..log import logmanager
 
 from .hs_base_analysis import HSBaseAnalysis
@@ -18,13 +19,13 @@ from .hs_base_analysis import HSBaseAnalysis
 logger = logmanager.getLogger(__name__)
 
 
-__all__ = ['HSFat']
+__all__ = ['HSBloodVessel']
 
 
-class HSFat(HSBaseAnalysis):
+class HSBloodVessel(HSBaseAnalysis):
     """
     Class to analyze hyper spectral image data by using the Moussa's algorithms
-    for fat detection.
+    for the detection of blood vessels.
 
     Attributes
     ----------
@@ -62,13 +63,12 @@ class HSFat(HSBaseAnalysis):
                 - :class:`HSExtinction<hsi.HSExtinction>`
                 - :class:`HSRefraction<hsi.HSRefraction>`
         """
-        super(HSFat, self).__init__(spectra, wavelen, hsformat)
-        self.keys = ['li0', 'li1', 'li2', 'li3']
+        super(HSBloodVessel, self).__init__(spectra, wavelen, hsformat)
+        self.keys = ['bv0', 'bv1', 'bv2']
         self.labels = [
-            "Fat Angle across 900-920 nm",
-            "Fat index 1: NDI 925/960 nm",
-            "Fat index 2: NDI 925/875 nm",
-            "Fat 2nd Derivative @ 925 nm",
+            "Angle Index SNV at 625-720 nm",
+            "Mean at 750-950 nm",
+            "Mask Combination",
         ]
 
     def evaluate(self, mask=None):
@@ -94,24 +94,19 @@ class HSFat(HSBaseAnalysis):
             # number of wavelengths
             m = len(self.spectra)
 
-            # unfiltered target vector in a reshaped 2-dimensional hsformat
-            spectra = self.spectra.reshape(m, -1)
-
             # filtered target vector in a reshaped 2-dimensional hsformat
             intensity = convert(
                 HSIntensity, self.hsformat, self.spectra, wavelen)
-            spectra_fat = -numpy.log(numpy.abs(intensity))
-            spectra_fat[spectra_fat == numpy.inf] = 0
-            spectra_fat = ndimage.uniform_filter(spectra_fat, size=7)
-            spectra_fat = numpy.pad(
-                spectra_fat, pad_width=((1, 1), (0, 0), (0, 0)),
-                mode='symmetric')
-            spectra_fat = numpy.diff(spectra_fat, n=2, axis=0)
-            spectra_fat = ndimage.uniform_filter(spectra_fat, size=7)
-            spectra_fat = signal.savgol_filter(
-                spectra_fat, window_length=9, polyorder=2, axis=0,
-                mode='mirror')
-            spectra_fat = spectra_fat.reshape(m, -1)
+            Abs = convert(
+                HSAbsorption, self.hsformat, self.spectra, wavelen)
+            Abs[Abs == numpy.inf] = 0
+            AbsMean = ndimage.uniform_filter(Abs, size=5)
+            spectra_snv = snv(AbsMean)
+
+            # unfiltered target vector in a reshaped 2-dimensional hsformat
+            spectra = AbsMean.reshape(m, -1)
+            intensity = intensity.reshape(m, -1)
+            spectra_snv = spectra_snv.reshape(m, -1)
 
             # retrieve the selected spectra
             index_mask = self._ravel_mask(mask)
@@ -122,22 +117,25 @@ class HSFat(HSBaseAnalysis):
             self._anaVarBounds = numpy.zeros((4, 2))
             self._anaVarBounds[:, 1] = 1
 
-            b = spectra_fat[:, index_mask]
+            b0 = intensity[:, index_mask]
+            b1 = spectra_snv[:, index_mask]
 
-            self._anaVarVector[0, index_mask] = self.evaluate_fat1(
-                b, wavelen)
-            self._anaVarVector[1, index_mask] = self.evaluate_fat2(
-                b, wavelen)
-            self._anaVarVector[2, index_mask] = self.evaluate_fat3(
-                b, wavelen)
-            self._anaVarVector[3, index_mask] = self.evaluate_fat4(
-                b, wavelen)
+            self._anaVarVector[0, index_mask] = self.evaluate_bv_0(
+                b1, wavelen)
+            self._anaVarVector[1, index_mask] = self.evaluate_bv_1(
+                b0, wavelen)
+
+            self._anaVarVector[2, index_mask] = rescale_intensity(
+                (1. - self._anaVarVector[0, index_mask]) *
+                self._anaVarVector[1, index_mask], (0, 1))
+
+
 
     @staticmethod
-    def evaluate_fat1(spectra, wavelen, reg0=None):
-        # method 1: Fat angle index
+    def evaluate_bv_0(spectra, wavelen, reg0=None):
+        # method 1: angle index at 625-720 nm
         if reg0 is None:
-            reg0 = [900e-9, 915e-9]
+            reg0 = [625e-9, 720e-9]
 
         idx0 = numpy.where((wavelen >= reg0[0]) * (wavelen <= reg0[1]))[0]
         # val0 = numpy.mean(spectra[idx0], axis=0, dtype=numpy.float64)
@@ -146,64 +144,26 @@ class HSFat(HSBaseAnalysis):
         x1 = range(len(idx0))
 
         ratio = numpy.arctan2(x1[-1] - x1[0], y1[-1] - y1[0])
+        # ratio = rescale_intensity(
+        #     ratio, (numpy.min(ratio), numpy.max(ratio)), (0, 100))
+
+        # ratio[ratio < 1.5707963267948966] = 1.5707963267948966
+
+        ratio = numpy.clip(ratio, numpy.pi/2, numpy.pi)
         ratio = rescale_intensity(
             ratio, (numpy.min(ratio), numpy.max(ratio)), (0, 1))
 
         return ratio.astype('float64')
 
     @staticmethod
-    def evaluate_fat2(spectra, wavelen, reg0=None):
-        # method 2: ratio index at 925 nm and 965 nm
+    def evaluate_bv_1(spectra, wavelen, reg0=None):
+        # method 2: mean intensity at 750-950 nm
         if reg0 is None:
-            reg0 = [925e-9, 960e-9]
+            reg0 = [750e-9, 950e-9]
 
         idx0 = numpy.where((wavelen >= reg0[0]) * (wavelen <= reg0[1]))[0]
-        # val0 = numpy.mean(spectra[idx0], axis=0, dtype=numpy.float64)
-
-        y1 = spectra[idx0] + 1.
-
-        ratio = (y1[-1] - y1[0]) / (y1[-1] + y1[0])
-        ratio[ratio == 0] = numpy.min(ratio)  # something strange
+        ratio = numpy.mean(spectra[idx0], axis=0, dtype=numpy.float64)
         ratio = rescale_intensity(
             ratio, (numpy.min(ratio), numpy.max(ratio)), (0, 1))
-
-        return ratio.astype('float64')
-
-    @staticmethod
-    def evaluate_fat3(spectra, wavelen, reg0=None):
-        # method 3: ratio index at 925 nm and 875 nm
-        if reg0 is None:
-            reg0 = [875e-9, 925e-9]
-
-        spectra[spectra == 0] = 1
-
-        idx0 = numpy.where((wavelen >= reg0[0]) * (wavelen <= reg0[1]))[0]
-        y1 = spectra[idx0] + 1.
-
-        ratio = -(y1[-1] - y1[0]) / (y1[-1] + y1[0])
-        ratio[ratio == 0] = numpy.min(ratio)  # something strange
-        ratio = rescale_intensity(
-            ratio, (numpy.min(ratio), numpy.max(ratio)), (0, 1))
-
-        return ratio.astype('float64')
-
-    @staticmethod
-    def evaluate_fat4(spectra, wavelen, reg0=None):
-        # method 4: second derivative at 925 nm
-        if reg0 is None:
-            reg0 = [925e-9, 925e-9]
-
-        spectra[spectra == 0] = 1
-
-        idx0 = numpy.where((wavelen >= reg0[0]) * (wavelen <= reg0[1]))[0]
-        y1 = spectra[idx0]
-
-        ratio = y1[0]
-        ratio[ratio == 1.] = numpy.min(ratio)  # something strange
-        ratio = rescale_intensity(
-            ratio, (numpy.min(ratio), numpy.max(ratio)), (0., 1.))
-
-        ratio = 1. - ratio  # invert
-        ratio[ratio == 1.] = 0.
 
         return ratio.astype('float64')

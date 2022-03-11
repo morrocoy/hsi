@@ -85,6 +85,7 @@ class QRegnPlotCtrlConfigWidget(QtWidgets.QWidget):
         self.minLevelSpinBox.setMaximum(1000)
         self.minLevelSpinBox.setSingleStep(0.1)
         self.minLevelSpinBox.setDecimals(3)
+        self.minLevelSpinBox.setMaximumWidth(60)
         self.mainLayout.addWidget(self.minLevelSpinBox)
 
         self.maxLevelSpinBox.setKeyboardTracking(False)
@@ -92,6 +93,7 @@ class QRegnPlotCtrlConfigWidget(QtWidgets.QWidget):
         self.maxLevelSpinBox.setMaximum(1000)
         self.maxLevelSpinBox.setSingleStep(0.1)
         self.maxLevelSpinBox.setDecimals(3)
+        self.maxLevelSpinBox.setMaximumWidth(60)
         self.mainLayout.addWidget(self.maxLevelSpinBox)
 
         self.resetButton.setDefaultAction(self.resetAction)

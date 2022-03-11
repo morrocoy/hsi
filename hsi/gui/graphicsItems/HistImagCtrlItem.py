@@ -6,6 +6,7 @@ import pyqtgraph as pg
 from ...bindings.Qt import QtWidgets, QtGui, QtCore
 from ...log import logmanager
 from ...misc import getPkgDir
+from ...core.hs_cm import cm
 
 from .ColorBarItem import ColorBarItem
 from .BaseImagCtrlItem import BaseImagCtrlItem
@@ -62,13 +63,14 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
                 "border-color: black;"
                 "font: bold 14px;"
             )
+            self.label.setMinimumWidth(120)
             self.mainLayout.addStretch()
             self.mainLayout.addWidget(self.label)
 
         self.mainLayout.addStretch()
-        self.label = QtWidgets.QLabel("limits", self)
-        self.label.setStyleSheet("border-color: black;")
-        self.mainLayout.addWidget(self.label)
+        # self.label = QtWidgets.QLabel("limits", self)
+        # self.label.setStyleSheet("border-color: black;")
+        # self.mainLayout.addWidget(self.label)
 
         self.minLevelSpinBox = QtWidgets.QDoubleSpinBox(self)
         self.minLevelSpinBox.setKeyboardTracking(False)
@@ -76,6 +78,7 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
         self.minLevelSpinBox.setMaximum(1000)
         self.minLevelSpinBox.setSingleStep(0.1)
         self.minLevelSpinBox.setDecimals(3)
+        self.minLevelSpinBox.setMaximumWidth(60)
         self.mainLayout.addWidget(self.minLevelSpinBox)
 
         self.maxLevelSpinBox = QtWidgets.QDoubleSpinBox(self)
@@ -84,6 +87,7 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
         self.maxLevelSpinBox.setMaximum(1000)
         self.maxLevelSpinBox.setSingleStep(0.1)
         self.maxLevelSpinBox.setDecimals(3)
+        self.maxLevelSpinBox.setMaximumWidth(60)
         self.mainLayout.addWidget(self.maxLevelSpinBox)
 
         self.minLevelSpinBox.valueChanged.connect(lambda val: self.setLevels((val, None)))
@@ -170,9 +174,12 @@ class HistImagCtrlItem(BaseImagCtrlItem):
 
         # set color map
         if cmap is None:
-            colors = np.loadtxt(
-                os.path.join(getPkgDir(), "data", "cmap_tivita.txt"))
+            # colors = np.loadtxt(
+            #     os.path.join(getPkgDir(), "data", "cmap_tivita.txt"))
+            cmap = cm.tivita()
+            colors = cmap(range(256))
             cmap = (colors * 255).view(np.ndarray).astype(np.uint8)
+
         self.imageItem.setLookupTable(cmap)
 
         self._setupActions()

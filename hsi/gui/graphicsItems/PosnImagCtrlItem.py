@@ -5,8 +5,10 @@ import pyqtgraph as pg
 from ...bindings.Qt import QtWidgets, QtGui, QtCore
 from ...log import logmanager
 from ...misc import check_is_an_array, check_class
+from ...core.hs_cm import cm
 
 from .BaseImagCtrlItem import BaseImagCtrlItem
+from .ColorBarItem import ColorBarItem
 
 logger = logmanager.getLogger(__name__)
 
@@ -48,29 +50,34 @@ class QPosnImagCtrlConfigWidget(QtWidgets.QWidget):
                 "border-color: black;"
                 "font: bold 14px;"
             )
+            self.label.setMinimumWidth(160)
             self.mainLayout.addStretch()
             self.mainLayout.addWidget(self.label)
 
         self.mainLayout.addStretch()
-        self.label = QtWidgets.QLabel("position")
+        self.label = QtWidgets.QLabel("pos.")
         self.label.setStyleSheet("border-color: black;")
         self.mainLayout.addWidget(self.label)
 
 
         self.cursorXSpinBox = QtWidgets.QDoubleSpinBox()
         self.cursorXSpinBox.setKeyboardTracking(False)
-        self.cursorXSpinBox.setMinimum(-10000)
-        self.cursorXSpinBox.setMaximum(10000)
-        self.cursorXSpinBox.setSingleStep(0.1)
-        self.cursorXSpinBox.setDecimals(3)
+        self.cursorXSpinBox.setMinimum(0)
+        self.cursorXSpinBox.setMaximum(1000)
+        self.cursorXSpinBox.setSingleStep(1)
+        self.cursorXSpinBox.setDecimals(0)
+        self.cursorXSpinBox.setMinimumWidth(60)
+        self.cursorXSpinBox.setMaximumWidth(60)
         self.mainLayout.addWidget(self.cursorXSpinBox)
 
         self.cursorYSpinBox = QtWidgets.QDoubleSpinBox()
         self.cursorYSpinBox.setKeyboardTracking(False)
-        self.cursorYSpinBox.setMinimum(-10000)
-        self.cursorYSpinBox.setMaximum(10000)
-        self.cursorYSpinBox.setSingleStep(0.1)
-        self.cursorYSpinBox.setDecimals(3)
+        self.cursorYSpinBox.setMinimum(0)
+        self.cursorYSpinBox.setMaximum(1000)
+        self.cursorYSpinBox.setSingleStep(1)
+        self.cursorYSpinBox.setDecimals(0)
+        self.cursorYSpinBox.setMinimumWidth(60)
+        self.cursorYSpinBox.setMaximumWidth(60)
         self.mainLayout.addWidget(self.cursorYSpinBox)
 
         self.cursorXSpinBox.valueChanged.connect(self.setCursorPos)
@@ -139,8 +146,26 @@ class QPosnImagCtrlConfigWidget(QtWidgets.QWidget):
 
 class PosnImagCtrlItem(BaseImagCtrlItem):
 
-    def __init__(self, label=None, parent=None):
+    def __init__(self,
+                 label=None,
+                 cmap=None,
+                 showHistogram=True,
+                 cbarOrientation='bottom',
+                 cbarWidth=20,
+                 cbarHistogramHeight=30,
+                 parent=None):
         BaseImagCtrlItem.__init__(self)
+
+        self.cbarWidth = cbarWidth
+        self.cbarHistogramHeight = cbarHistogramHeight
+        self.cbarOrientation = cbarOrientation
+        self.cbarHistogramIsVisible = showHistogram
+
+        if cmap is None:
+            cmap = cm.tivita()
+            colors = cmap(range(256))
+            cmap = (colors * 255).view(np.ndarray).astype(np.uint8)
+        self.imageItem.setLookupTable(cmap)
 
         self._setupActions()
         self._setupViews(label)
@@ -156,6 +181,12 @@ class PosnImagCtrlItem(BaseImagCtrlItem):
 
 
     def _setupViews(self, label):
+        self.colorBarItem = ColorBarItem(
+            imageItem=self.imageItem,
+            showHistogram=self.cbarHistogramIsVisible,
+            width=self.cbarWidth,
+            orientation=self.cbarOrientation)
+        self.colorBarItem.setMinimumHeight(60)
 
         self.toolbarWidget = QPosnImagCtrlConfigWidget(self, label=label)
         self.toolbarProxy = QtGui.QGraphicsProxyWidget()
@@ -168,7 +199,8 @@ class PosnImagCtrlItem(BaseImagCtrlItem):
 
         self.mainLayout.addItem(self.toolbarProxy, 0, 0)
         self.mainLayout.addItem(self.plotItem, 1, 0)
-        # self.mainLayout.addItem(self.colorLegendItem, 2, 0)
+        # self.mainLayout.addStretch()
+        self.mainLayout.addItem(self.colorBarItem, 2, 0)
 
 
 

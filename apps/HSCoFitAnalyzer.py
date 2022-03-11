@@ -46,7 +46,7 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
 
         # image, 2D histogram and spectral attenuation plots
         self.imagCtrlItems = {
-            'rgb': PosnImagCtrlItem("RGB Image"),
+            'rgb': PosnImagCtrlItem("RGB Image", cbarWidth=10),
             'blo': HistImagCtrlItem("Blood", cbarWidth=10),
             'oxy': HistImagCtrlItem("Oxygenation", cbarWidth=10),
             'wat': HistImagCtrlItem("Water", cbarWidth=10),
@@ -91,10 +91,7 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
             item.setMaximumWidth(440)
             item.setAspectLocked()
             item.invertY()
-            if key == 'rgb':
-                item.setMaximumHeight(350)
-            else:
-                item.setMaximumHeight(440)
+            item.setMaximumHeight(440)
 
         # configure spectral plot item
         for item in self.curveItems.values():
@@ -115,9 +112,9 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
         self.mainLayout.addWidget(self.graphicsLayoutWidget)
 
         # user config widgets
-        self.hsImageConfig.setMaximumWidth(200)
+        self.hsImageConfig.setMaximumWidth(220)
         self.hsImageConfig.setFormat(HSAbsorption)
-        self.hsComponentFitConfig.setMaximumWidth(200)
+        self.hsComponentFitConfig.setMaximumWidth(220)
 
         layout = QtGui.QVBoxLayout()
         layout.addWidget(self.hsImageConfig)
@@ -296,7 +293,7 @@ def main():
 
     win = QHSComponentFitAnalyzerWidget()
     # win.setGeometry(300, 30, 1200, 500)
-    win.setGeometry(290, 30, 1630, 900)
+    win.setGeometry(290, 30, 1800, 800)
     win.setWindowTitle("Hyperspectral Image Analysis")
     win.show()
     app.exec_()

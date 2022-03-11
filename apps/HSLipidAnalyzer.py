@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Feb 16 14:29:59 2021
+Created on Tue Mar  8 12:33:32 2022
 
 @author: kpapke
 
-This example demonstrates the Tivita analysis applied on hyperspectral images.
-The spectrum is plotted at user defined coordinated. Various filters may be
-applied on both, the image and spectral directions. The RGB picture is derived
-from the hyperspectral data using an in-build RGB filter is able to extract
-the different color channels.
+This example demonstrates the Lipid index parameters analysis applied on
+hyperspectral images. The spectrum is plotted at user defined coordinated.
+Various filters may be applied on both, the image and spectral directions.
+The RGB picture is derived from the hyperspectral data using an in-build RGB
+filter is able to extract the different color channels.
 """
 import sys
 import logging
@@ -29,8 +29,7 @@ from hsi.gui import HistImagCtrlItem
 from hsi.gui import PosnImagCtrlItem
 from hsi.gui import RegnPlotCtrlItem
 
-# from hsi.analysis import HSOpenTivita
-from hsi.analysis import HSTivita
+from hsi.analysis import HSLipids
 
 
 from hsi.log import logmanager
@@ -52,10 +51,10 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         # image, 2D histogram and spectral attenuation plots
         self.imagCtrlItems = {
             'rgb': PosnImagCtrlItem("RGB Image", cbarWidth=10),
-            'nir': HistImagCtrlItem("NIR Index", cbarWidth=10),
-            'oxy': HistImagCtrlItem("StO2 Index", cbarWidth=10),
-            'thi': HistImagCtrlItem("TH Index", cbarWidth=10),
-            'twi': HistImagCtrlItem("TW Index", cbarWidth=10),
+            'li0': HistImagCtrlItem("Angle 900-915nm", cbarWidth=10),
+            'li1': HistImagCtrlItem("Ratio 925-960nm", cbarWidth=10),
+            'li2': HistImagCtrlItem("Ratio 875-925nm", cbarWidth=10),
+            'li3': HistImagCtrlItem("2nd derv. 925nm", cbarWidth=10),
             # 'mel': HistImagCtrlItem("Melanin", cbarWidth=10),
         }
 
@@ -81,7 +80,7 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         # self.hsComponentFitConfig.setEnabled(False)
 
         # self.hsTivitaAnalysis = HSOpenTivita(hsformat=HSAbsorption)
-        self.hsTivitaAnalysis = HSTivita(hsformat=HSIntensity)
+        self.hsLipidsAnalysis = HSLipids(hsformat=HSIntensity)
 
         # set view
         self._setupViews(*args, **kwargs)
@@ -109,11 +108,10 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         # place graphics items
         self.graphicsLayoutWidget = pg.GraphicsLayoutWidget()
         self.graphicsLayoutWidget.addItem(self.imagCtrlItems['rgb'], 0, 0)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['nir'], 0, 1)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['oxy'], 0, 2)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['thi'], 1, 1)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['twi'], 1, 2)
-        # self.graphicsLayoutWidget.addItem(self.imagCtrlItems['mel'], 1, 2)
+        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['li0'], 0, 1)
+        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['li1'], 0, 2)
+        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['li2'], 1, 1)
+        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['li3'], 1, 2)
         self.graphicsLayoutWidget.addItem(self.spectViewer, 0, 3, rowspan=2)
         # qGraphicsGridLayout = self.graphicsLayoutWidget.ci.layout
         # qGraphicsGridLayout.setColumnStretchFactor(0, 1)
@@ -232,9 +230,9 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
 
         # self.hsTivitaAnalysis.set_data(
         #     self.spectra, self.wavelen, hsformat=hsformat)
-        self.hsTivitaAnalysis.set_data(
+        self.hsLipidsAnalysis.set_data(
             self.fspectra, self.wavelen, hsformat=hsformat)
-        self.hsTivitaAnalysis.evaluate(mask=mask)
+        self.hsLipidsAnalysis.evaluate(mask=mask)
 
         if newFile:
             # update spectra and wavelength for analysis
@@ -256,8 +254,8 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         # data = hsImageConfig.value()
 
         # update index plots and spectral viewer
-        param = self.hsTivitaAnalysis.get_solution(unpack=True)
-        keys = ['nir', 'oxy', 'thi', 'twi']
+        param = self.hsLipidsAnalysis.get_solution(unpack=True)
+        keys = ['li0', 'li1', 'li2', 'li3']
         for key in keys:
             self.imagCtrlItems[key].setImage(param[key])
         self.updateSpectralView()
@@ -266,8 +264,8 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         if self.hsImageConfig.isEmpty():
             return
 
-        param = self.hsTivitaAnalysis.get_solution(unpack=True)
-        keys = ['nir', 'oxy', 'thi', 'twi']
+        param = self.hsLipidsAnalysis.get_solution(unpack=True)
+        keys = ['li0', 'li1', 'li2', 'li3']
         for key in keys:
             self.imagCtrlItems[key].setImage(param[key])
             # self.imagCtrlItems[key].setLevels([0., 1.])
@@ -314,7 +312,7 @@ def main():
     win = QHSTivitaAnalyzerWidget()
     # win.setGeometry(300, 30, 1200, 500)
     win.setGeometry(290, 30, 1800, 800)
-    win.setWindowTitle("TIVITA Index Analysis")
+    win.setWindowTitle("Lipid Index Analysis")
     win.show()
     app.exec_()
 
