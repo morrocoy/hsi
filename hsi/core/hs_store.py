@@ -5,7 +5,7 @@ Created on Wed Mar  3 12:53:04 2021
 @author: kpapke
 """
 import os.path
-import pathlib
+# import pathlib
 
 # import re
 
@@ -229,7 +229,8 @@ class HSStore:
         self.index = 0
 
         # open underlying dataset file
-        if isinstance(fname, (str, pathlib.Path)):
+        # if isinstance(fname, (str, pathlib.Path)):
+        if isinstance(fname, (str)):
             logger.debug(f"Open file object {fname} in mode {mode}.")
             self.file = tables.open_file(fname, mode)
             self.mode = mode

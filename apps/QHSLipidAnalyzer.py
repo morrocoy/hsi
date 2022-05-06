@@ -311,7 +311,7 @@ def main():
 
     win = QHSTivitaAnalyzerWidget()
     # win.setGeometry(300, 30, 1200, 500)
-    win.setGeometry(290, 30, 1800, 800)
+    win.setGeometry(40, 160, 1800, 800)
     win.setWindowTitle("Lipid Index Analysis")
     win.show()
     app.exec_()

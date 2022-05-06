@@ -11,6 +11,7 @@ __pycache__/
 # distribution / packaging
 bin/
 build/
+dist/
 data/
 pictures/
 *.egg-info/

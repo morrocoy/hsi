@@ -23,6 +23,9 @@ def main():
     data_path = os.path.join(os.getcwd(), "..", "data")
     pict_path = os.path.join(os.getcwd(), "..", "pictures")
 
+    # data_path = os.path.join("d:", os.path.sep, "packages", "hsi", "data")
+    # pict_path = os.path.join("d:", os.path.sep, "packages", "hsi", "pictures")
+
     # create compound .........................................................
     wavelen = np.linspace(500, 1000, 100, endpoint=False)
     # wavelen = np.linspace(500, 1000, 500, endpoint=False)

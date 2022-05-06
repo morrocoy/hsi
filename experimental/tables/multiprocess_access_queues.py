@@ -7,7 +7,7 @@ import queue
 
 import multiprocessing
 import time
-from pathlib import Path
+# from pathlib import Path
 
 import numpy as np
 import tables as tb
@@ -178,7 +178,7 @@ if __name__ == '__main__':
         print()
         print(f'contents of log file {output_file}')
         print(open(output_file).read())
-        Path(output_file).unlink()
+        # Path(output_file).unlink()
 
     time.sleep(0.1)
-    Path(file_path).unlink()
+    # Path(file_path).unlink()

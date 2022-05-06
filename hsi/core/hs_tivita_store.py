@@ -6,7 +6,7 @@ Created on Wed Mar  3 12:53:04 2021
 """
 # import sys
 import os.path
-import pathlib
+# import pathlib
 
 # import re
 
@@ -73,7 +73,8 @@ class HSTivitaStore:
         }
 
         # open underlying dataset descriptor file
-        if isinstance(fname, (str, pathlib.Path)):
+        # if isinstance(fname, (str, pathlib.Path)):
+        if isinstance(fname, (str)):
             logger.debug(f"Open descriptor file object {fname}.")
             self.file = pd.ExcelFile(fname)  # tables.open_file(fname, mode)
             self.owner = True  # has ownership of the underlying file

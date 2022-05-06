@@ -13,17 +13,19 @@ try:
         # If the application is run as a bundle, the pyInstaller bootloader
         # extends the sys module by a flag frozen=True and sets the app
         # path into variable _MEIPASS'.
-        MODULE_DIR = os.path.join(sys._MEIPASS, 'cmlib')
+        # MODULE_DIR = os.path.join(sys._MEIPASS, 'cmlib')
+        MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
     else:
         MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
     VERSION_FILE = os.path.join(MODULE_DIR, 'version.txt')
     with open(VERSION_FILE) as stream:
         __version__ = stream.readline().strip()
+
 except Exception as ex:
     __version__ = "?.?.?"
     raise
-              
+
 # check python version (Allow anything >= 3.6)
 if sys.version_info[0] < 3 or (
         sys.version_info[0] == 3 and sys.version_info[1] < 6):
@@ -36,9 +38,9 @@ CONFIG_OPTIONS = {
     'enableBVLS': True,  # provide fortran bvls implementation
     'enableExperimental': True,  # Enable experimental features
     'imageAxisOrder': 'row-major',  # For 'row-major', image data is expected
-                                    # in the standard (row, col) order.
-                                    # For 'col-major', image data is expected
-                                    # in reversed (col, row) order.
+    # in the standard (row, col) order.
+    # For 'col-major', image data is expected
+    # in reversed (col, row) order.
 }
 
 # requires packages (import here to check if they are available)
@@ -73,8 +75,10 @@ from .core.hs_component import HSComponent
 # file io
 from .core.hs_file import HSFile
 from .core.hs_component_file import HSComponentFile
-from .core.hs_store import HSStore, HSPatientInfo
-from .core.hs_tivita_store import HSTivitaStore
+# TODO: hs_store currently not supported by pyinstaller
+if not getattr(sys, 'frozen', False):
+    from .core.hs_store import HSStore, HSPatientInfo
+    from .core.hs_tivita_store import HSTivitaStore
 
 # miscellaneous
 from .misc import genHash
@@ -88,10 +92,14 @@ __all__ = [
     # hyperspectral data representation
     "HSImage", "HSComponent",
     # File IO
-    "HSFile", "HSComponentFile", "HSStore", "HSTivitaStore", "HSPatientInfo",
+    "HSFile", "HSComponentFile",
     # miscellaneous
     "genHash",
 ]
+
+# TODO: hs_store currently not supported by pyinstaller
+if not getattr(sys, 'frozen', False):
+    __all__ += ["HSStore", "HSTivitaStore", "HSPatientInfo"]
 
 
 def system_info():
