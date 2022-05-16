@@ -7,7 +7,7 @@ names = ["HSImageViewer", "HSTivitaAnalyzer", "HSCoFitAnalyzer"]
 
 analyses = [
 	Analysis(
-		['apps\\%s.py' % name],
+		['apps\\Q%s.py' % name],
 		pathex=['.\\'],
 		binaries=[],
 		datas=[

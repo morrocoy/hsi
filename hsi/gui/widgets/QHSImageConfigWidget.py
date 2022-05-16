@@ -174,7 +174,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         self.imageFilterSizeSpinBox.setMaximum(50)
         self.imageFilterSizeSpinBox.setSingleStep(1)
         self.imageFilterSizeSpinBox.setDecimals(0)
-        self.imageFilterSizeSpinBox.setValue(4)
+        self.imageFilterSizeSpinBox.setValue(5)
         self.imageFilterSizeSpinBox.setEnabled(True)
         self.mainLayout.addRow(label, self.imageFilterSizeSpinBox)
 
@@ -215,7 +215,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         label.setIndent(5)
         label.setMinimumWidth(50)
         self.spectFilterSizeSpinBox.setKeyboardTracking(False)
-        self.spectFilterSizeSpinBox.setMinimum(5)
+        self.spectFilterSizeSpinBox.setMinimum(3)
         self.spectFilterSizeSpinBox.setMaximum(50)
         self.spectFilterSizeSpinBox.setSingleStep(1)
         self.spectFilterSizeSpinBox.setDecimals(0)

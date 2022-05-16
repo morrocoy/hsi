@@ -223,7 +223,7 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         red[idx] = gray*0
         green[idx] = gray*0
         blue[idx] = gray*0
-        self.imagCtrlItems['rgb'].setImage(image)  # rgb image
+        self.imagCtrlItems['rgb'].setData(image)  # rgb image
 
         # forward hsformat of hyperspectral image to the vector analyzer
         hsformat = self.hsImageConfig.getFormat()
@@ -259,7 +259,7 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         param = self.hsTivitaAnalysis.get_solution(unpack=True)
         keys = ['nir', 'oxy', 'thi', 'twi']
         for key in keys:
-            self.imagCtrlItems[key].setImage(param[key])
+            self.imagCtrlItems[key].setData(param[key])
         self.updateSpectralView()
 
     def onComponentFitChanged(self, analyzer, enableTest=False):
@@ -269,7 +269,7 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         param = self.hsTivitaAnalysis.get_solution(unpack=True)
         keys = ['nir', 'oxy', 'thi', 'twi']
         for key in keys:
-            self.imagCtrlItems[key].setImage(param[key])
+            self.imagCtrlItems[key].setData(param[key])
             # self.imagCtrlItems[key].setLevels([0., 1.])
 
         # hsformat = self.hsImageConfig.getFormat()

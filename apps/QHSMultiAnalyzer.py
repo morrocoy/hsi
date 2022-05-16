@@ -68,11 +68,9 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
                 name="fitted spectrum",
                 pen=pg.mkPen(color=(255, 0, 0), width=1))
         }
-        import os.path
-        data_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "..", "data")
+
         # config widgets
-        self.hsImageConfig = QHSImageConfigWidget(dir=data_path)
+        self.hsImageConfig = QHSImageConfigWidget()
         self.hsComponentFitConfig = QHSComponentFitConfigWidget(
             hsformat=HSAbsorption)
 
@@ -101,8 +99,6 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
 
         # place graphics items
         self.graphicsLayoutWidget = pg.GraphicsLayoutWidget()
-        self.graphicsLayoutWidget.ci.layout.setHorizontalSpacing(5)
-        self.graphicsLayoutWidget.ci.layout.setVerticalSpacing(20)
         self.graphicsLayoutWidget.addItem(self.imagCtrlItems['rgb'], 0, 0)
         self.graphicsLayoutWidget.addItem(self.imagCtrlItems['blo'], 0, 1)
         self.graphicsLayoutWidget.addItem(self.imagCtrlItems['oxy'], 0, 2)
@@ -218,8 +214,7 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
         red[idx] = gray*0
         green[idx] = gray*0
         blue[idx] = gray*0
-        self.imagCtrlItems['rgb'].setData({'rgb': image})  # rgb image
-        self.imagCtrlItems['rgb'].selectImage('rgb')  # rgb image
+        self.imagCtrlItems['rgb'].setData(image)  # rgb image
 
         # forward hsformat of hyperspectral image to the component analyzer
         hsformat = self.hsImageConfig.getFormat()
@@ -246,14 +241,6 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
         if self.hsImageConfig.isEmpty():
             return
 
-        labels = {
-            'blo': "Blood",
-            'oxy': "Oxygenation",
-            'wat': "Water",
-            'fat': "Fat",
-            'mel': "Melanin"
-        }
-
         # update image plots
         if not enableTest:
             param = analyzer.getSolution()
@@ -263,9 +250,7 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
             param['oxy'][idx] = param['ohb'][idx] / param['blo'][idx]
 
             for key in ['blo', 'oxy', 'wat', 'fat', 'mel']:
-                # self.imagCtrlItems[key].setData({key: param[key]})
-                self.imagCtrlItems[key].setData(param, labels)
-                self.imagCtrlItems[key].selectImage(key)
+                self.imagCtrlItems[key].setData(param[key])
 
         # hsformat = self.hsImageConfig.getFormat()
         self.mspectra = analyzer.getSpectra()  # hsformat=hsformat)
@@ -309,7 +294,7 @@ def main():
     win = QHSComponentFitAnalyzerWidget()
     # win.setGeometry(300, 30, 1200, 500)
     # win.setGeometry(290, 30, 1800, 800)
-    win.setGeometry(20, 30, 1900, 920)
+    win.setGeometry(40, 160, 1800, 800)
     win.setWindowTitle("Hyperspectral Image Analysis")
     win.show()
     app.exec_()

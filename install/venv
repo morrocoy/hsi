@@ -47,6 +47,9 @@ set backend_names = ['Qt5Agg'] at each occurence
 
 create spec files and executables using pyinstaller
 ---------------------------------------------------
-C:\Users\papkai\.conda\envs\pyi38\scripts\pyi-makespec.exe --path=.\ --windowed --add-data=.\hsi\version.txt;hsi .\apps\HSImageViewer.py
-C:\Users\papkai\.conda\envs\pyi38\scripts\pyi-makespec.exe --path=.\ --windowed --add-data=.\hsi\version.txt;hsi .\apps\HSTivitaAnalyzer.py
-C:\Users\papkai\.conda\envs\pyi38\scripts\pyi-makespec.exe --path=.\ --windowed --add-data=.\hsi\version.txt;hsi .\apps\HSCoFitAnalyzer.py
+C:\Users\papkai\.conda\envs\pyi38\scripts\pyi-makespec.exe --path=.\ --windowed --add-data=.\hsi\version.txt;hsi .\apps\QHSImageViewer.py
+C:\Users\papkai\.conda\envs\pyi38\scripts\pyi-makespec.exe --path=.\ --windowed --add-data=.\hsi\version.txt;hsi .\apps\QHSTivitaAnalyzer.py
+C:\Users\papkai\.conda\envs\pyi38\scripts\pyi-makespec.exe --path=.\ --windowed --add-data=.\hsi\version.txt;hsi .\apps\QHSCoFitAnalyzer.py
+
+copy hs_apps.spec to the project directory and run from there
+C:\Users\papkai\.conda\envs\pyi38\scripts\pyinstaller.exe hs_apps.spec

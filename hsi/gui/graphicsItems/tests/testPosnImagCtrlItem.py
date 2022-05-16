@@ -35,7 +35,7 @@ class DemoWindow(QtWidgets.QMainWindow):
         img2 = pg.gaussianFilter(np.random.normal(size=(300, 200)), (5, 5)) * 20
 
         self.controlItem4 = PosnImagCtrlItem(label="ImageCoordControlItem")
-        self.controlItem4.setImage(img2)
+        self.controlItem4.setData(img2)
 
         self.graphicsLayoutWidget = pg.GraphicsLayoutWidget()
         self.graphicsLayoutWidget.addItem(self.controlItem4, 0, 0)

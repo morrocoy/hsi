@@ -27,6 +27,9 @@ class BaseImagCtrlItem(pg.GraphicsWidget):
         parent = kwargs.get('parent', None)
         pg.GraphicsWidget.__init__(self, parent)
 
+        self.labels = None
+        self.data = np.ndarray([])
+
         self.linkedImageControlItem = None
 
         self.plotItem = pg.PlotItem()
@@ -60,12 +63,10 @@ class BaseImagCtrlItem(pg.GraphicsWidget):
         self.cursorX.sigPositionChanged.connect(self.cursorPositionChangeEvent)
         self.cursorY.sigPositionChanged.connect(self.cursorPositionChangeEvent)
 
-
     def cursorPositionChangeFinishedEvent(self):
         # print(ev.pos())
         self.sigCursorPositionChangeFinished.emit(self)
         logger.debug("Emit cursorPositionChangeFinished")
-
 
     def cursorPositionChangeEvent(self):
         # print(ev.pos())
@@ -78,60 +79,70 @@ class BaseImagCtrlItem(pg.GraphicsWidget):
         #     self.linkedImageControlItem.cursorY.setPos(y)
         logger.debug("emit cursorPositionChanged")
 
-
     def getCursorPos(self):
         x = self.cursorX.getXPos()
         y = self.cursorY.getYPos()
         return [x, y]
 
-
     def setCursorPos(self, pos):
         self.cursorX.setPos(pos[0])
         self.cursorY.setPos(pos[1])
 
-
     def setAspectLocked(self, lock=True):
         self.plotViewBox.setAspectLocked(lock)
-
 
     def invertY(self, enable=True):
         self.plotViewBox.invertY(enable)
 
-
     def invertX(self, enable=True):
         self.plotViewBox.invertX(enable)
-
 
     def autoRange(self, *args, **kwargs):
         self.plotViewBox.autoRange(*args, **kwargs)
 
-
-    def setImage(self, data):
+    def setData(self, data, labels=None):
         """ Sets the image data
         """
-        if isinstance(data, list):
-            data = np.array(data)
-        if not isinstance(data, np.ndarray):
-            raise Exception("Plot data must be ndarray.")
+        if not isinstance(data, dict):
+            raise Exception("Plot data must be dictionary of 2D or 3D ndarray.")
+
+        for key, img in data.items():
+            if isinstance(img, list):
+                data[key] = np.array(data[key])
+            if not isinstance(img, np.ndarray):
+                raise Exception("Plot data must be ndarray.")
+
+        if labels is None or not isinstance(data, dict):
+            self.labels = dict([(key, key) for key in data.keys()])
+        else:
+            self.labels = labels
+        self.data = data
+
+    def selectImage(self, key):
+        """ Sets the image data
+        """
+        if not key in self.data.keys():
+            return
+
+        data = self.data[key]
 
         if data.ndim == 2:
-            nrows, ncols = data.shape
-            nchan = 1
+            nRows, nCols = data.shape
+            nChan = 1
             self.imageItem.setImage(data, axisOrder='row-major')
         elif data.ndim == 3:
-            nrows, ncols, nchan = data.shape
+            nRows, nCols, nChan = data.shape
             self.imageItem.setImage(data, axisOrder='row-major')
         else:
             raise Exception("Plot data must be 2D or 3D ndarray.")
 
-        self.cursorX.setBounds((0, ncols-1))
-        self.cursorY.setBounds((0, nrows-1))
+        self.plotItem.setRange(xRange=[0, nCols], yRange=[0, nRows])
 
-        # width = self.imageItem.width()
-        # height = self.imageItem.width()
-        # self.cursorX.setPos((width // 2))
-        # self.cursorY.setPos((height // 2))
+        self.cursorX.setBounds((0, nCols-1))
+        self.cursorY.setBounds((0, nRows-1))
 
+        self.cursorX.setPos((nCols // 2))
+        self.cursorY.setPos((nRows // 2))
 
     def setXYLink(self, graphicsItems):
         if isinstance(graphicsItems, pg.PlotItem):
@@ -149,7 +160,3 @@ class BaseImagCtrlItem(pg.GraphicsWidget):
         else:
             raise TypeError("Unexpected type {}, was expecting {}".format(
                 type(graphicsItems), (pg.PlotItem, BaseImagCtrlItem)))
-
-
-
-

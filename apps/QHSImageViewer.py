@@ -110,7 +110,7 @@ class QHSImageViewerWidget(QtGui.QWidget):
 
     def updateImage(self, hsImageConfig, newFile):
         """Update hyperspectral image information."""
-        self.imageCtrlItem.setImage(hsImageConfig.getImage())
+        self.imageCtrlItem.setData(hsImageConfig.getImage())
         if newFile:
             self.imageCtrlItem.autoRange()
             self.imageCtrlItem.setCursorPos((0, 0))

@@ -42,20 +42,28 @@ class QPosnImagCtrlConfigWidget(QtWidgets.QWidget):
         self.mainLayout.setSpacing(3)
         self.setLayout(self.mainLayout)
 
-        if label is None:
-            self.label = None
-        else:
-            self.label = QtWidgets.QLabel(label)
-            self.label.setStyleSheet(
-                "border-color: black;"
-                "font: bold 14px;"
-            )
-            self.label.setMinimumWidth(160)
-            self.mainLayout.addStretch()
-            self.mainLayout.addWidget(self.label)
-
+        keys = [label]  # available fmts
+        self.selectImageComboBox = QtGui.QComboBox(self)
+        self.selectImageComboBox.addItems(keys)
+        self.selectImageComboBox.setCurrentText(keys[0])
+        self.selectImageComboBox.setMinimumWidth(120)
+        self.mainLayout.addWidget(self.selectImageComboBox)
         self.mainLayout.addStretch()
-        self.label = QtWidgets.QLabel("pos.")
+
+        # if label is None:
+        #     self.label = None
+        # else:
+        #     self.label = QtWidgets.QLabel(label)
+        #     self.label.setStyleSheet(
+        #         "border-color: black;"
+        #         "font: bold 14px;"
+        #     )
+        #     self.label.setMinimumWidth(160)
+        #     self.mainLayout.addStretch()
+        #     self.mainLayout.addWidget(self.label)
+        #
+        # self.mainLayout.addStretch()
+        self.label = QtWidgets.QLabel("Position")
         self.label.setStyleSheet("border-color: black;")
         self.mainLayout.addWidget(self.label)
 
@@ -195,8 +203,8 @@ class PosnImagCtrlItem(BaseImagCtrlItem):
         self.mainLayout = QtWidgets.QGraphicsGridLayout()
         self.setLayout(self.mainLayout)
         self.mainLayout.setContentsMargins(1, 1, 1, 1)
-        self.mainLayout.setSpacing(0)
-
+        self.mainLayout.setSpacing(10)
+        # self.mainLayout.setVerticalSpacing()
         self.mainLayout.addItem(self.toolbarProxy, 0, 0)
         self.mainLayout.addItem(self.plotItem, 1, 0)
         # self.mainLayout.addStretch()
@@ -229,9 +237,9 @@ class DemoWindow(QtWidgets.QMainWindow):
         img2 = pg.gaussianFilter(np.random.normal(size=(300, 200)), (5, 5)) * 20
 
         self.controlItem1 = PosnImagCtrlItem(label="ImageCoordControlItem1")
-        self.controlItem1.setImage(img1)
+        self.controlItem1.setData(img1)
         self.controlItem2 = PosnImagCtrlItem(label="ImageCoordControlItem2")
-        self.controlItem2.setImage(img2)
+        self.controlItem2.setData(img2)
 
         self.controlItem1.setXYLink(self.controlItem2)
 

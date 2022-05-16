@@ -39,9 +39,9 @@ class DemoWindow(QtWidgets.QMainWindow):
 
 
         self.controlItem1 = HistImagCtrlItem(label="ImageHistControlItem21", cmap=cmap, showHistogram=showHistogram, cbarWidth=10)
-        self.controlItem1.setImage(img1)
+        self.controlItem1.setData(img1)
         self.controlItem2 = HistImagCtrlItem(label="ImageHistControlItem2", cmap=cmap, showHistogram=showHistogram, cbarWidth=10)
-        self.controlItem2.setImage(img2)
+        self.controlItem2.setData(img2)
 
         self.imagCtrlItems = []
         self.imagCtrlItems.append(self.controlItem1)
