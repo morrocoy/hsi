@@ -3,7 +3,7 @@ import os.path
 import numpy as np
 import pyqtgraph as pg
 
-from ...bindings.Qt import QtWidgets, QtGui, QtCore
+from ...bindings.Qt import QtWidgets, QtCore
 from ...log import logmanager
 from ...misc import getPkgDir
 from ...core.hs_cm import cm
@@ -19,6 +19,7 @@ __all__ = ['HistImagCtrlItem']
 class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
 
     sigToggleHistogramChanged = QtCore.Signal(object)
+    sigSelectedImageChanged = QtCore.Signal(object)
 
     """ Config widget with two spinboxes that control the image levels.
     """
@@ -29,9 +30,9 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
 
         self.colorBarItem = colorBarItem
 
+        self.isHistAutoLevel = True
         self._setupActions()
         self._setupViews(label, labels)
-
 
     def _setupActions(self):
 
@@ -40,8 +41,12 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
         # self.resetAction.setShortcut("Ctrl+0")
         self.addAction(self.resetAction)
 
-        self.selectImageComboBox.currentTextChanged.connect(
-            self._updateImageSelection)
+        self.toggleHistAutoLevelAction = QtWidgets.QAction("Auto", self)
+        self.toggleHistAutoLevelAction.setCheckable(True)
+        self.toggleHistAutoLevelAction.setChecked(self.isHistAutoLevel)
+        self.toggleHistAutoLevelAction.triggered.connect(
+            self._triggerResetColorLevels)
+
         # self.toggleHistogramAction = QtWidgets.QAction("Hist", self)
         # self.toggleHistogramAction.setCheckable(True)
         # self.toggleHistogramAction.setChecked(self.colorBarItem.histogramIsVisible)
@@ -57,7 +62,7 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
         self.mainLayout.setSpacing(3)
         self.setLayout(self.mainLayout)
 
-        self.selectImageComboBox = QtGui.QComboBox(self)
+        self.selectImageComboBox = QtWidgets.QComboBox(self)
         if labels is not None:
             self.selectImageComboBox.addItems(labels)
             self.selectImageComboBox.setCurrentText(labels[0])
@@ -100,13 +105,21 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
         self.maxLevelSpinBox.setMaximumWidth(60)
         self.mainLayout.addWidget(self.maxLevelSpinBox)
 
+        # connect signals
         self.minLevelSpinBox.valueChanged.connect(lambda val: self.setLevels((val, None)))
         self.maxLevelSpinBox.valueChanged.connect(lambda val: self.setLevels((None, val)))
         self.colorBarItem.sigLevelsChanged.connect(self._updateSpinBoxLevels)
+        self.selectImageComboBox.currentTextChanged.connect(
+            self._triggerSelectedImageChanged)
 
         self.resetButton = QtWidgets.QToolButton(self)
         self.resetButton.setDefaultAction(self.resetAction)
         self.mainLayout.addWidget(self.resetButton)
+
+        self.histAutoLevelButton = QtWidgets.QToolButton(self)
+        self.histAutoLevelButton.setDefaultAction(
+            self.toggleHistAutoLevelAction)
+        self.mainLayout.addWidget(self.histAutoLevelButton)
 
         # self.histogramButton = QtWidgets.QToolButton(self)
         # self.histogramButton.setDefaultAction(self.toggleHistogramAction)
@@ -135,6 +148,11 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
         self.selectImageComboBox.clear()
         self.selectImageComboBox.addItems(list(labels.values()))
 
+    def selectImage(self, key):
+        if not key in self.labels.keys():
+            return
+        self.selectImageComboBox.setCurrentText(self.labels[key])
+
     def setLevels(self, levels):
         """ Sets plot levels
             :param levels: (vMin, vMax) tuple
@@ -158,19 +176,24 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
 
         self.colorBarItem.setLevels((minLevel, maxLevel))
 
-    def _updateSpinBoxLevels(self, levels):
-        """ Updates the spinboxes given the levels
-        """
-        minLevel, maxLevel = levels
-        logger.debug("_updateSpinBoxLevels: {}".format(levels))
-        self.minLevelSpinBox.setValue(minLevel)
-        self.maxLevelSpinBox.setValue(maxLevel)
+    def _triggerResetColorLevels(self, auto):
+        if auto:
+            self.colorBarItem.resetColorLevels()
 
-    def _updateImageSelection(self, label):
-
+    def _triggerSelectedImageChanged(self, label):
         for key, val in self.labels.items():
             if val == label:
-                self.self.selectImageComboBox.text
+                self.sigSelectedImageChanged.emit(key)
+                break
+
+    def _updateSpinBoxLevels(self, levels=None):
+        """ Updates the spinboxes given the levels
+        """
+        if self.isHistAutoLevel:
+            minLevel, maxLevel = levels
+            logger.debug("_updateSpinBoxLevels: {}".format(levels))
+            self.minLevelSpinBox.setValue(minLevel)
+            self.maxLevelSpinBox.setValue(maxLevel)
 
 
 class HistImagCtrlItem(BaseImagCtrlItem):
@@ -215,6 +238,7 @@ class HistImagCtrlItem(BaseImagCtrlItem):
         # self.noiseImgAction.triggered.connect(self._setTestData)
         # self.noiseImgAction.setShortcut("Ctrl+N")
         # self.addAction(self.noiseImgAction)
+
         pass
 
 
@@ -230,7 +254,7 @@ class HistImagCtrlItem(BaseImagCtrlItem):
         self.toolbarWidget = QHistImagCtrlConfigWidget(
             self.colorBarItem,
             label=label)
-        self.toolbarProxy = QtGui.QGraphicsProxyWidget()
+        self.toolbarProxy = QtWidgets.QGraphicsProxyWidget()
         self.toolbarProxy.setWidget(self.toolbarWidget)
 
         self.mainLayout = QtWidgets.QGraphicsGridLayout()
@@ -243,58 +267,27 @@ class HistImagCtrlItem(BaseImagCtrlItem):
         self.mainLayout.addItem(self.plotItem, 1, 0)
         self.mainLayout.addItem(self.colorBarItem, 2, 0)
 
+        self.toolbarWidget.sigSelectedImageChanged.connect(
+            self.updateSelectedImage)
 
     def setData(self, data, labels=None):
         """ Sets the image data
         """
-        # if not isinstance(data, dict):
-        #     raise Exception("Plot data must be dictionary of 2D or 3D ndarray.")
-        #
-        # for key, img in data.items():
-        #     if isinstance(img, list):
-        #         data[key] = np.array(data[key])
-        #     if not isinstance(img, np.ndarray):
-        #         raise Exception("Plot data must be ndarray.")
-        #
-        # if labels is None or not isinstance(data, dict):
-        #     self.labels = data.keys()
-        # else:
-        #     self.labels = labels
-        # self.data = data
-
         super(HistImagCtrlItem, self).setData(data, labels)
         self.toolbarWidget.setLabels(self.labels)
-
-
-    #     self.selectImageComboBox.setCurrentIndex(0)
-
-    # def setData(self, data):
-    #     """ Sets the image data
-    #     """
-    #     # PyQtGraph uses the following dimension order: T, X, Y, Color.
-    #     if not isinstance(data, dict):
-    #         raise Exception("Plot data must be dictionary of 2D or 3D ndarray.")
-    #
-    #     self.data = data
-
-        # self.imageItem.setImage(img.T)
-        # nRows, nCols = img.shape
-        # self.plotItem.setRange(xRange=[0, nCols], yRange=[0, nRows])
-        # self.colorBarItem.resetColorLevels()
-
-        # self.cursorX.setBounds((0, nCols))
-        # self.cursorY.setBounds((0, nRows))
-        #
-        # self.cursorX.setPos((nCols // 2))
-        # self.cursorY.setPos((nRows // 2))
 
     def selectImage(self, key):
         """ Sets the image data
         """
-        if not key in self.data.keys():
+        self.toolbarWidget.selectImage(key)
+
+    def updateSelectedImage(self, key):
+        if self.data is None or not isinstance(
+                self.data, dict) or not key in self.data.keys():
             return
 
         data = self.data[key]
+        self.selectedImage = data
 
         if data.ndim == 2:
             nRows, nCols = data.shape
@@ -307,46 +300,12 @@ class HistImagCtrlItem(BaseImagCtrlItem):
             raise Exception("Plot data must be 2D or 3D ndarray.")
 
         self.plotItem.setRange(xRange=[0, nCols], yRange=[0, nRows])
-        self.colorBarItem.resetColorLevels()
+
+        if self.toolbarWidget.toggleHistAutoLevelAction.isChecked():
+            self.colorBarItem.resetColorLevels()
 
         self.cursorX.setBounds((0, nCols-1))
         self.cursorY.setBounds((0, nRows-1))
 
-        self.cursorX.setPos((nCols // 2))
-        self.cursorY.setPos((nRows // 2))
-
-    # def selectImage(self, key):
-    #     """ Select the image data to be visualized
-    #     """
-    #     # PyQtGraph uses the following dimension order: T, X, Y, Color.
-    #
-    #     if not key in self.data.keys:
-    #         return
-    #
-    #     data = self.data[key]
-    #
-    #     if data.ndim == 2:
-    #         nRows, nCols = data.shape
-    #         nChan = 1
-    #         self.imageItem.setImage(data, axisOrder='row-major')
-    #     elif data.ndim == 3:
-    #         nRows, nCols, nChan = data.shape
-    #         self.imageItem.setImage(data, axisOrder='row-major')
-    #     else:
-    #         raise Exception("Plot data must be 2D or 3D ndarray.")
-    #
-    #     # self.imageItem.setImage(img.T)
-    #     # nRows, nCols = img.shape
-    #
-    #     self.plotItem.setRange(xRange=[0, nCols], yRange=[0, nRows])
-    #     self.colorBarItem.resetColorLevels()
-    #
-    #     self.cursorX.setBounds((0, nCols))
-    #     self.cursorY.setBounds((0, nRows))
-    #
-    #     self.cursorX.setPos((nCols // 2))
-    #     self.cursorY.setPos((nRows // 2))
-
     def setLevels(self, levels):
         self.colorBarItem.setLevels(levels)
-

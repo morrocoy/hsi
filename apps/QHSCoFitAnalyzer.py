@@ -14,7 +14,7 @@ import sys
 import logging
 
 import numpy as np
-from pyqtgraph.Qt import QtWidgets, QtGui
+from pyqtgraph.Qt import QtWidgets
 import pyqtgraph as pg
 
 import hsi
@@ -22,7 +22,7 @@ import hsi
 from hsi import HSAbsorption
 
 from hsi.gui import QHSImageConfigWidget
-from hsi.gui import QHSComponentFitConfigWidget
+from hsi.gui import QHSCoFitConfigWidget
 
 from hsi.gui import BaseImagCtrlItem
 from hsi.gui import HistImagCtrlItem
@@ -33,10 +33,22 @@ from hsi.log import logmanager
 
 logger = logmanager.getLogger(__name__)
 
+PARAM_CONFIG = {
+    'rgb': "RGB Image",
+    'blo': "Blood",
+    'oxy': "Oxygenation",
+    'wat': "Water",
+    'fat': "Fat",
+    'mel': "Melanin",
+    'hhb': "Deoxyhemoglobin",
+    'ohb': "Oxyhemoglobin",
+    'met': "Methemoglobin",
+}
 
-class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
+
+class QHSCoFitAnalyzerWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
 
         # internal buffers
         self.spectra = None  # multidimensional array of unfiltered hs-data
@@ -45,14 +57,14 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
         self.wavelen = None  # wavelength axis
 
         # image, 2D histogram and spectral attenuation plots
-        self.imagCtrlItems = {
-            'rgb': PosnImagCtrlItem("RGB Image", cbarWidth=10),
-            'blo': HistImagCtrlItem("Blood", cbarWidth=10),
-            'oxy': HistImagCtrlItem("Oxygenation", cbarWidth=10),
-            'wat': HistImagCtrlItem("Water", cbarWidth=10),
-            'fat': HistImagCtrlItem("Fat", cbarWidth=10),
-            'mel': HistImagCtrlItem("Melanin", cbarWidth=10),
-        }
+        self.imagCtrlItems = [
+            PosnImagCtrlItem("Image Control Item 0", cbarWidth=10),
+            HistImagCtrlItem("Image Control Item 1", cbarWidth=10),
+            HistImagCtrlItem("Image Control Item 2", cbarWidth=10),
+            HistImagCtrlItem("Image Control Item 3", cbarWidth=10),
+            HistImagCtrlItem("Image Control Item 4", cbarWidth=10),
+            HistImagCtrlItem("Image Control Item 5", cbarWidth=10),
+        ]
 
         self.spectViewer = RegnPlotCtrlItem(
             "spectral attenuation", xlabel="wavelength", xunits="m")
@@ -73,7 +85,7 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
             os.path.dirname(os.path.abspath(__file__)), "..", "data")
         # config widgets
         self.hsImageConfig = QHSImageConfigWidget(dir=data_path)
-        self.hsComponentFitConfig = QHSComponentFitConfigWidget(
+        self.hsCoFitConfig = QHSCoFitConfigWidget(
             hsformat=HSAbsorption)
 
         # set view
@@ -89,7 +101,7 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
         self.setLayout(self.mainLayout)
 
         # configure image control items
-        for key, item in self.imagCtrlItems.items():
+        for item in self.imagCtrlItems:
             item.setMaximumWidth(440)
             item.setAspectLocked()
             item.invertY()
@@ -103,12 +115,18 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
         self.graphicsLayoutWidget = pg.GraphicsLayoutWidget()
         self.graphicsLayoutWidget.ci.layout.setHorizontalSpacing(5)
         self.graphicsLayoutWidget.ci.layout.setVerticalSpacing(20)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['rgb'], 0, 0)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['blo'], 0, 1)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['oxy'], 0, 2)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['wat'], 1, 0)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['fat'], 1, 1)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['mel'], 1, 2)
+        for i in range(2):
+            for j in range(3):
+                self.graphicsLayoutWidget.addItem(
+                    self.imagCtrlItems[i*3 + j], i, j)
+
+        # self.graphicsLayoutWidget.addItem(self.imagCtrlItems[0], 0, 0)
+        # self.graphicsLayoutWidget.addItem(self.imagCtrlItems[1], 0, 1)
+        # self.graphicsLayoutWidget.addItem(self.imagCtrlItems[2], 0, 2)
+        # self.graphicsLayoutWidget.addItem(self.imagCtrlItems[3], 1, 0)
+        # self.graphicsLayoutWidget.addItem(self.imagCtrlItems[4], 1, 1)
+        # self.graphicsLayoutWidget.addItem(self.imagCtrlItems[5], 1, 2)
+
         self.graphicsLayoutWidget.addItem(self.spectViewer, 0, 3, rowspan=2)
         # qGraphicsGridLayout = self.graphicsLayoutWidget.ci.layout
         # qGraphicsGridLayout.setColumnStretchFactor(0, 1)
@@ -118,21 +136,21 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
         # user config widgets
         self.hsImageConfig.setMaximumWidth(220)
         self.hsImageConfig.setFormat(HSAbsorption)
-        self.hsComponentFitConfig.setMaximumWidth(220)
+        self.hsCoFitConfig.setMaximumWidth(220)
 
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.hsImageConfig)
 
-        line = QtGui.QFrame()
-        line.setFrameShape(QtGui.QFrame.HLine)
-        line.setFrameShadow(QtGui.QFrame.Sunken)
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
         layout.addWidget(line)
 
-        layout.addWidget(self.hsComponentFitConfig)
+        layout.addWidget(self.hsCoFitConfig)
 
-        line = QtGui.QFrame()
-        line.setFrameShape(QtGui.QFrame.HLine)
-        line.setFrameShadow(QtGui.QFrame.Sunken)
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
         layout.addWidget(line)
 
         layout.addStretch()
@@ -141,13 +159,12 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
         # connect signals
 
         # link image items
-        firstItem = next(iter(self.imagCtrlItems.values()))
-        for item in self.imagCtrlItems.values():
-            item.setXYLink(firstItem)
+        for item in self.imagCtrlItems[0:]:
+            item.setXYLink(self.imagCtrlItems[0])
             item.sigCursorPositionChanged.connect(self.updateCursorPosition)
 
         self.hsImageConfig.sigValueChanged.connect(self.setHSImage)
-        self.hsComponentFitConfig.sigValueChanged.connect(
+        self.hsCoFitConfig.sigValueChanged.connect(
             self.onComponentFitChanged)
         # self.spectViewer.sigRegionChanged.connect(self.onRegionChanged)
         self.spectViewer.sigRegionChangeFinished.connect(
@@ -176,7 +193,7 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
 
     def onRegionChangeFinished(self, item):
         reg = item.getRegion()
-        self.hsComponentFitConfig.setROI(reg)
+        self.hsCoFitConfig.setROI(reg)
 
     def updateCursorPosition(self):
         sender = self.sender()
@@ -185,7 +202,7 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
                             .format(type(sender), BaseImagCtrlItem))
 
         x, y = sender.getCursorPos()
-        for item in self.imagCtrlItems.values():  # link cursors
+        for item in self.imagCtrlItems:  # link cursors
             if item is not sender:
                 item.blockSignals(True)
                 item.setCursorPos([x, y])
@@ -218,41 +235,34 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
         red[idx] = gray*0
         green[idx] = gray*0
         blue[idx] = gray*0
-        self.imagCtrlItems['rgb'].setData({'rgb': image})  # rgb image
-        self.imagCtrlItems['rgb'].selectImage('rgb')  # rgb image
+        self.imagCtrlItems[0].setData({'rgb': image}, PARAM_CONFIG)  # rgb image
+        self.imagCtrlItems[0].selectImage('rgb')  # rgb image
 
         # forward hsformat of hyperspectral image to the component analyzer
         hsformat = self.hsImageConfig.getFormat()
-        self.hsComponentFitConfig.setFormat(hsformat)
-        self.hsComponentFitConfig.setMask(mask)
+        self.hsCoFitConfig.setFormat(hsformat)
+        self.hsCoFitConfig.setMask(mask)
 
         if newFile:
             # update spectra and wavelength for analysis
-            self.hsComponentFitConfig.setData(self.fspectra, self.wavelen)
+            self.hsCoFitConfig.setData(self.fspectra, self.wavelen)
 
             # autorange image plots and cursor reset
-            self.imagCtrlItems['rgb'].autoRange()
-            self.imagCtrlItems['rgb'].setCursorPos((0, 0))
+            self.imagCtrlItems[0].autoRange()
+            self.imagCtrlItems[0].resetCursor()
 
             # update wavelength region and bounds in the spectral viewer
             bounds = self.wavelen[[0, -1]]
             self.spectViewer.setBounds(bounds)
             self.spectViewer.setRegion(bounds)
+
         else:
             # update only spectra for analysis (keep wavelength)
-            self.hsComponentFitConfig.setData(self.fspectra)
+            self.hsCoFitConfig.setData(self.fspectra)
 
     def onComponentFitChanged(self, analyzer, enableTest=False):
         if self.hsImageConfig.isEmpty():
             return
-
-        labels = {
-            'blo': "Blood",
-            'oxy': "Oxygenation",
-            'wat': "Water",
-            'fat': "Fat",
-            'mel': "Melanin"
-        }
 
         # update image plots
         if not enableTest:
@@ -262,10 +272,11 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
             idx = np.nonzero(param['blo'])
             param['oxy'][idx] = param['ohb'][idx] / param['blo'][idx]
 
-            for key in ['blo', 'oxy', 'wat', 'fat', 'mel']:
-                # self.imagCtrlItems[key].setData({key: param[key]})
-                self.imagCtrlItems[key].setData(param, labels)
-                self.imagCtrlItems[key].selectImage(key)
+            keys = [key for key in PARAM_CONFIG.keys() if key in param.keys()]
+            nkeys = len(keys)
+            for i, item in enumerate(self.imagCtrlItems[1:]):
+                item.setData(param, PARAM_CONFIG)
+                item.selectImage(keys[i % nkeys])
 
         # hsformat = self.hsImageConfig.getFormat()
         self.mspectra = analyzer.getSpectra()  # hsformat=hsformat)
@@ -283,7 +294,7 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
         if self.spectra is None:
             return
 
-        x, y = self.imagCtrlItems['rgb'].getCursorPos()
+        x, y = self.imagCtrlItems[0].getCursorPos()
         col = int(x)
         row = int(y)
         nwav, nrows, ncols = self.spectra.shape  # row-major
@@ -295,7 +306,7 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
         self.curveItems['fil'].setData(wavelen, self.fspectra[:, row, col])
         self.curveItems['mod'].setData(wavelen, self.mspectra[:, row, col])
 
-        self.hsComponentFitConfig.setTestMask([row, col])
+        self.hsCoFitConfig.setTestMask([row, col])
 
 
 def main():
@@ -306,7 +317,7 @@ def main():
 
     app = QtWidgets.QApplication([])
 
-    win = QHSComponentFitAnalyzerWidget()
+    win = QHSCoFitAnalyzerWidget()
     # win.setGeometry(300, 30, 1200, 500)
     # win.setGeometry(290, 30, 1800, 800)
     win.setGeometry(20, 30, 1900, 920)
@@ -323,7 +334,7 @@ def main():
     # win.show()
     #
     # if (sys.flags.interactive != 1) or not hasattr(pg.QtCore, 'PYQT_VERSION'):
-    #     pg.QtGui.QApplication.instance().exec_()
+    #     pg.QtWidgets.QApplication.instance().exec_()
 
 
 if __name__ == '__main__':

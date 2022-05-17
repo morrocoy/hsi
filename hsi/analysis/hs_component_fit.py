@@ -154,11 +154,24 @@ class HSComponentFit(HSBaseAnalysis):
                 weight=weight, bounds=bounds)
             self.keys.append(name)
 
-    def clear(self):
+    def clear(self, mode='all'):
         """ Clear all spectral information including component vectors."""
-        super(HSComponentFit, self).clear()
-        self.roiIndex = [None, None]
-        self.components.clear()
+        if mode == 'all':
+            super(HSComponentFit, self).clear()
+            self.components.clear()
+            self.roiIndex = [None, None]
+
+        elif mode == 'spec':
+            self.spectra = None  # image data flatten to 2D ndarray
+            self._anaTrgVector = None
+            self._anaVarVector = None
+            self._anaResVector = None
+
+        elif mode == 'bvec':
+            self.components.clear()
+            self._anaSysMatrix = None
+            self._anaVarScales = None
+            self._anaVarBounds = None
 
     def fit(self, method='gesv', **kwargs):
         """Fit spectral data
@@ -436,7 +449,7 @@ class HSComponentFit(HSBaseAnalysis):
         mode : {"bvec", "spec", "all"}
             Specify which kind of spectra to read.
         """
-        self.clear()
+        self.clear(mode)
         with HSComponentFile(file_path) as file:
             vectors, spectra, wavelen = file.read()
             hsformat = file.hsformat

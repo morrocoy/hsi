@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import pyqtgraph as pg
 
-from ...bindings.Qt import QtWidgets, QtGui, QtCore
+from ...bindings.Qt import QtWidgets, QtCore
 from ...log import logmanager
 from ...misc import check_is_an_array, check_class
 
@@ -74,6 +74,7 @@ class QRegnPlotCtrlConfigWidget(QtWidgets.QWidget):
             )
             self.mainLayout.addStretch()
             self.mainLayout.addWidget(self.label)
+
 
         self.mainLayout.addStretch()
         self.label = QtWidgets.QLabel("limits")
@@ -181,6 +182,7 @@ class RegnPlotCtrlItem(pg.GraphicsWidget):
         =============== ========================================================
 
         """
+
         pg.GraphicsObject.__init__(self, kwargs.get('parent', None))
 
         if len(args) == 0:
@@ -190,7 +192,8 @@ class RegnPlotCtrlItem(pg.GraphicsWidget):
         else:
             raise TypeError("Unexpected number of arguments {}".format(args))
 
-
+        self._previousGeometry = None
+        
         label = kwargs.get('label', None)
 
         self.curveItems = []
@@ -200,6 +203,7 @@ class RegnPlotCtrlItem(pg.GraphicsWidget):
         self.plotItem2 = pg.PlotItem()
         self.regionItem = pg.LinearRegionItem()
         self.toolbarWidget = QRegnPlotCtrlConfigWidget(self.regionItem, label)
+
 
         self._setupActions()
         self._setupViews(**kwargs)
@@ -242,7 +246,7 @@ class RegnPlotCtrlItem(pg.GraphicsWidget):
 
         # self.plotItem1.setLabel('bottom', "test")
 
-        self.toolbarProxy = QtGui.QGraphicsProxyWidget()
+        self.toolbarProxy = QtWidgets.QGraphicsProxyWidget()
         self.toolbarProxy.setWidget(self.toolbarWidget)
 
         self.mainLayout = QtWidgets.QGraphicsGridLayout()

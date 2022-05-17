@@ -6,7 +6,7 @@ Created on Fri Feb 12 10:35:08 2021
 """
 import numpy as np
 
-from ...bindings.Qt import QtWidgets, QtGui, QtCore
+from ...bindings.Qt import QtWidgets, QtCore
 from ...log import logmanager
 
 logger = logmanager.getLogger(__name__)
@@ -97,7 +97,7 @@ class QParamRegionWidget(QtWidgets.QWidget):
         else:
             self.upperBoundSpinBox.setValue(self.dvalue[1] * self.scale)
 
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.lowerBoundSpinBox)
         layout.addWidget(self.upperBoundSpinBox)
         self.mainLayout.addRow(self.varLabel, layout)

@@ -14,7 +14,7 @@ import sys
 import logging
 
 import numpy as np
-from pyqtgraph.Qt import QtWidgets, QtGui
+from pyqtgraph.Qt import QtWidgets
 import pyqtgraph as pg
 
 import hsi
@@ -22,8 +22,6 @@ import hsi
 from hsi import HSAbsorption, HSIntensity
 
 from hsi.gui import QHSImageConfigWidget
-from hsi.gui import QHSComponentFitConfigWidget
-
 from hsi.gui import BaseImagCtrlItem
 from hsi.gui import HistImagCtrlItem
 from hsi.gui import PosnImagCtrlItem
@@ -36,11 +34,18 @@ from hsi.log import logmanager
 
 logger = logmanager.getLogger(__name__)
 
+PARAM_CONFIG = {
+    'rgb': "RGB Image",
+    'li0': "Angle 900-915nm",
+    'li1': "Ratio 925-960nm",
+    'li2': "Ratio 875-925nm",
+    'li3': "2nd derv. 925nm",
+}
 
-class QHSTivitaAnalyzerWidget(QtGui.QWidget):
+class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
 
     def __init__(self, *args, **kwargs):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
 
         # internal buffers
         self.spectra = None  # multidimensional array of unfiltered hs-data
@@ -49,14 +54,14 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         self.wavelen = None  # wavelength axis
 
         # image, 2D histogram and spectral attenuation plots
-        self.imagCtrlItems = {
-            'rgb': PosnImagCtrlItem("RGB Image", cbarWidth=10),
-            'li0': HistImagCtrlItem("Angle 900-915nm", cbarWidth=10),
-            'li1': HistImagCtrlItem("Ratio 925-960nm", cbarWidth=10),
-            'li2': HistImagCtrlItem("Ratio 875-925nm", cbarWidth=10),
-            'li3': HistImagCtrlItem("2nd derv. 925nm", cbarWidth=10),
-            # 'mel': HistImagCtrlItem("Melanin", cbarWidth=10),
-        }
+        self.imagCtrlItems = [
+            PosnImagCtrlItem("Image Control Item 0", cbarWidth=10),
+            HistImagCtrlItem("Image Control Item 1", cbarWidth=10),
+            HistImagCtrlItem("Image Control Item 2", cbarWidth=10),
+            HistImagCtrlItem("Image Control Item 3", cbarWidth=10),
+            HistImagCtrlItem("Image Control Item 4", cbarWidth=10),
+            HistImagCtrlItem("Image Control Item 5", cbarWidth=10),
+        ]
 
         self.spectViewer = RegnPlotCtrlItem(
             "spectral attenuation", xlabel="wavelength", xunits="m")
@@ -95,7 +100,7 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         self.setLayout(self.mainLayout)
 
         # configure image control items
-        for key, item in self.imagCtrlItems.items():
+        for item in self.imagCtrlItems:
             item.setMaximumWidth(440)
             item.setAspectLocked()
             item.invertY()
@@ -107,11 +112,11 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
 
         # place graphics items
         self.graphicsLayoutWidget = pg.GraphicsLayoutWidget()
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['rgb'], 0, 0)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['li0'], 0, 1)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['li1'], 0, 2)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['li2'], 1, 1)
-        self.graphicsLayoutWidget.addItem(self.imagCtrlItems['li3'], 1, 2)
+        for i in range(2):
+            for j in range(3):
+                self.graphicsLayoutWidget.addItem(
+                    self.imagCtrlItems[i * 3 + j], i, j)
+
         self.graphicsLayoutWidget.addItem(self.spectViewer, 0, 3, rowspan=2)
         # qGraphicsGridLayout = self.graphicsLayoutWidget.ci.layout
         # qGraphicsGridLayout.setColumnStretchFactor(0, 1)
@@ -124,19 +129,19 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         self.hsImageConfig.setFormat(HSAbsorption)
         self.hsImageConfig.imageFilterTypeComboBox.setCurrentIndex(0)
 
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.hsImageConfig)
 
-        line = QtGui.QFrame()
-        line.setFrameShape(QtGui.QFrame.HLine)
-        line.setFrameShadow(QtGui.QFrame.Sunken)
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
         layout.addWidget(line)
 
         # layout.addWidget(self.hsComponentFitConfig)
 
-        # line = QtGui.QFrame()
-        # line.setFrameShape(QtGui.QFrame.HLine)
-        # line.setFrameShadow(QtGui.QFrame.Sunken)
+        # line = QtWidgets.QFrame()
+        # line.setFrameShape(QtWidgets.QFrame.HLine)
+        # line.setFrameShadow(QtWidgets.QFrame.Sunken)
         # layout.addWidget(line)
 
         layout.addStretch()
@@ -145,9 +150,8 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         # connect signals
 
         # link image items
-        firstItem = next(iter(self.imagCtrlItems.values()))
-        for item in self.imagCtrlItems.values():
-            item.setXYLink(firstItem)
+        for item in self.imagCtrlItems[0:]:
+            item.setXYLink(self.imagCtrlItems[0])
             item.sigCursorPositionChanged.connect(self.updateCursorPosition)
 
         self.hsImageConfig.sigValueChanged.connect(self.setHSImage)
@@ -155,19 +159,6 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         # self.spectViewer.sigRegionChanged.connect(self.onRegionChanged)
         self.spectViewer.sigRegionChangeFinished.connect(
             self.onRegionChangeFinished)
-
-        # dark theme
-        # self.setStyleSheet(
-        #     "color: rgb(150,150,150);"
-        #     "background-color: black;"
-        #     "selection-color: white;"
-        #     "selection-background-color: rgb(0,118,211);"
-        #     "selection-border-color: blue;"
-        #     "border-style: outset;"
-        #     "border-width: 1px;"
-        #     "border-radius: 2px;"
-        #     "border-color: grey;"
-        # )
 
     # def onRegionChanged(self, item):
     #     reg = item.getRegion()
@@ -188,7 +179,7 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
                             .format(type(sender), BaseImagCtrlItem))
 
         x, y = sender.getCursorPos()
-        for item in self.imagCtrlItems.values():  # link cursors
+        for item in self.imagCtrlItems:  # link cursors
             if item is not sender:
                 item.blockSignals(True)
                 item.setCursorPos([x, y])
@@ -221,7 +212,8 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         red[idx] = gray*0
         green[idx] = gray*0
         blue[idx] = gray*0
-        self.imagCtrlItems['rgb'].setData(image)  # rgb image
+        self.imagCtrlItems[0].setData({'rgb': image}, PARAM_CONFIG)  # rgb image
+        self.imagCtrlItems[0].selectImage('rgb')  # rgb image
 
         # forward hsformat of hyperspectral image to the vector analyzer
         hsformat = self.hsImageConfig.getFormat()
@@ -239,8 +231,8 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
             # self.hsComponentFitConfig.setData(self.fspectra, self.wavelen)
 
             # autorange image plots and cursor reset
-            self.imagCtrlItems['rgb'].autoRange()
-            self.imagCtrlItems['rgb'].setCursorPos((0, 0))
+            self.imagCtrlItems[0].autoRange()
+            self.imagCtrlItems[0].resetCursor()
 
             # update wavelength region and bounds in the spectral viewer
             bounds = self.wavelen[[0, -1]]
@@ -255,9 +247,12 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
 
         # update index plots and spectral viewer
         param = self.hsLipidsAnalysis.get_solution(unpack=True)
-        keys = ['li0', 'li1', 'li2', 'li3']
-        for key in keys:
-            self.imagCtrlItems[key].setData(param[key])
+        keys = [key for key in PARAM_CONFIG.keys() if key in param.keys()]
+        nkeys = len(keys)
+        for i, item in enumerate(self.imagCtrlItems[1:]):
+            item.setData(param, PARAM_CONFIG)
+            item.selectImage(keys[i % nkeys])
+
         self.updateSpectralView()
 
     def onComponentFitChanged(self, analyzer, enableTest=False):
@@ -286,7 +281,7 @@ class QHSTivitaAnalyzerWidget(QtGui.QWidget):
         if self.spectra is None:
             return
 
-        x, y = self.imagCtrlItems['rgb'].getCursorPos()
+        x, y = self.imagCtrlItems[0].getCursorPos()
         col = int(x)
         row = int(y)
         nwav, nrows, ncols = self.spectra.shape  # row-major
@@ -325,7 +320,7 @@ def main():
     # win.show()
     #
     # if (sys.flags.interactive != 1) or not hasattr(pg.QtCore, 'PYQT_VERSION'):
-    #     pg.QtGui.QApplication.instance().exec_()
+    #     pg.QtWidgets.QApplication.instance().exec_()
 
 
 if __name__ == '__main__':

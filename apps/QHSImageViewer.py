@@ -15,7 +15,7 @@ a standard normal variate correction.
 import sys
 import logging
 
-from pyqtgraph.Qt import QtWidgets, QtGui
+from pyqtgraph.Qt import QtWidgets 
 import pyqtgraph as pg
 
 import hsi
@@ -28,10 +28,10 @@ from hsi.log import logmanager
 logger = logmanager.getLogger(__name__)
 
 
-class QHSImageViewerWidget(QtGui.QWidget):
+class QHSImageViewerWidget(QtWidgets.QWidget):
 
     def __init__(self, *args, **kwargs):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
 
         # internal buffers
         self.spectra = None  # unfiltered hyperspectral data
@@ -110,7 +110,7 @@ class QHSImageViewerWidget(QtGui.QWidget):
 
     def updateImage(self, hsImageConfig, newFile):
         """Update hyperspectral image information."""
-        self.imageCtrlItem.setData(hsImageConfig.getImage())
+        self.imageCtrlItem.setData({"image": hsImageConfig.getImage()})
         if newFile:
             self.imageCtrlItem.autoRange()
             self.imageCtrlItem.setCursorPos((0, 0))
@@ -163,7 +163,7 @@ def main():
     # win.show()
     #
     # if (sys.flags.interactive != 1) or not hasattr(pg.QtCore, 'PYQT_VERSION'):
-    #     pg.QtGui.QApplication.instance().exec_()
+    #     pg.QtWidgets.QApplication.instance().exec_()
 
 
 if __name__ == '__main__':

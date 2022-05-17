@@ -3,7 +3,7 @@ from timeit import default_timer as timer
 
 from ... import CONFIG_OPTIONS
 
-from ...bindings.Qt import QtWidgets, QtGui, QtCore
+from ...bindings.Qt import QtWidgets, QtCore
 from ...log import logmanager
 from ...misc import getPkgDir
 
@@ -13,7 +13,7 @@ from .QParamRegionWidget import QParamRegionWidget
 
 logger = logmanager.getLogger(__name__)
 
-__all__ = ['QHSComponentFitConfigWidget']
+__all__ = ['QHSCoFitConfigWidget']
 
 
 if CONFIG_OPTIONS['enableBVLS']:
@@ -47,7 +47,7 @@ else:
     )
 
 
-class QHSComponentFitConfigWidget(QtWidgets.QWidget):
+class QHSCoFitConfigWidget(QtWidgets.QWidget):
     """ Config widget for hyper spectral images
     """
     sigValueChanged = QtCore.Signal(object, bool)
@@ -62,7 +62,7 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
             kwargs['parent'] = args[1]
 
         parent = kwargs.get('parent', None)
-        super(QHSComponentFitConfigWidget, self).__init__(parent=parent)
+        super(QHSCoFitConfigWidget, self).__init__(parent=parent)
 
         # self.filePath = None  # file providing the base vectors
         self.hsVectorAnalysis = HSComponentFit()  # analysis object
@@ -78,9 +78,9 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         self.testButton = QtWidgets.QToolButton(self)
         self.updateButton = QtWidgets.QToolButton(self)
 
-        self.fileLineEdit = QtGui.QLineEdit(self)
-        self.normalCheckBox = QtGui.QCheckBox(self)
-        self.methodComboBox = QtGui.QComboBox(self)
+        self.fileLineEdit = QtWidgets.QLineEdit(self)
+        self.normalCheckBox = QtWidgets.QCheckBox(self)
+        self.methodComboBox = QtWidgets.QComboBox(self)
         self.wavRegionWidget = QParamRegionWidget("roi", self)
         self.lsVarRegionWidgets = []
 
@@ -93,6 +93,7 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         # load base vectors and update filePath
         # filePath = kwargs.get('filePath', "basevectors_1.txt")
         filePath = kwargs.get('filePath', "basevectors_2.txt")
+        # filePath = kwargs.get('filePath', "basevectors_2_17052022.txt")
 
         # for i in range(10):
         self.loadFile(filePath)
@@ -156,7 +157,7 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
 
         # file load ..........................................................
         self.loadLayout = QtWidgets.QFormLayout()
-        label = QtGui.QLabel("Base vectors", self)
+        label = QtWidgets.QLabel("Base vectors", self)
         label.setStyleSheet(
             "border: 0px;"
             "font: bold;"
@@ -166,25 +167,25 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
 
         self.fileLineEdit.setReadOnly(True)
 
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.fileLineEdit)
         layout.addWidget(self.loadButton)
         self.mainLayout.addRow(layout)
 
         # Parameter settings and controls ....................................
-        label = QtGui.QLabel("Param bounds [%]", self)
+        label = QtWidgets.QLabel("Param bounds [%]", self)
         label.setIndent(5)
         label.setMinimumHeight(20)
         label.setStyleSheet("border: 0px;")
 
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.addWidget(label)
         layout.addWidget(self.resetParamButton)
         layout.addWidget(self.toggleParamButton)
         self.mainLayout.addRow(layout)
 
         # fit settings and controls ..........................................
-        label = QtGui.QLabel("Least square fit", self)
+        label = QtWidgets.QLabel("Least square fit", self)
         label.setStyleSheet(
             "border: 0px;"
             "font: bold;"
@@ -200,7 +201,7 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         self.wavRegionWidget.setMaximumWidth(200)
         self.mainLayout.addRow(self.wavRegionWidget)
 
-        label = QtGui.QLabel("Method", self)
+        label = QtWidgets.QLabel("Method", self)
         label.setStyleSheet("border: 0px;")
         label.setIndent(6)
         label.setMinimumWidth(50)
@@ -216,14 +217,14 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         self.normalCheckBox.setChecked(True)
         self.normalCheckBox.setText("Normal")
 
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.methodComboBox)
         layout.addStretch()
         layout.addWidget(self.normalCheckBox)
         self.mainLayout.addRow(label, layout)
 
-        layout = QtGui.QHBoxLayout()
-        label = QtGui.QLabel(self)
+        layout = QtWidgets.QHBoxLayout()
+        label = QtWidgets.QLabel(self)
         label.setMinimumHeight(20)
         label.setStyleSheet("border: 0px;")
         layout.addWidget(label)
@@ -304,7 +305,7 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         """ Should be called manually before object deletion
         """
         logger.debug("Finalizing: {}".format(self))
-        super(QHSComponentFitConfigWidget, self).finalize()
+        super(QHSCoFitConfigWidget, self).finalize()
 
     def getROI(self):
         return self.wavRegionWidget.value()
@@ -373,13 +374,14 @@ class QHSComponentFitConfigWidget(QtWidgets.QWidget):
         self.wavRegionWidget.setValueDefault([lbnd, ubnd])
         self.wavRegionWidget.setValue([lbnd, ubnd])
         self.wavRegionWidget.setSingleStep(1)
+        self._updateVectorFit()
 
     def onLoadFile(self):
         """Load hyper spectral image file using a dialog box. """
         filter = "Normal text file (*.txt)"
 
         dir = os.path.join(getPkgDir(), "data")
-        filePath, filter = QtGui.QFileDialog.getOpenFileName(
+        filePath, filter = QtWidgets.QFileDialog.getOpenFileName(
             None, 'Select file:', dir, filter)
 
         if filePath != "":

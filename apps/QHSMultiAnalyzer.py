@@ -14,7 +14,7 @@ import sys
 import logging
 
 import numpy as np
-from pyqtgraph.Qt import QtWidgets, QtGui
+from pyqtgraph.Qt import QtWidgets
 import pyqtgraph as pg
 
 import hsi
@@ -22,7 +22,7 @@ import hsi
 from hsi import HSAbsorption
 
 from hsi.gui import QHSImageConfigWidget
-from hsi.gui import QHSComponentFitConfigWidget
+from hsi.gui import QHSCoFitConfigWidget
 
 from hsi.gui import BaseImagCtrlItem
 from hsi.gui import HistImagCtrlItem
@@ -34,9 +34,9 @@ from hsi.log import logmanager
 logger = logmanager.getLogger(__name__)
 
 
-class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
+class QHSComponentFitAnalyzerWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
 
         # internal buffers
         self.spectra = None  # multidimensional array of unfiltered hs-data
@@ -71,7 +71,7 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
 
         # config widgets
         self.hsImageConfig = QHSImageConfigWidget()
-        self.hsComponentFitConfig = QHSComponentFitConfigWidget(
+        self.hsComponentFitConfig = QHSCoFitConfigWidget(
             hsformat=HSAbsorption)
 
         # set view
@@ -116,19 +116,19 @@ class QHSComponentFitAnalyzerWidget(QtGui.QWidget):
         self.hsImageConfig.setFormat(HSAbsorption)
         self.hsComponentFitConfig.setMaximumWidth(220)
 
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.hsImageConfig)
 
-        line = QtGui.QFrame()
-        line.setFrameShape(QtGui.QFrame.HLine)
-        line.setFrameShadow(QtGui.QFrame.Sunken)
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
         layout.addWidget(line)
 
         layout.addWidget(self.hsComponentFitConfig)
 
-        line = QtGui.QFrame()
-        line.setFrameShape(QtGui.QFrame.HLine)
-        line.setFrameShadow(QtGui.QFrame.Sunken)
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
         layout.addWidget(line)
 
         layout.addStretch()
@@ -308,7 +308,7 @@ def main():
     # win.show()
     #
     # if (sys.flags.interactive != 1) or not hasattr(pg.QtCore, 'PYQT_VERSION'):
-    #     pg.QtGui.QApplication.instance().exec_()
+    #     pg.QtWidgets.QApplication.instance().exec_()
 
 
 if __name__ == '__main__':

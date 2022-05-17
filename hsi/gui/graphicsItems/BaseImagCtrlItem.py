@@ -27,8 +27,9 @@ class BaseImagCtrlItem(pg.GraphicsWidget):
         parent = kwargs.get('parent', None)
         pg.GraphicsWidget.__init__(self, parent)
 
-        self.labels = None
-        self.data = np.ndarray([])
+        self.labels = {}
+        self.data = None
+        self.selectedImage = None
 
         self.linkedImageControlItem = None
 
@@ -37,8 +38,12 @@ class BaseImagCtrlItem(pg.GraphicsWidget):
         self.imageItem = pg.ImageItem()
         self.plotItem.addItem(self.imageItem)
 
-        self.cursorX = InfiniteLine(angle=90, movable=True, pen=(150, 150, 150), hoverPen=(255, 255, 255))
-        self.cursorY = InfiniteLine(angle=0, movable=True, pen=(150, 150, 150), hoverPen=(255, 255, 255))
+        self.cursorX = InfiniteLine(
+            angle=90, movable=True, pen=(150, 150, 150),
+            hoverPen=(255, 255, 255))
+        self.cursorY = InfiniteLine(
+            angle=0, movable=True, pen=(150, 150, 150),
+            hoverPen=(255, 255, 255))
         self.cursorX.setPos(0)
         self.cursorY.setPos(0)
         self.cursorX.setZValue(10)
@@ -58,8 +63,10 @@ class BaseImagCtrlItem(pg.GraphicsWidget):
         self.mainLayout.addItem(self.plotItem, 0, 0)
 
         # Connect signals
-        self.cursorX.sigPositionChangeFinished.connect(self.cursorPositionChangeFinishedEvent)
-        self.cursorY.sigPositionChangeFinished.connect(self.cursorPositionChangeFinishedEvent)
+        self.cursorX.sigPositionChangeFinished.connect(
+            self.cursorPositionChangeFinishedEvent)
+        self.cursorY.sigPositionChangeFinished.connect(
+            self.cursorPositionChangeFinishedEvent)
         self.cursorX.sigPositionChanged.connect(self.cursorPositionChangeEvent)
         self.cursorY.sigPositionChanged.connect(self.cursorPositionChangeEvent)
 
@@ -100,6 +107,27 @@ class BaseImagCtrlItem(pg.GraphicsWidget):
     def autoRange(self, *args, **kwargs):
         self.plotViewBox.autoRange(*args, **kwargs)
 
+    def resetCursor(self):
+
+        if self.selectedImage is not None:
+            data = self.selectedImage
+        elif self.data is not None:
+            data = self.data[0]
+
+        if not isinstance(data, np.ndarray):
+            return
+        elif data.ndim == 2:
+            nRows, nCols = data.shape
+        elif data.ndim == 3:
+            nRows, nCols, nChan = data.shape
+
+        # self.cursorX.setBounds((0, nCols - 1))
+        # self.cursorY.setBounds((0, nRows - 1))
+
+        self.setCursorPos([nCols // 2, nRows // 2])
+        # self.cursorX.setPos((nCols // 2))
+        # self.cursorY.setPos((nRows // 2))
+
     def setData(self, data, labels=None):
         """ Sets the image data
         """
@@ -115,16 +143,22 @@ class BaseImagCtrlItem(pg.GraphicsWidget):
         if labels is None or not isinstance(data, dict):
             self.labels = dict([(key, key) for key in data.keys()])
         else:
-            self.labels = labels
+            self.labels = dict(
+                [(key, val) for key, val in labels.items()
+                 if key in data.keys()])
         self.data = data
 
     def selectImage(self, key):
         """ Sets the image data
         """
+        pass
+
+    def updateSelectedImage(self, key):
         if not key in self.data.keys():
             return
 
         data = self.data[key]
+        self.selectedImage = data
 
         if data.ndim == 2:
             nRows, nCols = data.shape
@@ -140,9 +174,6 @@ class BaseImagCtrlItem(pg.GraphicsWidget):
 
         self.cursorX.setBounds((0, nCols-1))
         self.cursorY.setBounds((0, nRows-1))
-
-        self.cursorX.setPos((nCols // 2))
-        self.cursorY.setPos((nRows // 2))
 
     def setXYLink(self, graphicsItems):
         if isinstance(graphicsItems, pg.PlotItem):

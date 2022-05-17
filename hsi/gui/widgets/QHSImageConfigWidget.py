@@ -1,6 +1,6 @@
 import os
 
-from ...bindings.Qt import QtWidgets, QtGui, QtCore
+from ...bindings.Qt import QtWidgets, QtCore
 from ...log import logmanager
 from ...core.hs_image import HSImage
 
@@ -43,12 +43,12 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         self.resetButton = QtWidgets.QToolButton(self)
         self.filterButton = QtWidgets.QToolButton(self)
 
-        self.fileLineEdit = QtGui.QLineEdit(self)
-        self.spectSNVCheckBox = QtGui.QCheckBox(self)
-        self.spectFormatComboBox = QtGui.QComboBox(self)
+        self.fileLineEdit = QtWidgets.QLineEdit(self)
+        self.spectSNVCheckBox = QtWidgets.QCheckBox(self)
+        self.spectFormatComboBox = QtWidgets.QComboBox(self)
         self.maskThreshRegionWidget = QParamRegionWidget("mask", self)
-        self.imageFilterTypeComboBox = QtGui.QComboBox(self)
-        self.spectFilterTypeComboBox = QtGui.QComboBox(self)
+        self.imageFilterTypeComboBox = QtWidgets.QComboBox(self)
+        self.spectFilterTypeComboBox = QtWidgets.QComboBox(self)
 
         self.imageFilterSizeSpinBox = QtWidgets.QDoubleSpinBox(self)
         self.imageFilterSigmaSpinBox = QtWidgets.QDoubleSpinBox(self)
@@ -106,7 +106,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         self.setLayout(self.mainLayout)
 
         # file load ..........................................................
-        label = QtGui.QLabel("Image file")
+        label = QtWidgets.QLabel("Image file")
         label.setStyleSheet(
             "border: 0px;"
             "font: bold;"
@@ -115,12 +115,12 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         self.mainLayout.addRow(label)
 
         self.fileLineEdit.setReadOnly(True)
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.fileLineEdit)
         layout.addWidget(self.loadButton)
         self.mainLayout.addRow(layout)
 
-        label = QtGui.QLabel("Format")
+        label = QtWidgets.QLabel("Format")
         label.setStyleSheet("border: 0px;")
         label.setIndent(5)
         label.setMinimumWidth(50)
@@ -132,7 +132,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         self.spectSNVCheckBox.setChecked(False)
         self.spectSNVCheckBox.setText("SNV")
 
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.spectFormatComboBox)
         layout.addStretch()
         layout.addWidget(self.spectSNVCheckBox)
@@ -147,7 +147,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         self.mainLayout.addRow(self.maskThreshRegionWidget)
 
         # image filter .......................................................
-        label = QtGui.QLabel("Image smoothening filter")
+        label = QtWidgets.QLabel("Image smoothening filter")
         label.setStyleSheet(
             "border: 0px;"
             "font: bold;"
@@ -156,7 +156,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         label.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom)
         self.mainLayout.addRow(label)
 
-        label = QtGui.QLabel("Type")
+        label = QtWidgets.QLabel("Type")
         label.setStyleSheet("border: 0px;")
         label.setIndent(5)
         label.setMinimumWidth(50)
@@ -165,7 +165,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         self.imageFilterTypeComboBox.setCurrentIndex(1)
         self.mainLayout.addRow(label, self.imageFilterTypeComboBox)
 
-        label = QtGui.QLabel("Size")
+        label = QtWidgets.QLabel("Size")
         label.setStyleSheet("border: 0px;")
         label.setIndent(5)
         label.setMinimumWidth(50)
@@ -178,7 +178,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         self.imageFilterSizeSpinBox.setEnabled(True)
         self.mainLayout.addRow(label, self.imageFilterSizeSpinBox)
 
-        label = QtGui.QLabel("Sigma")
+        label = QtWidgets.QLabel("Sigma")
         label.setStyleSheet("border: 0px;")
         label.setIndent(5)
         label.setMinimumWidth(50)
@@ -192,7 +192,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         self.mainLayout.addRow(label, self.imageFilterSigmaSpinBox)
 
         # spectral attenuation filter ........................................
-        label = QtGui.QLabel("Spectral attenuation filter")
+        label = QtWidgets.QLabel("Spectral attenuation filter")
         label.setStyleSheet(
             "border: 0px;"
             "font: bold;"
@@ -201,7 +201,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         label.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom)
         self.mainLayout.addRow(label)
 
-        label = QtGui.QLabel("Type")
+        label = QtWidgets.QLabel("Type")
         label.setStyleSheet("border: 0px;")
         label.setIndent(5)
         label.setMinimumWidth(50)
@@ -210,7 +210,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         self.spectFilterTypeComboBox.setCurrentIndex(0)
         self.mainLayout.addRow(label, self.spectFilterTypeComboBox)
 
-        label = QtGui.QLabel("Size")
+        label = QtWidgets.QLabel("Size")
         label.setStyleSheet("border: 0px;")
         label.setIndent(5)
         label.setMinimumWidth(50)
@@ -223,7 +223,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         self.spectFilterSizeSpinBox.setEnabled(False)
         self.mainLayout.addRow(label, self.spectFilterSizeSpinBox)
 
-        label = QtGui.QLabel("Sigma")
+        label = QtWidgets.QLabel("Sigma")
         label.setStyleSheet("border: 0px;")
         label.setIndent(5)
         label.setMinimumWidth(50)
@@ -236,7 +236,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         self.spectFilterSigmaSpinBox.setEnabled(False)
         self.mainLayout.addRow(label, self.spectFilterSigmaSpinBox)
 
-        label = QtGui.QLabel("Order")
+        label = QtWidgets.QLabel("Order")
         label.setStyleSheet("border: 0px;")
         label.setIndent(5)
         label.setMinimumWidth(50)
@@ -249,7 +249,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         self.spectFilterOrderSpinBox.setEnabled(False)
         self.mainLayout.addRow(label, self.spectFilterOrderSpinBox)
 
-        label = QtGui.QLabel("Deriv")
+        label = QtWidgets.QLabel("Deriv")
         label.setStyleSheet("border: 0px;")
         label.setIndent(5)
         label.setMinimumWidth(50)
@@ -263,13 +263,13 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         self.mainLayout.addRow(label, self.spectFilterDerivSpinBox)
 
         # filter and reset controls
-        label = QtGui.QLabel(self)
+        label = QtWidgets.QLabel(self)
         label.setMinimumHeight(20)
         label.setStyleSheet("border: 0px;")
         self.filterButton.setText("Update")
         self.resetButton.setText("Reset")
 
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.addWidget(label)
         layout.addWidget(self.resetButton)
         layout.addWidget(self.filterButton)
@@ -346,7 +346,7 @@ class QHSImageConfigWidget(QtWidgets.QWidget):
         """Load hyper spectral image file using a dialog box
         """
         filter = "data cube (*.dat)"
-        filePath, filter = QtGui.QFileDialog.getOpenFileName(
+        filePath, filter = QtWidgets.QFileDialog.getOpenFileName(
             None, 'Select file:', self.dir, filter)
 
         if not os.path.isfile(filePath):

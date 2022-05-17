@@ -2,7 +2,7 @@ import sys
 import numpy as np
 import pyqtgraph as pg
 
-from ...bindings.Qt import QtWidgets, QtGui, QtCore
+from ...bindings.Qt import QtWidgets, QtCore
 from ...log import logmanager
 from ...misc import check_is_an_array, check_class
 from ...core.hs_cm import cm
@@ -18,6 +18,7 @@ __all__ = ['PosnImagCtrlItem']
 class QPosnImagCtrlConfigWidget(QtWidgets.QWidget):
 
     sigToggleHistogramChanged = QtCore.Signal(object)
+    sigSelectedImageChanged = QtCore.Signal(object)
 
     """ Config widget with two spinboxes that control the image levels.
     """
@@ -35,17 +36,17 @@ class QPosnImagCtrlConfigWidget(QtWidgets.QWidget):
         pass
 
 
-    def _setupViews(self, label=None):
+    def _setupViews(self, label=None, labels=None):
 
         self.mainLayout = QtWidgets.QHBoxLayout()
         self.mainLayout.setContentsMargins(5, 0, 5, 0) # left, top, right, bottom
         self.mainLayout.setSpacing(3)
         self.setLayout(self.mainLayout)
 
-        keys = [label]  # available fmts
-        self.selectImageComboBox = QtGui.QComboBox(self)
-        self.selectImageComboBox.addItems(keys)
-        self.selectImageComboBox.setCurrentText(keys[0])
+        self.selectImageComboBox = QtWidgets.QComboBox(self)
+        if labels is not None:
+            self.selectImageComboBox.addItems(labels)
+            self.selectImageComboBox.setCurrentText(labels[0])
         self.selectImageComboBox.setMinimumWidth(120)
         self.mainLayout.addWidget(self.selectImageComboBox)
         self.mainLayout.addStretch()
@@ -88,9 +89,12 @@ class QPosnImagCtrlConfigWidget(QtWidgets.QWidget):
         self.cursorYSpinBox.setMaximumWidth(60)
         self.mainLayout.addWidget(self.cursorYSpinBox)
 
+        # connect signals
         self.cursorXSpinBox.valueChanged.connect(self.setCursorPos)
         self.cursorYSpinBox.valueChanged.connect(self.setCursorPos)
         self.controlItem.sigCursorPositionChanged.connect(self._updateSpinBoxPosition)
+        self.selectImageComboBox.currentTextChanged.connect(
+            self._triggerSelectedImageChanged)
 
         # self.resetButton = QtWidgets.QToolButton()
         # self.resetButton.setDefaultAction(self.resetAction)
@@ -112,13 +116,21 @@ class QPosnImagCtrlConfigWidget(QtWidgets.QWidget):
             "border-color: grey;"
        )
 
-
     def finalize(self):
         """ Should be called manually before object deletion
         """
         logger.debug("Finalizing: {}".format(self))
         super(QPosnImagCtrlConfigWidget, self).finalize()
 
+    def setLabels(self, labels):
+        self.labels = labels
+        self.selectImageComboBox.clear()
+        self.selectImageComboBox.addItems(list(labels.values()))
+
+    def selectImage(self, key):
+        if not key in self.labels.keys():
+            return
+        self.selectImageComboBox.setCurrentText(self.labels[key])
 
     def setCursorPos(self, pos):
         """ Sets plot levels
@@ -134,7 +146,11 @@ class QPosnImagCtrlConfigWidget(QtWidgets.QWidget):
         self.controlItem.cursorY.setPos(y)
         self.controlItem.blockSignals(False)
 
-
+    def _triggerSelectedImageChanged(self, label):
+        for key, val in self.labels.items():
+            if val == label:
+                self.sigSelectedImageChanged.emit(key)
+                break
 
     def _updateSpinBoxPosition(self):
         """ Updates the spinboxes given the levels
@@ -197,7 +213,7 @@ class PosnImagCtrlItem(BaseImagCtrlItem):
         self.colorBarItem.setMinimumHeight(60)
 
         self.toolbarWidget = QPosnImagCtrlConfigWidget(self, label=label)
-        self.toolbarProxy = QtGui.QGraphicsProxyWidget()
+        self.toolbarProxy = QtWidgets.QGraphicsProxyWidget()
         self.toolbarProxy.setWidget(self.toolbarWidget)
 
         self.mainLayout = QtWidgets.QGraphicsGridLayout()
@@ -210,8 +226,43 @@ class PosnImagCtrlItem(BaseImagCtrlItem):
         # self.mainLayout.addStretch()
         self.mainLayout.addItem(self.colorBarItem, 2, 0)
 
+        self.toolbarWidget.sigSelectedImageChanged.connect(
+            self.updateSelectedImage)
 
 
+    def setData(self, data, labels=None):
+        """ Sets the image data
+        """
+        super(PosnImagCtrlItem, self).setData(data, labels)
+        self.toolbarWidget.setLabels(self.labels)
+
+    def selectImage(self, key):
+        """ Sets the image data
+        """
+        self.toolbarWidget.selectImage(key)
+
+    def updateSelectedImage(self, key):
+        if self.data is None or not isinstance(
+                self.data, dict) or not key in self.data.keys():
+            return
+
+        data = self.data[key]
+        self.selectedImage = data
+
+        if data.ndim == 2:
+            nRows, nCols = data.shape
+            nChan = 1
+            self.imageItem.setImage(data, axisOrder='row-major')
+        elif data.ndim == 3:
+            nRows, nCols, nChan = data.shape
+            self.imageItem.setImage(data, axisOrder='row-major')
+        else:
+            raise Exception("Plot data must be 2D or 3D ndarray.")
+
+        self.plotItem.setRange(xRange=[0, nCols], yRange=[0, nRows])
+
+        self.cursorX.setBounds((0, nCols-1))
+        self.cursorY.setBounds((0, nRows-1))
 
 
 class DemoWindow(QtWidgets.QMainWindow):
