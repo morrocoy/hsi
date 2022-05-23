@@ -109,7 +109,7 @@ class QPosnImagCtrlConfigWidget(QtWidgets.QWidget):
             "background-color: black;"
             "selection-color: white;"
             "selection-background-color: rgb(0,118,211);"
-            "selection-border-color: blue;"
+            # "selection-border-color: blue;"
             "border-style: outset;"
             "border-width: 1px;"
             "border-radius: 2px;"

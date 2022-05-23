@@ -30,6 +30,10 @@ def main():
     # load hyper spectral image data .........................................
     subfolder = "thyroid"
     timestamp = "2019_11_14_08_59_25"
+
+    subfolder = "occlusion"
+    timestamp = "2016_11_02_16_48_30"
+
     img_file_path = os.path.join(
         data_path, subfolder, timestamp, timestamp + "_SpecCube.dat")
 

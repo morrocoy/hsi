@@ -16,7 +16,7 @@ import hsi
 from hsi import HSAbsorption
 # from hsi import HSIntensity, HSExtinction, HSRefraction
 
-from hsi.analysis import HSComponentFit
+from hsi.analysis import HSCoFit
 # from hsi.analysis import HSComponentFit2 as HSComponentFit
 from hsi.log import logmanager
 
@@ -28,7 +28,7 @@ def main():
     pict_path = os.path.join(os.getcwd(), "..", "pictures")
 
     # load spectra and base vectors ..........................................
-    analysis = HSComponentFit(hsformat=HSAbsorption)
+    analysis = HSCoFit(hsformat=HSAbsorption)
     # analysis = HSVectorAnalysis(hsformat=HSIntensity)
     # analysis = HSVectorAnalysis(hsformat=HSExtinction)
     # analysis = HSVectorAnalysis(hsformat=HSRefraction)

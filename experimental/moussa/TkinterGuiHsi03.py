@@ -11,7 +11,7 @@ from tkinter import IntVar, DISABLED, ACTIVE, NORMAL, StringVar, messagebox
 from tkinter.colorchooser import askcolor
 import numpy as np
 from hsi import HSAbsorption, HSImage
-from hsi.analysis import HSComponentFit
+from hsi.analysis import HSCoFit
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
@@ -114,7 +114,7 @@ def LoadCubeData ():
     hsImage.add_filter(mode='image', filter_type='mean', size=5)
     spectra = hsImage.fspectra
     wavelen = hsImage.wavelen
-    analysis = HSComponentFit(hsformat=HSAbsorption)
+    analysis = HSCoFit(hsformat=HSAbsorption)
     analysis.loadtxt("basevectors_3.txt", mode='all')
     analysis.set_data(spectra, wavelen, hsformat=HSAbsorption)
     analysis.set_roi([500e-9, 995e-9])

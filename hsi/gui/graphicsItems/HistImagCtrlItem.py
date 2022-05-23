@@ -36,10 +36,10 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
 
     def _setupActions(self):
 
-        self.resetAction = QtWidgets.QAction("Reset", self)
-        self.resetAction.triggered.connect(self.colorBarItem.resetColorLevels)
-        # self.resetAction.setShortcut("Ctrl+0")
-        self.addAction(self.resetAction)
+        # self.resetAction = QtWidgets.QAction("Reset", self)
+        # self.resetAction.triggered.connect(self.colorBarItem.resetColorLevels)
+        # # self.resetAction.setShortcut("Ctrl+0")
+        # self.addAction(self.resetAction)
 
         self.toggleHistAutoLevelAction = QtWidgets.QAction("Auto", self)
         self.toggleHistAutoLevelAction.setCheckable(True)
@@ -49,8 +49,10 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
 
         # self.toggleHistogramAction = QtWidgets.QAction("Hist", self)
         # self.toggleHistogramAction.setCheckable(True)
-        # self.toggleHistogramAction.setChecked(self.colorBarItem.histogramIsVisible)
-        # self.toggleHistogramAction.triggered.connect(self.colorBarItem.showHistogram)
+        # self.toggleHistogramAction.setChecked(
+        # self.colorBarItem.histogramIsVisible)
+        # self.toggleHistogramAction.triggered.connect(
+        # self.colorBarItem.showHistogram)
         # # self.toggleHistogramAction.setShortcut("Ctrl+H")
         # self.addAction(self.toggleHistogramAction)
 
@@ -58,7 +60,7 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
     def _setupViews(self, label=None, labels=None):
 
         self.mainLayout = QtWidgets.QHBoxLayout()
-        self.mainLayout.setContentsMargins(5, 0, 5, 0) # left, top, right, bottom
+        self.mainLayout.setContentsMargins(5, 0, 5, 0) # ltrb
         self.mainLayout.setSpacing(3)
         self.setLayout(self.mainLayout)
 
@@ -106,20 +108,26 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
         self.mainLayout.addWidget(self.maxLevelSpinBox)
 
         # connect signals
-        self.minLevelSpinBox.valueChanged.connect(lambda val: self.setLevels((val, None)))
-        self.maxLevelSpinBox.valueChanged.connect(lambda val: self.setLevels((None, val)))
+        self.minLevelSpinBox.valueChanged.connect(
+            lambda val: self.setLevels((val, None)))
+        self.maxLevelSpinBox.valueChanged.connect(
+            lambda val: self.setLevels((None, val)))
         self.colorBarItem.sigLevelsChanged.connect(self._updateSpinBoxLevels)
         self.selectImageComboBox.currentTextChanged.connect(
             self._triggerSelectedImageChanged)
 
-        self.resetButton = QtWidgets.QToolButton(self)
-        self.resetButton.setDefaultAction(self.resetAction)
-        self.mainLayout.addWidget(self.resetButton)
+        # self.resetButton = QtWidgets.QToolButton(self)
+        # self.resetButton.setDefaultAction(self.resetAction)
+        # self.mainLayout.addWidget(self.resetButton)
 
         self.histAutoLevelButton = QtWidgets.QToolButton(self)
         self.histAutoLevelButton.setDefaultAction(
             self.toggleHistAutoLevelAction)
         self.mainLayout.addWidget(self.histAutoLevelButton)
+
+        self.histAutoLevelButton.setStyleSheet(
+            "QToolButton:checked { background-color: gray }"
+        )
 
         # self.histogramButton = QtWidgets.QToolButton(self)
         # self.histogramButton.setDefaultAction(self.toggleHistogramAction)
@@ -130,7 +138,7 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
             "background-color: black;"
             "selection-color: white;"
             "selection-background-color: rgb(0,118,211);"
-            "selection-border-color: blue;"
+            # "selection-border-color: blue;"
             "border-style: outset;"
             "border-width: 1px;"
             "border-radius: 2px;"
@@ -153,7 +161,7 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
             return
         self.selectImageComboBox.setCurrentText(self.labels[key])
 
-    def setLevels(self, levels):
+    def setLevels(self, levels, autoscale=True):
         """ Sets plot levels
             :param levels: (vMin, vMax) tuple
         """
@@ -176,6 +184,10 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
 
         self.colorBarItem.setLevels((minLevel, maxLevel))
 
+        if not autoscale:
+            self.isHistAutoLevel = False
+            self.toggleHistAutoLevelAction.setChecked(False)
+
     def _triggerResetColorLevels(self, auto):
         if auto:
             self.colorBarItem.resetColorLevels()
@@ -186,7 +198,7 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
                 self.sigSelectedImageChanged.emit(key)
                 break
 
-    def _updateSpinBoxLevels(self, levels=None):
+    def _updateSpinBoxLevels(self, levels=[None, None]):
         """ Updates the spinboxes given the levels
         """
         if self.isHistAutoLevel:

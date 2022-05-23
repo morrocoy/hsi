@@ -19,7 +19,7 @@ from hsi import cm
 from hsi import HSAbsorption
 from hsi import HSIntensity, convert
 from hsi import HSImage
-from hsi.analysis import HSComponentFit
+from hsi.analysis import HSCoFit
 
 from hsi.log import logmanager
 
@@ -33,15 +33,15 @@ def main():
     # load hyperspectral image
     # subfolder = "thyroid"
     # timestamp = "2019_11_14_08_59_25"
-    # subfolder = "occlusion"
-    # timestamp = "2016_11_02_16_48_30"
-    subfolder = "2021-06-29_aufnahmen_arm"
-    timestamp = "2021_07_06_16_04_59"
+    subfolder = "occlusion"
+    timestamp = "2016_11_02_16_48_30"
+    # subfolder = "2021-06-29_aufnahmen_arm"
+    # timestamp = "2021_07_06_16_04_59"
 
 
-    subfolder = "wetransfer_2021_09_20_15_13_41_2022-02-23_2049"
-    # timestamp = "2021_09_20_15_13_41"
-    timestamp = "2021_09_27_15_42_49"
+    # subfolder = "wetransfer_2021_09_20_15_13_41_2022-02-23_2049"
+    # # timestamp = "2021_09_20_15_13_41"
+    # timestamp = "2021_09_27_15_42_49"
 
     file_path = os.path.join(data_path, subfolder, timestamp, timestamp)
 
@@ -73,7 +73,7 @@ def main():
     plt.show()
 
     # component fit analysis ..................................................
-    analysis = HSComponentFit(hsformat=HSAbsorption)
+    analysis = HSCoFit(hsformat=HSAbsorption)
 
     analysis.loadtxt("basevectors_3.txt", mode='all')
     analysis.set_data(spectra, wavelen, hsformat=HSAbsorption)
@@ -83,14 +83,17 @@ def main():
     print(analysis.keys)
 
     # modify bounds for component weights
-    analysis.set_var_bounds("hhb", [0, 0.05])
-    analysis.set_var_bounds("ohb", [0, 0.05])
+    analysis.set_var_bounds("hhb", [0, 0.1])
+    analysis.set_var_bounds("ohb", [0, 0.1])
     analysis.set_var_bounds("wat", [0, 2.00])
     analysis.set_var_bounds("fat", [0, 1.00])
-    analysis.set_var_bounds("mel", [0, 0.5])
+    analysis.set_var_bounds("mel", [0, 0.2])
 
     # remove components
-    analysis.remove_component("mel")
+    # analysis.remove_component("mel")
+    # print(analysis.keys)
+
+    analysis.remove_component("fat")
     print(analysis.keys)
 
     analysis.prepare_ls_problem()
@@ -131,6 +134,9 @@ def main():
     cmap = cm.tivita()
     keys = ['oxy', 'blo', 'wat', 'fat']
     labels = ["Oxygenation", "Blood", "Water", "Fat"]
+
+    keys = ['oxy', 'blo', 'wat', 'mel']
+    labels = ["Oxygenation", "Blood", "Water", "Melanin"]
 
     fig = plt.figure()
     fig.set_size_inches(12, 8)

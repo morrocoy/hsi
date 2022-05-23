@@ -50,10 +50,12 @@ class QParamRegionWidget(QtWidgets.QWidget):
         val = kwargs.get('value', [None, None])
         self.setValueDefault(val)
 
-
         self.varLabel = QtWidgets.QLabel()
         self.lowerBoundSpinBox = QtWidgets.QDoubleSpinBox(self)
         self.upperBoundSpinBox = QtWidgets.QDoubleSpinBox(self)
+
+        self.lowerBoundSpinBox.setKeyboardTracking(False)
+        self.upperBoundSpinBox.setKeyboardTracking(False)
 
         # configure widget views
         self._setupViews(*args, **kwargs)
@@ -63,7 +65,6 @@ class QParamRegionWidget(QtWidgets.QWidget):
             lambda val: self._triggerSigValueChanged((val, None)))
         self.upperBoundSpinBox.valueChanged.connect(
             lambda val: self._triggerSigValueChanged((None, val)))
-
 
     def _setupViews(self, *args, **kwargs):
         self.mainLayout = QtWidgets.QFormLayout()
@@ -98,10 +99,11 @@ class QParamRegionWidget(QtWidgets.QWidget):
             self.upperBoundSpinBox.setValue(self.dvalue[1] * self.scale)
 
         layout = QtWidgets.QHBoxLayout()
+
+        layout.addStretch()
         layout.addWidget(self.lowerBoundSpinBox)
         layout.addWidget(self.upperBoundSpinBox)
         self.mainLayout.addRow(self.varLabel, layout)
-
 
     def _triggerSigValueChanged(self, bounds=[None, None]):
         lbnd, ubnd = bounds
@@ -115,7 +117,6 @@ class QParamRegionWidget(QtWidgets.QWidget):
         ubnd = ubnd / self.scale
         self.sigValueChanged.emit(self.name, [lbnd, ubnd])
 
-
     def reset(self):
         if self.dvalue[0] is None:
             self.lowerBoundSpinBox.setValue(self.lowerBoundSpinBox.minimum())
@@ -127,22 +128,18 @@ class QParamRegionWidget(QtWidgets.QWidget):
         else:
             self.upperBoundSpinBox.setValue(self.dvalue[1] * self.scale)
 
-
     def setDecimals(self, val):
         self.lowerBoundSpinBox.setDecimals(val)
         self.upperBoundSpinBox.setDecimals(val)
         pass
 
-
     def setEnabled(self, val):
         self.lowerBoundSpinBox.setEnabled(val)
         self.upperBoundSpinBox.setEnabled(val)
 
-
     def setLabel(self, label):
         self.label = label
         self.varLabel.setText(label)
-
 
     def setMaximumWidth(self, val):
         super(QParamRegionWidget, self).setMaximumWidth(val)
@@ -156,7 +153,6 @@ class QParamRegionWidget(QtWidgets.QWidget):
         if label is not None:
             self.label = label
             self.varLabel.setText(label)
-
 
     def setBounds(self, val=[None, None]):
         if val is None:
@@ -179,7 +175,6 @@ class QParamRegionWidget(QtWidgets.QWidget):
         self.lowerBoundSpinBox.setRange(lbnd, ubnd)
         self.upperBoundSpinBox.setRange(lbnd, ubnd)
 
-
     def setScale(self, val):
         lbnd, ubnd = self.value()
         lbnd = lbnd / self.scale * val
@@ -189,11 +184,9 @@ class QParamRegionWidget(QtWidgets.QWidget):
         self.lowerBoundSpinBox.setValue(lbnd)
         self.upperBoundSpinBox.setValue(ubnd)
 
-
     def setSingleStep(self, val):
         self.lowerBoundSpinBox.setSingleStep(val)
         self.upperBoundSpinBox.setSingleStep(val)
-
 
     def setValue(self, val):
         if val is None:
@@ -223,7 +216,6 @@ class QParamRegionWidget(QtWidgets.QWidget):
 
         self._triggerSigValueChanged()
 
-
     def setValueDefault(self, val):
         if val is None:
             bounds = [None, None]
@@ -234,7 +226,6 @@ class QParamRegionWidget(QtWidgets.QWidget):
                              "1D ndarray of length 2. Got {}".format(val))
 
         self.dvalue = bounds
-
 
     def value(self):
         lbnd = 1./self.scale * self.lowerBoundSpinBox.value()

@@ -38,7 +38,8 @@ from hsi.log import logmanager
 logger = logmanager.getLogger(__name__)
 
 PARAM_CONFIG = {
-    'rgb': "RGB Image",
+    'im0': "RGB Image (original)",
+    'im1': "RGB Image (with selection)",
     'blo': "Blood",
     'oxy': "Oxygenation",
     'wat': "Water",
@@ -208,20 +209,25 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
         self.wavelen = hsImageConfig.getWavelen()
 
         # set masked rgb image
-        image = hsImageConfig.getImage()
+        image_0 = hsImageConfig.getImage()
         mask = hsImageConfig.getMask()
 
-        red = image[:, :, 0]
-        green = image[:, :, 1]
-        blue = image[:, :, 2]
+        image_1 = image_0.copy()
+        red = image_1[:, :, 0]
+        green = image_1[:, :, 1]
+        blue = image_1[:, :, 2]
 
         idx = np.nonzero(mask == 0)  # gray out region out of mask
         gray = 0.2989 * red[idx] + 0.5870 * green[idx] + 0.1140 * blue[idx]
-        red[idx] = gray*0
-        green[idx] = gray*0
-        blue[idx] = gray*0
-        self.imagCtrlItems[0].setData({'rgb': image}, PARAM_CONFIG)  # rgb image
-        self.imagCtrlItems[0].selectImage('rgb')  # rgb image
+        red[idx] = gray * 0
+        green[idx] = gray * 0
+        blue[idx] = gray * 0
+
+        self.imagCtrlItems[0].setData({
+            'im0': image_0,
+            'im1': image_1
+        }, PARAM_CONFIG)  # rgb images
+        self.imagCtrlItems[0].selectImage('im1')
 
         # forward hsformat of hyperspectral image to the vector analyzer
         hsformat = self.hsImageConfig.getFormat()

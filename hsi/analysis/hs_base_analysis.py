@@ -59,7 +59,8 @@ class HSBaseAnalysis(object):
         self.spectra = None  # image data flatten to 2D ndarray
 
         self._anaTrgVector = None  # target vectors (reshaped spectral data)
-        self._anaVarVector = None  # vector of unknowns
+        self._anaVarVector = None  # vector of variable solutions
+        self._anaFixVector = None  # vector of fixed solutions
         self._anaVarScales = None  # scale factors for each unknown variable
         self._anaVarBounds = None  # bounds for each unknown variable
         self._anaResVector = None  # residual vector (squared Euclidean 2-norm)

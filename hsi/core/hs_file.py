@@ -7,7 +7,10 @@ Created on Mon Feb  1 07:55:39 2021
 import os.path
 import re
 from ast import literal_eval
+
+import locale
 import datetime
+
 import numpy
 
 from .. import __version__
@@ -379,10 +382,13 @@ class HSFile(object):
             logger.debug("Read info version: invalid.")
 
         # date of creation
+        _locale = locale.getlocale()
+        locale.setlocale(locale.LC_TIME, ('en_US', 'UTF-8'))
         sdate = cls.parse_string("Date:", file.readline())
         info['date'] = datetime.datetime.strptime(sdate, "%b %d %Y, %H:%M")
         logger.debug("Read info date: {}.".format(info['date'].strftime(
             "%b %d %Y, %H:%M")))
+        locale.setlocale(locale.LC_TIME, _locale)
 
         # spectral hsformat
         sformat = cls.parse_string("Format:", file.readline())
@@ -622,7 +628,10 @@ class HSFile(object):
         if title is None:
             title = ""
         if isinstance(date, datetime.datetime):
+            _locale = locale.getlocale()
+            locale.setlocale(locale.LC_TIME, ('en_US', 'UTF-8'))
             sdate = date.strftime("%b %d %Y, %H:%M")
+            locale.setlocale(locale.LC_TIME, _locale)
         else:
             sdate = date
         if isinstance(hsformat, HSFormatFlag):

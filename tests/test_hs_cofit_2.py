@@ -16,7 +16,7 @@ import hsi
 from hsi import cm
 from hsi import HSAbsorption, HSIntensity, convert
 from hsi import HSImage
-from hsi.analysis import HSComponentFit
+from hsi.analysis import HSCoFit
 # from hsi.analysis import HSComponentFit2 as HSComponentFit
 from hsi.log import logmanager
 
@@ -76,7 +76,7 @@ def main():
     plt.show()
 
     # analysis and post processing ...........................................
-    analysis = HSComponentFit(hsformat=HSAbsorption)
+    analysis = HSCoFit(hsformat=HSAbsorption)
 
     analysis.loadtxt("basevectors_2.txt", mode='all')
     analysis.set_data(spectra, wavelen, hsformat=HSAbsorption)

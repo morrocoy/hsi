@@ -15,11 +15,11 @@ import tkinter as tk
 from tkinter import filedialog
 from skimage.exposure import rescale_intensity
 
+from load_cube import load_cube
+
+
 ##### Cube Daten Einlesen
 
-dim=3
-dtype=np.float32
-size = np.dtype(dtype).itemsize
 
 root = tk.Tk()
 root.withdraw()
@@ -32,22 +32,12 @@ pict_path = os.path.join(os.getcwd(), "..", "..", "pictures")
 # load hyper spectral image data .........................................
 subfolder = "occlusion"
 timestamp = "2016_11_02_16_48_30"
+
 image_file_path = os.path.join(
     data_path, subfolder, timestamp, timestamp + "_SpecCube.dat")
 
-with open(image_file_path,'rb') as file:
-    dtypeHeader = np.dtype(np.int32)
-    dtypeHeader = dtypeHeader.newbyteorder('>')
-    buffer = file.read(size*dim)
-    header = np.frombuffer(buffer, dtype=dtypeHeader)
 
-    dtypeData = np.dtype(dtype)
-    dtypeData = dtypeData.newbyteorder('>')
-    buffer = file.read()
-    cubeData = np.frombuffer(buffer, dtype=dtypeData)
-        
-cubeData = cubeData.reshape(header, order='C')
-cubeData = np.rot90(cubeData)
+cubeData = load_cube(image_file_path)
 
 ##### RGB Bild Erzeugen
 
@@ -56,6 +46,8 @@ gval = cubeData[:,:,16]
 bval = cubeData[:,:,8]
 
 rgb = (np.stack([rval, gval, bval], axis = 2)).clip(0., 1.)
+
+
 
 ##### RGB mit gamma Korrektur
 

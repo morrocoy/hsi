@@ -7,7 +7,7 @@ from ...bindings.Qt import QtWidgets, QtCore
 from ...log import logmanager
 from ...misc import getPkgDir
 
-from ...analysis.hs_component_fit import HSComponentFit
+from ...analysis.hs_cofit import HSCoFit
 
 from .QParamRegionWidget import QParamRegionWidget
 
@@ -47,8 +47,30 @@ else:
     )
 
 
+
 class QHSCoFitConfigWidget(QtWidgets.QWidget):
     """ Config widget for hyper spectral images
+
+    Attributes
+    ----------
+    hsformat :  :obj:`HSFormatFlag<hsi.HSFormatFlag>`, optional
+        The output hsformat for the hyperspectral data. Should be one of:
+
+            - :class:`HSIntensity<hsi.HSIntensity>`
+            - :class:`HSAbsorption<hsi.HSAbsorption>`
+            - :class:`HSExtinction<hsi.HSExtinction>`
+            - :class:`HSRefraction<hsi.HSRefraction>`
+
+    filePath :  str
+        The input file providing the base vectors.
+    hsVectorAnalysis :  HSCoFit
+        A wrapper for the component fit analysis.
+    testMask : numpy.ndarray
+        An image mask applied for test pixel-wise analysis.
+    mask : numpy.ndarray
+        An image mask applied for the complete image analysis.
+    nroi : int
+        The number of regions of interest.
     """
     sigValueChanged = QtCore.Signal(object, bool)
 
@@ -60,12 +82,22 @@ class QHSCoFitConfigWidget(QtWidgets.QWidget):
         elif len(args) == 2:
             kwargs['filePath'] = args[0]
             kwargs['parent'] = args[1]
+        elif len(args) == 3:
+            kwargs['filePath'] = args[0]
+            kwargs['analysis'] = args[1]
+            kwargs['parent'] = args[2]
 
         parent = kwargs.get('parent', None)
         super(QHSCoFitConfigWidget, self).__init__(parent=parent)
 
-        # self.filePath = None  # file providing the base vectors
-        self.hsVectorAnalysis = HSComponentFit()  # analysis object
+        # file providing the base vectors
+        # filePath = kwargs.get('filePath', "basevectors_1.txt")
+        filePath = kwargs.get('filePath', "basevectors_2.txt")
+        # filePath = kwargs.get('filePath', "basevectors_2_17052022.txt")
+
+        # analysis object
+        self.hsVectorAnalysis = kwargs.get('analysis', HSCoFit())
+        self.nroi = self.hsVectorAnalysis.nroi
 
         # mask for testwise fit
         self.testMask = None
@@ -81,7 +113,8 @@ class QHSCoFitConfigWidget(QtWidgets.QWidget):
         self.fileLineEdit = QtWidgets.QLineEdit(self)
         self.normalCheckBox = QtWidgets.QCheckBox(self)
         self.methodComboBox = QtWidgets.QComboBox(self)
-        self.wavRegionWidget = QParamRegionWidget("roi", self)
+        self.wavRegionWidgets = [
+            QParamRegionWidget("roi%d" % i, self) for i in range(self.nroi)]
         self.lsVarRegionWidgets = []
 
         # configure actions
@@ -91,21 +124,19 @@ class QHSCoFitConfigWidget(QtWidgets.QWidget):
         self._setupViews(*args, **kwargs)
 
         # load base vectors and update filePath
-        # filePath = kwargs.get('filePath', "basevectors_1.txt")
-        filePath = kwargs.get('filePath', "basevectors_2.txt")
-        # filePath = kwargs.get('filePath', "basevectors_2_17052022.txt")
-
-        # for i in range(10):
         self.loadFile(filePath)
 
         # connect signals
         self.methodComboBox.currentTextChanged.connect(self._updateSettings)
         self.normalCheckBox.stateChanged.connect(self._updateSettings)
-        self.wavRegionWidget.sigValueChanged.connect(self._updateROI)
 
+        for i, item in enumerate(self.wavRegionWidgets):
+            item.sigValueChanged.connect(self._updateROI)
 
-        # self.imageFilterTypeComboBox.currentTextChanged.connect(self._updateImageFilterSettings)
-        # self.spectFilterTypeComboBox.currentTextChanged.connect(self._updateSpectFilterSettings)
+        # self.imageFilterTypeComboBox.currentTextChanged.connect(
+        # self._updateImageFilterSettings)
+        # self.spectFilterTypeComboBox.currentTextChanged.connect(
+        # self._updateSpectFilterSettings)
 
         # self.imageFilterSigmaSpinBox.valueChanged.connect(self.updateLSFit)
         # self.spectFilterSizeSpinBox.valueChanged.connect(self.updateLSFit)
@@ -173,7 +204,7 @@ class QHSCoFitConfigWidget(QtWidgets.QWidget):
         self.mainLayout.addRow(layout)
 
         # Parameter settings and controls ....................................
-        label = QtWidgets.QLabel("Param bounds [%]", self)
+        label = QtWidgets.QLabel("Bounds [%]", self)
         label.setIndent(5)
         label.setMinimumHeight(20)
         label.setStyleSheet("border: 0px;")
@@ -194,12 +225,16 @@ class QHSCoFitConfigWidget(QtWidgets.QWidget):
         label.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom)
         self.mainLayout.addRow(label)
 
-        self.wavRegionWidget.setLabel("ROI")
-        self.wavRegionWidget.setScale(1e9)  # show in nm
-        self.wavRegionWidget.setDecimals(0)
-        self.wavRegionWidget.setSingleStep(1)
-        self.wavRegionWidget.setMaximumWidth(200)
-        self.mainLayout.addRow(self.wavRegionWidget)
+        for i, item in enumerate(self.wavRegionWidgets):
+            if self.nroi == 1:
+                item.setLabel("ROI")
+            else:
+                item.setLabel("ROI %d" % i)
+            item.setScale(1e9)  # show in nm
+            item.setDecimals(0)
+            item.setSingleStep(1)
+            item.setMaximumWidth(200)
+            self.mainLayout.addRow(item)
 
         label = QtWidgets.QLabel("Method", self)
         label.setStyleSheet("border: 0px;")
@@ -307,8 +342,15 @@ class QHSCoFitConfigWidget(QtWidgets.QWidget):
         logger.debug("Finalizing: {}".format(self))
         super(QHSCoFitConfigWidget, self).finalize()
 
-    def getROI(self):
-        return self.wavRegionWidget.value()
+    def getROI(self, index=-1):
+        """Get the region(s) of interest for spectral fits."""
+        if index == -1:
+            if self.nroi == 1:
+                return self.wavRegionWidgets[index].value()
+            else:
+                return [item.value() for item in self.wavRegionWidgets]
+        elif index > -1 and index < self.nroi:
+            return self.wavRegionWidgets[index].value()
 
     def getSpectra(self, hsformat=None):
         """Get the spectral fits."""
@@ -370,10 +412,12 @@ class QHSCoFitConfigWidget(QtWidgets.QWidget):
 
         # reconfigure wavelength region widget
         lbnd, ubnd = self.hsVectorAnalysis.wavelen[[0, -1]]
-        self.wavRegionWidget.setBounds([lbnd, ubnd])
-        self.wavRegionWidget.setValueDefault([lbnd, ubnd])
-        self.wavRegionWidget.setValue([lbnd, ubnd])
-        self.wavRegionWidget.setSingleStep(1)
+
+        for item in self.wavRegionWidgets:
+            item.setBounds([lbnd, ubnd])
+            item.setValueDefault([lbnd, ubnd])
+            item.setValue([lbnd, ubnd])
+            item.setSingleStep(1)
         self._updateVectorFit()
 
     def onLoadFile(self):
@@ -401,7 +445,8 @@ class QHSCoFitConfigWidget(QtWidgets.QWidget):
         self.normalCheckBox.blockSignals(False)
 
         # triggers a test fit using either of the methods 'gesv' or 'bvls_f'
-        self.wavRegionWidget.reset()
+        for item in self.wavRegionWidgets:
+            item.reset()
 
     def resetParam(self):
         """Set the default values for the parameter bounds."""
@@ -442,11 +487,12 @@ class QHSCoFitConfigWidget(QtWidgets.QWidget):
         # update region of interest if new x axis
         if x is not None:
             bounds = x[[0, -1]]
-            self.wavRegionWidget.blockSignals(True)
-            self.wavRegionWidget.setBounds(bounds)
-            self.wavRegionWidget.setValueDefault(bounds)
-            self.wavRegionWidget.setValue(bounds)
-            self.wavRegionWidget.blockSignals(False)
+            for item in self.wavRegionWidgets:
+                item.blockSignals(True)
+                item.setBounds(bounds)
+                item.setValueDefault(bounds)
+                item.setValue(bounds)
+                item.blockSignals(False)
 
         meth = self.methodComboBox.currentText()
         if meth in ('bvls_f', 'gesv', 'lstsq', 'nnls'):
@@ -500,7 +546,7 @@ class QHSCoFitConfigWidget(QtWidgets.QWidget):
         """
         self.normalCheckBox.setChecked(enableNormal)
 
-    def setROI(self, bounds):
+    def setROI(self, bounds, index=-1):
         """Set the region of interest for the wavelength in the widget.
 
         Parameters
@@ -509,9 +555,14 @@ class QHSCoFitConfigWidget(QtWidgets.QWidget):
             The absolute lower and upper bounds for the wavelength.
         """
         logger.debug("Set ROI for the wavelength to {}".format(bounds))
-        self.wavRegionWidget.setValue(bounds)
 
-    def setBounds(self, bounds):
+        if index == -1:
+            for item in self.wavRegionWidgets:
+                item.setValue(bounds)
+        elif index > -1 and index < self.nroi:
+            self.wavRegionWidgets[index].setValue(bounds)
+
+    def setBounds(self, bounds, index=-1):
         """Set the region of interest for the wavelength in the widget.
 
         Parameters
@@ -519,8 +570,16 @@ class QHSCoFitConfigWidget(QtWidgets.QWidget):
         bounds : list, tuple
             The absolute lower and upper bounds for the wavelength.
         """
-        logger.debug("Set ROI bounds for the wavelength to {}".format(bounds))
-        self.wavRegionWidget.setBounds(bounds)
+        if index == -1:
+            logger.debug(
+                "Set ROI bounds for the wavelength to {}".format(bounds))
+            for item in self.wavRegionWidgets:
+                item.setBounds(bounds)
+        elif index > -1 and index < self.nroi:
+            logger.debug(
+                "Set ROI bounds with index {} for the wavelength to {}".format(
+                    index, bounds))
+            self.wavRegionWidgets[index].setBounds(bounds)
 
     def setMask(self, mask):
         """Set the general mask for fitting procedures.

@@ -4,7 +4,8 @@ import os.path
 import sys
 
 from .hs_base_analysis import HSBaseAnalysis
-from .hs_component_fit import HSComponentFit
+from .hs_cofit import HSCoFit
+# from .hs_cofit_sequence import HSCoFitSequence
 from .hs_open_tivita import HSOpenTivita
 
 # TODO clean up Moussa's files before consider freezing
@@ -14,7 +15,8 @@ if not getattr(sys, 'frozen', False):
 
 __all__ = [
     "HSBaseAnalysis",
-    "HSComponentFit",
+    "HSCoFit",
+    # "HSCoFitSequence",
     "HSOpenTivita",
 ]
 

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import hsi
 from hsi import HSIntensity, HSAbsorption, HSRefraction
 from hsi import HSComponent, HSComponentFile
-from hsi.analysis import HSComponentFit
+from hsi.analysis import HSCoFit
 
 
 
@@ -28,7 +28,7 @@ fat_ddy = np.diff(fat.yNodeData, n=2)
 fat_ddx = fat.xNodeData[1:-1]
 
 # create a component fit analysis using basis spectra of 2nd derivative
-analysis = HSComponentFit(spec_ddy, spec_ddx)
+analysis = HSCoFit(spec_ddy, spec_ddx)
 analysis.add_component(fat_ddy, fat_ddx, name="fat", label="fat", hsformat=HSAbsorption,
                        weight=fat.weight, bounds=fat.bounds)
 
