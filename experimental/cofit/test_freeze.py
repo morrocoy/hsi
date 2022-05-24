@@ -107,7 +107,7 @@ def plot_pixel(analysis, row=220, col=520):
     plt.show()
 
 
-def plot_test_spectra(analysis, index=0):
+def plot_test_spectra(analysis, index=0, sol='last'):
 
     # plot residual at specific coordinates
     wavelen = analysis.wavelen
@@ -126,7 +126,7 @@ def plot_test_spectra(analysis, index=0):
     res = b - a[:, :] @ x[:, :]
     res = res.reshape((100, -1))
 
-    param = analysis.get_solution(unpack=True, clip=True)
+    param = analysis.get_solution(select=sol, unpack=True, clip=True)
     param['blo'] = param['hhb'] + param['ohb']
     param['oxy'] = np.zeros(param['blo'].shape)
     idx = np.nonzero(param['blo'])
@@ -157,7 +157,95 @@ def plot_test_spectra(analysis, index=0):
     plt.show()
 
 
-def main():
+def test_mc_simulations_1():
+    # component fit analysis ..................................................
+    analysis = HSCoFit(hsformat=HSAbsorption)
+    analysis.loadtxt("basevectors_1.txt", mode='all')
+
+    # print base component names
+    print(analysis.keys)
+
+    # modify bounds for component weights
+    analysis.set_var_bounds("hhb", [0, 0.1])
+    analysis.set_var_bounds("ohb", [0, 0.1])
+    analysis.set_var_bounds("wat", [0, 2.00])
+    analysis.set_var_bounds("fat", [0, 1.00])
+    analysis.set_var_bounds("mel", [0, 0.20])
+
+    # remove components .......................................................
+    # analysis.remove_component("mel")
+    # print(analysis.keys)
+    # analysis.freeze_component("mel")
+    # analysis.remove_component("fat")
+    # print(analysis.keys)
+
+    # component fit analysis ..................................................
+    index = 13
+
+    analysis.prepare_ls_problem()
+
+    analysis.set_roi([520e-9, 600e-9])
+    analysis.fit(method='bvls_f')
+    analysis.freeze_component("hhb")
+    analysis.freeze_component("ohb")
+    plot_test_spectra(analysis, index)
+
+    analysis.set_roi([520e-9, 995e-9])
+    analysis.fit(method='bvls_f')
+    plot_test_spectra(analysis, index)
+
+    return
+
+
+def test_mc_simulations_2():
+    # component fit analysis ..................................................
+    analysis = HSCoFit(hsformat=HSAbsorption)
+    analysis.loadtxt("basevectors_1.txt", mode='all')
+
+    # print base component names
+    print(analysis.keys)
+
+    # modify bounds for component weights
+    analysis.set_var_bounds("hhb", [0, 0.1])
+    analysis.set_var_bounds("ohb", [0, 0.1])
+    analysis.set_var_bounds("wat", [0, 2.00])
+    analysis.set_var_bounds("fat", [0, 1.00])
+    analysis.set_var_bounds("mel", [0, 0.20])
+
+    # remove components .......................................................
+    # analysis.remove_component("mel")
+    # print(analysis.keys)
+    # analysis.freeze_component("mel")
+    # analysis.remove_component("fat")
+    # print(analysis.keys)
+
+    # component fit analysis ..................................................
+    index = 13
+
+    analysis.prepare_ls_problem()
+
+    analysis.set_roi([520e-9, 995e-9])
+    analysis.fit(method='bvls_f')
+    analysis.freeze_component("mel")
+    plot_test_spectra(analysis, index)
+
+    analysis.set_roi([520e-9, 600e-9])
+    # analysis.set_roi([680e-9, 820e-9])
+    # analysis.set_roi([550e-9, 820e-9])
+    analysis.fit(method='bvls_f')
+    analysis.freeze_component("hhb")
+    analysis.freeze_component("ohb")
+    plot_test_spectra(analysis, index)
+
+    analysis.set_roi([520e-9, 995e-9])
+    # analysis.set_roi([700e-9, 995e-9])
+    analysis.fit(method='bvls_f')
+    plot_test_spectra(analysis, index)
+
+    return
+
+
+def test_hsimage():
     data_path = os.path.join(os.getcwd(), "..", "data")
     data_path = os.path.join("d:", os.path.sep, "packages", "hsi", "data")
     # pict_path = os.path.join(os.getcwd(), "..", "pictures")
@@ -169,7 +257,6 @@ def main():
     timestamp = "2016_11_02_16_48_30"
     # subfolder = "2021-06-29_aufnahmen_arm"
     # timestamp = "2021_07_06_16_04_59"
-
 
     # subfolder = "wetransfer_2021_09_20_15_13_41_2022-02-23_2049"
     # # timestamp = "2021_09_20_15_13_41"
@@ -214,7 +301,7 @@ def main():
     # print base component names
     print(analysis.keys)
 
-    # modify bounds for component weights .....................................
+    # modify bounds for component weights
     analysis.set_var_bounds("hhb", [0, 0.1])
     analysis.set_var_bounds("ohb", [0, 0.1])
     analysis.set_var_bounds("wat", [0, 2.00])
@@ -222,42 +309,43 @@ def main():
     analysis.set_var_bounds("mel", [0, 0.20])
 
     # remove components .......................................................
+    # analysis.remove_component("mel")
+    # print(analysis.keys)
+    # analysis.freeze_component("mel")
     analysis.remove_component("fat")
     print(analysis.keys)
 
-    start = timer()
-
     analysis.prepare_ls_problem()
-    analysis.set_roi([520e-9, 995e-9])
+
+    # analysis.set_roi([520e-9, 995e-9])
+    # analysis.fit(method='bvls_f', mask=mask)
+    # analysis.freeze_component("mel")
+    # plot_results(analysis)
+    # plot_pixel(analysis)
+
+    analysis.set_roi([520e-9, 600e-9])
+    # analysis.set_roi([680e-9, 820e-9])
+    # analysis.set_roi([520e-9, 820e-9])
     analysis.fit(method='bvls_f', mask=mask)
-
-    print("Elapsed time: %f sec" % (timer() - start))
-
-    # get dictionary of solutions (weights for each component .................
-    param = analysis.get_solution(unpack=True, clip=True)
-    print([np.sum(param[key]) for key in ["mel", "hhb", "ohb", "wat"]])
-
-    # squared sum of residual over wavelength .................................
-    res = analysis.get_residual()
-
-    # residual of hyperspectral image
-    a = analysis._anaSysMatrix  # matrix of base vectors
-    b = analysis._anaTrgVector  # spectra to be fitted
-    x = analysis._anaVarVector  # vector of unknowns
-
-    # res = b - a[:, :-1] @ x[:-1, :]
-    res = b - a[:, :] @ x[:, :]
-    res = res.reshape(hsimage.shape)
-
-    wavelen = analysis.components["hhb"].xIntpData
-    spectrum = analysis.components["hhb"].yIntpData
-
-    # residual conversion from absorption to intensity ........................
-    res_int = convert(HSIntensity, HSAbsorption, res, wavelen)
-
-    # plot solution parameters ................................................
+    analysis.freeze_component("hhb")
+    analysis.freeze_component("ohb")
     plot_results(analysis)
     plot_pixel(analysis)
+
+    analysis.set_roi([520e-9, 995e-9])
+    analysis.fit(method='bvls_f', mask=mask)
+    plot_results(analysis)
+    plot_pixel(analysis)
+
+
+def main():
+    start = timer()
+
+    test_mc_simulations_1()
+    # test_mc_simulations_2()
+    # test_hsimage()
+
+    print("Elapsed time: %f sec" % (timer() - start))
 
 
 

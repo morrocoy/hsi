@@ -65,6 +65,12 @@ class HSBaseAnalysis(object):
         self._anaVarBounds = None  # bounds for each unknown variable
         self._anaResVector = None  # residual vector (squared Euclidean 2-norm)
         self._anaSysMatrix = None  # assembly of normalized based vector
+        self._anaVarBuffer = None  # storage for variable solutions
+
+        self._buffer_maxcount = 10  # max number of solution stores
+        self._buffer_count = 0  # number of solution stores
+        self._buffer_index = 0  # index on solution buffer
+
 
         # list of solution parameter keys
         self.keys = []
@@ -127,6 +133,7 @@ class HSBaseAnalysis(object):
         self._anaSysMatrix = None
         self._anaVarScales = None
         self._anaVarBounds = None
+        self._anaVarBuffer = None
 
     def get_residual(self):
 
@@ -137,7 +144,7 @@ class HSBaseAnalysis(object):
         else:
             return None
 
-    def get_solution(self, unpack=False, clip=True):
+    def get_solution(self, select="last", unpack=False, clip=True):
         """Get the solution vector for each spectrum.
 
         Parameters
@@ -151,7 +158,11 @@ class HSBaseAnalysis(object):
         if self._anaVarVector is None:
             return
 
-        # x = self._anaVarVector
+        # index circular buffer
+        _ibuf = [
+            (self._buffer_index + self._buffer_maxcount - i) %
+            self._buffer_maxcount for i in range(self._buffer_count)]
+
         if clip:
             lbnd = self._anaVarBounds[:, 0]
             ubnd = self._anaVarBounds[:, 1]
@@ -161,13 +172,36 @@ class HSBaseAnalysis(object):
             _lbnd[numpy.isnan(_lbnd)] = -numpy.inf
             _ubnd[numpy.isnan(_ubnd)] = numpy.inf
 
-            # print(self._anaVarScales)
-            # numpy.clip(x, lbnd[:, None], ubnd[:, None], x)
+            if select == "last":
+                x = self._anaVarScales * numpy.clip(
+                    self._anaVarVector, _lbnd[:, None], _ubnd[:, None])
 
-            x = self._anaVarScales * numpy.clip(
-                self._anaVarVector, _lbnd[:, None], _ubnd[:, None])
+            elif select == "all":
+                x = self._anaVarScales * numpy.clip(
+                    self._anaVarBuffer[_ibuf], _lbnd[:, None], _ubnd[:, None])
+
+            elif isinstance(select, int) and 0 < select < self._buffer_maxcount:
+                x = self._anaVarScales * numpy.clip(
+                    self._anaVarBuffer[_ibuf[select]],
+                    _lbnd[:, None], _ubnd[:, None])
+
+            else:
+                raise Exception(
+                    "Selection '%s' for solution vector unknown." % select)
+
         else:
-            x = self._anaVarScales * self._anaVarVector
+            if select == "last":
+                x = self._anaVarScales * self._anaVarVector
+
+            elif select == "all":
+                x = self._anaVarScales * self._anaVarBuffer[_ibuf]
+
+            elif isinstance(select, int) and 0 < select < self._buffer_maxcount:
+                x = self._anaVarScales * self._anaVarBuffer[_ibuf[select]]
+
+            else:
+                raise Exception(
+                    "Selection '%s' for solution vector unknown." % select)
 
         if unpack:
             shape = self.spectra.shape[1:]

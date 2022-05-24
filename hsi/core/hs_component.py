@@ -124,9 +124,13 @@ class HSComponent:
         self.weight = weight
         self.bounds = None
         self.scale = None
+        self._frozen = False
 
         self.set_bounds(bounds)
         self.set_data(yn, xn, x)
+
+    def freeze(self):
+        self._frozen = True
 
     def get_scaled_bounds(self):
         """Get the normalized lower and upper bounds for the weight ."""
@@ -157,6 +161,9 @@ class HSComponent:
                              "of the range of x.")
         else:
             self.yIntpData = self._interp(self.xIntpData)
+
+    def is_frozen(self):
+        return self._frozen
 
     def len(self):
         """Get length of base vector (resampled spectral data)."""
@@ -339,3 +346,6 @@ class HSComponent:
             self.scale = (ubnd - self.weight) / self.weight
         else:
             self.scale = (ubnd - lbnd) / self.weight
+
+    def unfreeze(self):
+        self._frozen = False
