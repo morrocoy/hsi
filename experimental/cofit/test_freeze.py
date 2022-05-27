@@ -126,7 +126,7 @@ def plot_test_spectra(analysis, index=0, sol='last'):
     res = b - a[:, :] @ x[:, :]
     res = res.reshape((100, -1))
 
-    param = analysis.get_solution(select=sol, unpack=True, clip=True)
+    param = analysis.get_solution(which=sol, unpack=True, clip=True)
     param['blo'] = param['hhb'] + param['ohb']
     param['oxy'] = np.zeros(param['blo'].shape)
     idx = np.nonzero(param['blo'])

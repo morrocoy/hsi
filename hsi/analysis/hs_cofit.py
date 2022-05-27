@@ -340,6 +340,7 @@ class HSCoFit(HSBaseAnalysis):
 
         # store solution vector
         self._anaVarVector[ivar, :] = x
+        self.push_solution()
 
         # store residual vector (squared Euclidean 2-norm)
         # r[:] = numpy.sum((a @ x - b) ** 2, axis=0)
@@ -471,9 +472,8 @@ class HSCoFit(HSBaseAnalysis):
 
         # store solution vector
         self._anaVarVector[ivar, :] = x
-        ibuf = self._buffer_index
-        self._anaVarBuffer[ibuf, ...] = self._anaVarVector.copy()
-        ibuf = (ibuf + 1) % self._buffer_maxcount
+        self._anaVarBuffer[self._buffer_index] = self._anaVarVector.copy()
+        self._buffer_index = (self._buffer_index + 1) % self._buffer_maxcount
 
         # store residual vector (squared Euclidean 2-norm)
         # r[:] = numpy.sum((a @ x - b) ** 2, axis=0)
@@ -537,11 +537,22 @@ class HSCoFit(HSBaseAnalysis):
 
         return self.components  # return dict of component vectors if no errors
 
-    def model(self, hsformat=None):
+    def model(self, which="last", clip=True, hsformat=None):
+
         a = self._anaSysMatrix.view()
-        x = self._anaVarVector.view()
-        b = numpy.einsum('ij,jk->ik', a, x)
-        mspectra = b.reshape(self.spectra.shape)
+
+        x = self.get_solution(
+            which=which, unpack=False, clip=clip, norm=True, flatten=True)
+        # x = self._anaVarVector.view()
+
+        if len(x.shape) == 2:
+            b = numpy.einsum('ij,jk->ik', a, x)
+            mspectra = b.reshape(self.spectra.shape)
+        elif len(x.shape) == 3:
+            b = numpy.einsum('ij,njk->nik', a, x)
+            mspectra = b.reshape((self._buffer_count, ) + self.spectra.shape)
+        else:
+            raise Exception("Wrong solution format '{}'.".format(x.shape))
 
         if hsformat is None:
             return mspectra

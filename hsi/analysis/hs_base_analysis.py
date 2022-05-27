@@ -144,7 +144,21 @@ class HSBaseAnalysis(object):
         else:
             return None
 
-    def get_solution(self, select="last", unpack=False, clip=True):
+    def push_solution(self):
+        self._buffer_index = (self._buffer_index + 1) % self._buffer_maxcount
+        self._anaVarBuffer[self._buffer_index] = self._anaVarVector.copy()
+
+        if self._buffer_count < self._buffer_maxcount:
+            self._buffer_count += 1
+
+    def pop_solution(self):
+        if self._buffer_count > 0:
+            self._buffer_index = \
+                (self._buffer_index + self._buffer_maxcount - 1) \
+                % self._buffer_maxcount
+            self._buffer_count -= 1
+
+    def get_solution(self, which="last", unpack=False, clip=True, norm=False, flatten=False):
         """Get the solution vector for each spectrum.
 
         Parameters
@@ -163,6 +177,11 @@ class HSBaseAnalysis(object):
             (self._buffer_index + self._buffer_maxcount - i) %
             self._buffer_maxcount for i in range(self._buffer_count)]
 
+        if norm:
+            scale = 1
+        else:
+            scale = self._anaVarScales
+
         if clip:
             lbnd = self._anaVarBounds[:, 0]
             ubnd = self._anaVarBounds[:, 1]
@@ -172,45 +191,60 @@ class HSBaseAnalysis(object):
             _lbnd[numpy.isnan(_lbnd)] = -numpy.inf
             _ubnd[numpy.isnan(_ubnd)] = numpy.inf
 
-            if select == "last":
-                x = self._anaVarScales * numpy.clip(
+            if which == "last":
+                x = scale * numpy.clip(
                     self._anaVarVector, _lbnd[:, None], _ubnd[:, None])
 
-            elif select == "all":
-                x = self._anaVarScales * numpy.clip(
+            elif which == "all":
+                x = scale * numpy.clip(
                     self._anaVarBuffer[_ibuf], _lbnd[:, None], _ubnd[:, None])
 
-            elif isinstance(select, int) and 0 < select < self._buffer_maxcount:
-                x = self._anaVarScales * numpy.clip(
-                    self._anaVarBuffer[_ibuf[select]],
-                    _lbnd[:, None], _ubnd[:, None])
+            elif isinstance(which, int) and 0 < which < self._buffer_maxcount:
+                x = scale * numpy.clip(self._anaVarBuffer[_ibuf[which]],
+                                       _lbnd[:, None], _ubnd[:, None])
 
             else:
                 raise Exception(
-                    "Selection '%s' for solution vector unknown." % select)
+                    "Selection '%s' for solution vector unknown." % which)
 
         else:
-            if select == "last":
-                x = self._anaVarScales * self._anaVarVector
+            if which == "last":
+                x = scale * self._anaVarVector
 
-            elif select == "all":
-                x = self._anaVarScales * self._anaVarBuffer[_ibuf]
+            elif which == "all":
+                x = scale * self._anaVarBuffer[_ibuf]
 
-            elif isinstance(select, int) and 0 < select < self._buffer_maxcount:
-                x = self._anaVarScales * self._anaVarBuffer[_ibuf[select]]
+            elif isinstance(which, int) and 0 < which < self._buffer_maxcount:
+                x = scale * self._anaVarBuffer[_ibuf[which]]
 
             else:
                 raise Exception(
-                    "Selection '%s' for solution vector unknown." % select)
+                    "Selection '%s' for solution vector unknown." % which)
 
         if unpack:
             shape = self.spectra.shape[1:]
-            return {key: x[i].reshape(shape) for i, key in
-                    enumerate(self.keys)}
+            if len(x.shape) == 3:
+                return {"%s_%d" % (key, j) : x[j, i, :].reshape(shape) for i, key in
+                        enumerate(self.keys) for j in range(len(x))}
+            elif len(x.shape) == 2:
+                return {key: x[i].reshape(shape) for i, key in
+                        enumerate(self.keys)}
+            else:
+                raise Exception("Wrong solution format '{}'.".format(x.shape))
+
         else:
-            k, n = x.shape  # number of variables, spectra
-            shape = (k,) + self.spectra.shape[1:]
-            return x.reshape(shape)
+            if flatten:
+                return x
+            elif len(x.shape) == 3:
+                p, k, n = x.shape  # number of variables, spectra
+                shape = (p, k,) + self.spectra.shape[1:]
+                return x.reshape(shape)
+            elif len(x.shape) == 2:
+                k, n = x.shape  # number of variables, spectra
+                shape = (k,) + self.spectra.shape[1:]
+                return x.reshape(shape)
+            else:
+                raise Exception("Wrong solution format '{}'.".format(x.shape))
 
     def set_data(self, y, x=None, hsformat=None):
         """Set spectral data to be fitted.
