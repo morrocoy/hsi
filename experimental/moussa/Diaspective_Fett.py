@@ -33,6 +33,13 @@ pict_path = os.path.join(os.getcwd(), "..", "..", "pictures")
 subfolder = "occlusion"
 timestamp = "2016_11_02_16_48_30"
 
+subfolder = "thyroid"
+timestamp = "2019_11_14_08_59_25"
+
+subfolder = "Hautlappen"
+timestamp = "2021_09_20_15_13_41"
+timestamp = "2022_04_04_14_09_02"
+
 image_file_path = os.path.join(
     data_path, subfolder, timestamp, timestamp + "_SpecCube.dat")
 

@@ -25,21 +25,24 @@ from hsi.log import logmanager
 
 logger = logmanager.getLogger(__name__)
 
+prefix = "cofit_"
 
 def plot_results(analysis):
     param = analysis.get_solution(unpack=True, clip=True)
     # post processing - calculate bood and oxygenation from HHB and O2HB ......
-    param['blo'] = param['hhb'] + param['ohb']
-    param['oxy'] = np.zeros(param['blo'].shape)
-    idx = np.nonzero(param['blo'])
-    param['oxy'][idx] = param['ohb'][idx] / param['blo'][idx]
+    param[prefix + 'blo'] = param[prefix + 'hhb'] + param[prefix + 'ohb']
+    param[prefix + 'oxy'] = np.zeros(param[prefix + 'blo'].shape)
+    idx = np.nonzero(param[prefix + 'blo'])
+    param[prefix + 'oxy'][idx] = param[prefix + 'ohb'][idx] / param[prefix + 'blo'][idx]
 
     # plot solution parameters ................................................
     cmap = cm.tivita()
     # keys = ['oxy', 'blo', 'wat', 'fat']
     # labels = ["Oxygenation", "Blood", "Water", "Fat"]
 
-    keys = ['oxy', 'blo', 'wat', 'mel']
+
+    keys = [
+        'oxy', 'blo', 'wat', 'mel']
     labels = ["Oxygenation", "Blood", "Water", "Melanin"]
 
     fig = plt.figure()
@@ -48,19 +51,19 @@ def plot_results(analysis):
         ax = fig.add_subplot(2, 2, i + 1)
         ax.axis('off')
         if key in ('blo', 'ohb', 'hhb', 'mel'):
-            pos = plt.imshow(param[key], cmap=cmap, vmin=0, vmax=0.05)
+            pos = plt.imshow(param[prefix + key], cmap=cmap, vmin=0, vmax=0.05)
         elif key in ('oxy', 'fat'):
-            pos = plt.imshow(param[key], cmap=cmap, vmin=0, vmax=1)
+            pos = plt.imshow(param[prefix + key], cmap=cmap, vmin=0, vmax=1)
         elif key == 'wat':
-            pos = plt.imshow(param[key], cmap=cmap, vmin=0, vmax=1.6)
+            pos = plt.imshow(param[prefix + key], cmap=cmap, vmin=0, vmax=1.6)
         else:
-            pos = plt.imshow(param[key], cmap=cmap, vmin=0, vmax=1.)
+            pos = plt.imshow(param[prefix + key], cmap=cmap, vmin=0, vmax=1.)
         fig.colorbar(pos, ax=ax)
         ax.set_title(labels[i])
 
     plt.show()
 
-    print([np.sum(param[key]) for key in ["mel", "wat", "hhb", "ohb"]])
+    print([np.sum(param[prefix + key]) for key in keys])
 
 
 def plot_pixel(analysis, row=220, col=520):
@@ -127,10 +130,10 @@ def plot_test_spectra(analysis, index=0):
     res = res.reshape((100, -1))
 
     param = analysis.get_solution(unpack=True, clip=True)
-    param['blo'] = param['hhb'] + param['ohb']
-    param['oxy'] = np.zeros(param['blo'].shape)
-    idx = np.nonzero(param['blo'])
-    param['oxy'][idx] = param['ohb'][idx] / param['blo'][idx]
+    param[prefix + 'blo'] = param[prefix + 'hhb'] + param[prefix + 'ohb']
+    param[prefix + 'oxy'] = np.zeros(param[prefix + 'blo'].shape)
+    idx = np.nonzero(param[prefix + 'blo'])
+    param[prefix + 'oxy'][idx] = param[prefix + 'ohb'][idx] / param[prefix + 'blo'][idx]
 
     fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(4.5, 7))
     plt.subplots_adjust(hspace=0.1)
@@ -145,7 +148,7 @@ def plot_test_spectra(analysis, index=0):
     ax2.plot(wavelen * 1e9, res[:, index])
 
     info = '\n'.join(
-        ["%s = %f" % (key, param[key][index])
+        ["%s = %f" % (key, param[prefix + key][index])
          for key in ["blo", "oxy", "wat", "fat", "mel"]])
     ax1.text(0.02, 0.02, info, transform=ax1.transAxes, va='bottom', ha='left')
 
@@ -235,7 +238,16 @@ def main():
 
     # get dictionary of solutions (weights for each component .................
     param = analysis.get_solution(unpack=True, clip=True)
-    print([np.sum(param[key]) for key in ["mel", "hhb", "ohb", "wat"]])
+
+    keys = ['oxy', 'blo', 'wat', 'mel']
+    labels = [
+        "Oxygenation",
+        "Blood",
+        "Water",
+        "Melanin"
+    ]
+
+    print([np.sum(param[prefix + key]) for key in ["mel", "hhb", "ohb", "wat"]])
 
     # squared sum of residual over wavelength .................................
     res = analysis.get_residual()

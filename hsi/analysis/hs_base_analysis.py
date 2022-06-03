@@ -74,6 +74,7 @@ class HSBaseAnalysis(object):
 
         # list of solution parameter keys
         self.keys = []
+        self.prefix = ""  # key prefix to distinguish analyzers
 
         # check hsformat, if not previously defined also set the hsformat
         if not HSFormatFlag.has_flag(hsformat):

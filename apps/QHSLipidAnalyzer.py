@@ -36,10 +36,10 @@ logger = logmanager.getLogger(__name__)
 
 PARAM_CONFIG = {
     'rgb': "RGB Image",
-    'li0': "Angle 900-915nm",
-    'li1': "Ratio 925-960nm",
-    'li2': "Ratio 875-925nm",
-    'li3': "2nd derv. 925nm",
+    'lipids_li0': "LPI Angle 900-915nm",
+    'lipids_li1': "LPI Ratio 925-960nm",
+    'lipids_li2': "LPI Ratio 875-925nm",
+    'lipids_li3': "LPI 2nd Derv. 925nm",
 }
 
 class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):

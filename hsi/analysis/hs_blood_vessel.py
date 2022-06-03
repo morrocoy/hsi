@@ -6,7 +6,8 @@ Created on Tue Mar  8 13:09:21 2022
 """
 import numpy
 from scipy import ndimage, signal
-from skimage.exposure import rescale_intensity
+# from skimage.exposure import rescale_intensity
+from ..core.hs_functions import rescale_intensity
 
 from ..core.hs_formats import convert
 from ..core.hs_formats import HSIntensity, HSAbsorption
@@ -124,12 +125,9 @@ class HSBloodVessel(HSBaseAnalysis):
                 b1, wavelen)
             self._anaVarVector[1, index_mask] = self.evaluate_bv_1(
                 b0, wavelen)
-
             self._anaVarVector[2, index_mask] = rescale_intensity(
                 (1. - self._anaVarVector[0, index_mask]) *
-                self._anaVarVector[1, index_mask], (0, 1))
-
-
+                self._anaVarVector[1, index_mask], (0, 1), (0, 1))
 
     @staticmethod
     def evaluate_bv_0(spectra, wavelen, reg0=None):

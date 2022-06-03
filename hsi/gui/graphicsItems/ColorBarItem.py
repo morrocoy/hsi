@@ -251,6 +251,9 @@ class ColorBarItem(pg.GraphicsWidget):
         logger.debug("setImageItem")
         check_class(imageItem, pg.ImageItem, allowNone=True)
 
+        if imageItem is None:
+            return
+
         # Remove old imageItem
         if self._imageItem:
             self._imageItem.sigImageChanged.disconnect(self.onImageChanged)

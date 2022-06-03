@@ -354,7 +354,7 @@ class QHSCoFitConfigWidget(QtWidgets.QWidget):
 
     def getSpectra(self, hsformat=None):
         """Get the spectral fits."""
-        return self.hsVectorAnalysis.model(hsformat)
+        return self.hsVectorAnalysis.model(hsformat=hsformat)
 
     def getSolution(self):
         """Get the solution vectors of the least square fit for the entire

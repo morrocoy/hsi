@@ -383,12 +383,19 @@ class HSFile(object):
 
         # date of creation
         _locale = locale.getlocale()
-        locale.setlocale(locale.LC_TIME, ('en_US', 'UTF-8'))
+        try:
+            locale.setlocale(locale.LC_TIME, ('en_US', 'UTF-8'))
+        except:
+            logger.debug("WARNING: Could not find locale 'en_US'. "
+                         "Keep {} instead.".format(_locale))
         sdate = cls.parse_string("Date:", file.readline())
         info['date'] = datetime.datetime.strptime(sdate, "%b %d %Y, %H:%M")
         logger.debug("Read info date: {}.".format(info['date'].strftime(
             "%b %d %Y, %H:%M")))
-        locale.setlocale(locale.LC_TIME, _locale)
+        try:
+            locale.setlocale(locale.LC_TIME, _locale)
+        except:
+            pass
 
         # spectral hsformat
         sformat = cls.parse_string("Format:", file.readline())
@@ -629,9 +636,17 @@ class HSFile(object):
             title = ""
         if isinstance(date, datetime.datetime):
             _locale = locale.getlocale()
-            locale.setlocale(locale.LC_TIME, ('en_US', 'UTF-8'))
+            try:
+                locale.setlocale(locale.LC_TIME, ('en_US', 'UTF-8'))
+            except:
+                logger.debug("WARNING: Could not find locale 'en_US'. "
+                             "Keep {} instead.".format(_locale))
             sdate = date.strftime("%b %d %Y, %H:%M")
-            locale.setlocale(locale.LC_TIME, _locale)
+            try:
+                locale.setlocale(locale.LC_TIME, _locale)
+            except:
+                pass
+
         else:
             sdate = date
         if isinstance(hsformat, HSFormatFlag):

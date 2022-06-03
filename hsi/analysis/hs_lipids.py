@@ -6,7 +6,8 @@ Created on Wed Feb  2 15:22:49 2022
 """
 import numpy
 from scipy import ndimage, signal
-from skimage.exposure import rescale_intensity
+# from skimage.exposure import rescale_intensity
+from ..core.hs_functions import rescale_intensity
 
 from ..core.hs_formats import convert
 from ..core.hs_formats import HSIntensity
@@ -63,7 +64,8 @@ class HSLipids(HSBaseAnalysis):
                 - :class:`HSRefraction<hsi.HSRefraction>`
         """
         super(HSLipids, self).__init__(spectra, wavelen, hsformat)
-        self.keys = ['li0', 'li1', 'li2', 'li3']
+        self.prefix = "lipids_"
+        self.keys = ['lipids_li0', 'lipids_li1', 'lipids_li2', 'lipids_li3']
         self.labels = [
             "Fat Angle across 900-920 nm",
             "Fat index 1: NDI 925/960 nm",
@@ -134,7 +136,7 @@ class HSLipids(HSBaseAnalysis):
                 b, wavelen)
 
     @staticmethod
-    def evaluate_lipid_0(spectra, wavelen, reg0=None):
+    def evaluate_lipid_4(spectra, wavelen, reg0=None):
         # method 1: Fat angle index
         if reg0 is None:
             reg0 = [900e-9, 915e-9]
@@ -205,5 +207,26 @@ class HSLipids(HSBaseAnalysis):
 
         ratio = 1. - ratio  # invert
         ratio[ratio == 1.] = 0.
+
+        return ratio.astype('float64')
+
+    @staticmethod
+    def evaluate_lipid_0(spectra, wavelen, reg0=None):
+        # method 5: Fat angle index with absolute scaling
+        if reg0 is None:
+            reg0 = [900e-9, 915e-9]
+
+        idx0 = numpy.where((wavelen >= reg0[0]) * (wavelen <= reg0[1]))[0]
+        # val0 = numpy.mean(spectra[idx0], axis=0, dtype=numpy.float64)
+
+        y1 = spectra[idx0]*2000
+        x1 = range(len(idx0))
+
+        ratio = numpy.arctan2(y1[-1] - y1[0], x1[-1] - x1[0])
+        ratio = -numpy.rad2deg(ratio)
+        ratio[ratio < -20] = -19
+        ratio[ratio > 85] = 85
+        ratio[ratio == 0] = -20
+        # ratio = rescale_intensity(ratio, (-20, 85), (0, 1))
 
         return ratio.astype('float64')

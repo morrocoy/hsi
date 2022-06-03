@@ -97,6 +97,7 @@ class HSCoFit(HSBaseAnalysis):
         self.roiIndex = [None, None]
 
         super(HSCoFit, self).__init__(spectra, wavelen, hsformat)
+        self.prefix = "cofit_"
 
         # adopt roi bounds and corresponing indices
         self.set_roi(bounds)
@@ -154,7 +155,7 @@ class HSCoFit(HSBaseAnalysis):
             self.components[name] = HSComponent(
                 y, x, self.wavelen, name=name, label=label, hsformat=hsformat,
                 weight=weight, bounds=bounds)
-            self.keys.append(name)
+            self.keys.append(self.prefix + name)
 
     def clear(self, mode='all'):
         """ Clear all spectral information including component vectors."""
@@ -174,6 +175,10 @@ class HSCoFit(HSBaseAnalysis):
             self._anaSysMatrix = None
             self._anaVarScales = None
             self._anaVarBounds = None
+
+    def clear_buffer(self):
+        self._buffer_index = 0
+        self._buffer_count = 0
 
     def fit(self, method='gesv', **kwargs):
         """Fit spectral data
@@ -533,7 +538,7 @@ class HSCoFit(HSBaseAnalysis):
                 vec.set_format(self.hsformat)  # adopt hsformat
                 vec.set_interp_points(self.wavelen)
             self.components.update(vectors)
-            self.keys = [key for key in vectors.keys()]
+            self.keys = [self.prefix + key for key in vectors.keys()]
 
         return self.components  # return dict of component vectors if no errors
 
@@ -563,6 +568,8 @@ class HSCoFit(HSBaseAnalysis):
 
     def prepare_ls_problem(self):
         """Prepare least square problem for fitting procedure"""
+
+        self.clear_buffer()
 
         if self.spectra is None or not self.components:
             self._anaTrgVector = None
@@ -621,7 +628,7 @@ class HSCoFit(HSBaseAnalysis):
             logger.debug(
                 "Remove component '{}'.".format(name))
             self.components.pop(name)
-            self.keys.remove(name)
+            self.keys.remove(self.prefix + name)
 
     def savetxt(self, file_path, title=None, mode='bvec'):
         """Export the component vectors and spectral data.

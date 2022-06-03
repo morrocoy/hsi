@@ -3,7 +3,14 @@
 
 block_cipher = None
 
-names = ["HSImageViewer", "HSTivitaAnalyzer", "HSCoFitAnalyzer"]
+
+names = [
+    "HSImageViewer",
+    "HSTivitaAnalyzer",
+    "HSCoFitAnalyzer",
+    "HSLipidAnalyzer",
+    "HSMultiAnalyzer"
+]
 
 analyses = [
 	Analysis(

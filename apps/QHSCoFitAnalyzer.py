@@ -36,14 +36,14 @@ logger = logmanager.getLogger(__name__)
 PARAM_CONFIG = {
     'im0': "RGB Image (original)",
     'im1': "RGB Image (with selection)",
-    'blo': "Blood",
-    'oxy': "Oxygenation",
-    'wat': "Water",
-    'fat': "Fat",
-    'mel': "Melanin",
-    'hhb': "Deoxyhemoglobin",
-    'ohb': "Oxyhemoglobin",
-    'met': "Methemoglobin",
+    'cofit_blo': "Blood",
+    'cofit_oxy': "Oxygenation",
+    'cofit_wat': "Water",
+    'cofit_fat': "Fat",
+    'cofit_mel': "Melanin",
+    'cofit_hhb': "Deoxyhemoglobin",
+    'cofit_ohb': "Oxyhemoglobin",
+    'cofit_met': "Methemoglobin",
 }
 
 
@@ -272,11 +272,12 @@ class QHSCoFitAnalyzerWidget(QtWidgets.QWidget):
 
         # update image plots
         if not enableTest:
+            prefix = "cofit_"
             param = analyzer.getSolution()
-            param['blo'] = param['hhb'] + param['ohb']
-            param['oxy'] = np.zeros(param['blo'].shape)
-            idx = np.nonzero(param['blo'])
-            param['oxy'][idx] = param['ohb'][idx] / param['blo'][idx]
+            param[prefix + 'blo'] = param[prefix + 'hhb'] + param[prefix + 'ohb']
+            param[prefix + 'oxy'] = np.zeros(param[prefix + 'blo'].shape)
+            idx = np.nonzero(param[prefix + 'blo'])
+            param[prefix + 'oxy'][idx] = param[prefix + 'ohb'][idx] / param[prefix + 'blo'][idx]
 
             keys = [key for key in PARAM_CONFIG.keys() if key in param.keys()]
             nkeys = len(keys)
@@ -327,7 +328,7 @@ def main():
     # win.setGeometry(300, 30, 1200, 500)
     # win.setGeometry(290, 30, 1800, 800)
     # win.setGeometry(20, 30, 1900, 920)
-    win.setGeometry(20, 30, 1800, 820)
+    win.setGeometry(20, 30, 1800, 800)
     win.setWindowTitle("Hyperspectral Image Analysis")
     win.show()
     app.exec_()

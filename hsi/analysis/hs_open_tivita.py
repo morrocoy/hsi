@@ -61,9 +61,14 @@ class HSOpenTivita(HSBaseAnalysis):
                 - :class:`HSRefraction<hsi.HSRefraction>`
         """
         super(HSOpenTivita, self).__init__(spectra, wavelen, hsformat)
-        self.keys = ['oxy', 'nir', 'thi', 'twi']
-        self.labels = ["Oxygenation", "NIR-Perfusion", "THI", "TWI"]
-
+        self.prefix = "tivita_"
+        self.keys = ['tivita_oxy', 'tivita_nir', 'tivita_thi', 'tivita_twi']
+        self.labels = [
+            "Oxygenation (TIVITA)",
+            "NIR-Perfusion (TIVITA)",
+            "THI (TIVITA)",
+            "TWI (TIVITA)"
+        ]
 
     def evaluate(self, mask=None):
         """Evaluate Tivita index values.

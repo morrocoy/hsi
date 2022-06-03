@@ -71,7 +71,12 @@ def main():
 
     # plot reference tivita index values for the hyperspectral image .........
     keys = ['oxy', 'nir', 'thi', 'twi']
-    labels = ["Oxygenation", "NIR-Perfusion", "THI", "TWI"]
+    labels = [
+        "Oxygenation",
+        "NIR-Perfusion",
+        "THI",
+        "TWI"
+    ]
 
     fig = plt.figure()
     fig.set_size_inches(10, 8)
@@ -99,14 +104,14 @@ def main():
 
     param = tissue.get_solution(unpack=True, clip=False)
     keys = ['oxy', 'nir', 'thi', 'twi']
-
+    prefix = "tivita_"
     fig = plt.figure()
     fig.set_size_inches(12, 8)
     fig.patch.set_visible(False)
     for i, key in enumerate(keys):
         ax = fig.add_subplot(2, 2, i+1)
         ax.axis('off')
-        pos = plt.imshow(param[key], cmap=cmap, vmin=0, vmax=1)
+        pos = plt.imshow(param[prefix + key], cmap=cmap, vmin=0, vmax=1)
         fig.colorbar(pos, ax=ax)
         ax.set_title(key.upper())
 

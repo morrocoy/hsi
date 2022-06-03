@@ -70,13 +70,14 @@ def main():
     cmap = cm.tivita()
 
     param = tissue.get_solution(unpack=True, clip=False)
+    prefix = "lipids_"
+    keys = ['li0', 'li1', 'li2', 'li3']
     labels = [
         "Fat Angle across 900-920 nm",
         "Fat index 1: NDI 925/960 nm",
         "Fat index 2: NDI 925/875 nm",
         "Fat 2nd Derivative @ 925 nm",
     ]
-    keys = ['li0', 'li1', 'li2', 'li3']
 
     fig = plt.figure()
     # fig.set_size_inches(12, 8)
@@ -84,7 +85,11 @@ def main():
     for i, key in enumerate(keys):
         ax = fig.add_subplot(2, 2, i+1, xticks = [], yticks = [])
         # ax.axis('off')
-        pos = plt.imshow(param[key], cmap=cmap, vmin=0, vmax=1)
+        # if key == "li0":
+        pos = plt.imshow(param[prefix + key], cmap=cmap, vmin=-20, vmax=85)
+        # else:
+        # pos = plt.imshow(param[prefix + key], cmap=cmap, vmin=0, vmax=1)
+
         # fig.colorbar(pos, ax=ax)
         # ax.set_title(key.upper())#, fontsize=14)
         ax.set_title(labels[i])  # , fontsize=14)

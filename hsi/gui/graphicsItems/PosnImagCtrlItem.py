@@ -47,7 +47,7 @@ class QPosnImagCtrlConfigWidget(QtWidgets.QWidget):
         if labels is not None:
             self.selectImageComboBox.addItems(labels)
             self.selectImageComboBox.setCurrentText(labels[0])
-        self.selectImageComboBox.setMinimumWidth(120)
+        self.selectImageComboBox.setMinimumWidth(150)
         self.mainLayout.addWidget(self.selectImageComboBox)
         self.mainLayout.addStretch()
 

@@ -21,6 +21,7 @@ if CONFIG_OPTIONS['enableGUI']:
     __all__ = [
         "InfiniteLine",
         "InfLineLabel",
+        "ColorBarItem",
         "RegnPlotCtrlItem",
         "BaseImagCtrlItem",
         "HistImagCtrlItem",

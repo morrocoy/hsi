@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Apr 21 14:45:53 2021
+Created on Fri May 27 14:45:53 2022
 
 @author: kpapke
 
@@ -30,6 +30,7 @@ def plot_params(analysis, which="last"):
     cmap = cm.tivita()
     keys = ['hhb', 'ohb', 'wat', 'fat', 'mel']
 
+    prefix = analysis.prefix
     params = analysis.get_solution(which=which, unpack=True, clip=True)
 
     if which == "last":
@@ -39,13 +40,17 @@ def plot_params(analysis, which="last"):
             ax = fig.add_subplot(len(keys), 1, i + 1)
             ax.axis('off')
             if key in ('blo', 'ohb', 'hhb', 'mel'):
-                pos = plt.imshow(params["%s" % key], cmap=cmap, vmin=0, vmax=0.05)
+                pos = plt.imshow(params[prefix + key], cmap=cmap, vmin=0,
+                                 vmax=0.05)
             elif key in ('oxy', 'fat'):
-                pos = plt.imshow(params["%s" % key], cmap=cmap, vmin=0, vmax=1)
+                pos = plt.imshow(params[prefix + key], cmap=cmap, vmin=0,
+                                 vmax=1)
             elif key == 'wat':
-                pos = plt.imshow(params["%s" % key], cmap=cmap, vmin=0, vmax=1.6)
+                pos = plt.imshow(params[prefix + key], cmap=cmap, vmin=0,
+                                 vmax=1.6)
             else:
-                pos = plt.imshow(params["%s" % key], cmap=cmap, vmin=0, vmax=1.)
+                pos = plt.imshow(params[prefix + key], cmap=cmap, vmin=0,
+                                 vmax=1.)
             fig.colorbar(pos, ax=ax)
             ax.set_title(keys[i % len(keys)])
         plt.show()
@@ -58,17 +63,17 @@ def plot_params(analysis, which="last"):
                 ax = fig.add_subplot(len(keys), 3, j + 3 * i + 1)
                 ax.axis('off')
                 if key in ('blo', 'ohb', 'hhb', 'mel'):
-                    pos = plt.imshow(params["%s_%d" % (key, j)], cmap=cmap,
-                                     vmin=0, vmax=0.05)
+                    pos = plt.imshow(params["%s%s_%d" % (prefix, key, j)],
+                                     cmap=cmap, vmin=0, vmax=0.05)
                 elif key in ('oxy', 'fat'):
-                    pos = plt.imshow(params["%s_%d" % (key, j)], cmap=cmap,
-                                     vmin=0, vmax=1)
+                    pos = plt.imshow(params["%s%s_%d" % (prefix, key, j)],
+                                     cmap=cmap, vmin=0, vmax=1)
                 elif key == 'wat':
-                    pos = plt.imshow(params["%s_%d" % (key, j)], cmap=cmap,
-                                     vmin=0, vmax=1.6)
+                    pos = plt.imshow(params["%s%s_%d" % (prefix, key, j)],
+                                     cmap=cmap, vmin=0, vmax=1.6)
                 else:
-                    pos = plt.imshow(params["%s_%d" % (key, j)], cmap=cmap,
-                                     vmin=0, vmax=1.)
+                    pos = plt.imshow(params["%s%s_%d" % (prefix, key, j)],
+                                     cmap=cmap, vmin=0, vmax=1.)
                 fig.colorbar(pos, ax=ax)
                 ax.set_title(keys[i % len(keys)])
 
@@ -92,6 +97,7 @@ def test_mc_simulations():
     analysis.set_var_bounds("mel", [0, 0.20])
 
     analysis.prepare_ls_problem()
+    prefix = analysis.prefix
 
     analysis.set_roi([520e-9, 995e-9])
     analysis.fit(method='bvls_f')
@@ -101,21 +107,21 @@ def test_mc_simulations():
 
     param = analysis.get_solution(which="last", unpack=True, clip=True)
     spec_0 = analysis.model()[:, index]
-    print(' '.join(["%s = %f" % (key, param[key][index])
+    print(' '.join(["%s = %f" % (key, param[prefix + key][index])
                     for key in ["hhb", "ohb", "wat", "fat", "mel"]]))
 
     analysis.set_roi([520e-9, 600e-9])
     analysis.fit(method='bvls_f')
     spec_1 = analysis.model()[:, index]
     param = analysis.get_solution(which="last", unpack=True, clip=True)
-    print(' '.join(["%s = %f" % (key, param[key][index])
+    print(' '.join(["%s = %f" % (key, param[prefix + key][index])
                     for key in ["hhb", "ohb", "wat", "fat", "mel"]]))
 
     analysis.set_roi([700e-9, 800e-9])
     analysis.fit(method='bvls_f')
     spec_2 = analysis.model()[:, index]
     param = analysis.get_solution(which="last", unpack=True, clip=True)
-    print(' '.join(["%s = %f" % (key, param[key][index])
+    print(' '.join(["%s = %f" % (key, param[prefix + key][index])
                     for key in ["hhb", "ohb", "wat", "fat", "mel"]]))
 
 
@@ -124,8 +130,9 @@ def test_mc_simulations():
     # print(param.keys())
 
     for i in range(3):
-        print(' '.join(["%s = %f" % (key, param["%s_%d" % (key, i)][index])
-                        for key in ["hhb", "ohb", "wat", "fat", "mel"]]))
+        print(' '.join(
+            ["%s = %f" % (key, param["%s%s_%d" % (prefix, key, i)][index])
+             for key in ["hhb", "ohb", "wat", "fat", "mel"]]))
 
     # test plots
     fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(4.5, 7))
@@ -224,6 +231,7 @@ def test_hsimage():
     analysis.set_var_bounds("mel", [0, 0.20])
 
     analysis.prepare_ls_problem()
+    prefix = analysis.prefix
 
     analysis.set_roi([520e-9, 995e-9])
     analysis.fit(method='bvls_f', mask=mask)
@@ -234,7 +242,7 @@ def test_hsimage():
 
     param_0 = analysis.get_solution(which="last", unpack=True, clip=True)
     spec_0 = analysis.model()[:, row, col]
-    print(' '.join(["%s = %f" % (key, param_0[key][row, col])
+    print(' '.join(["%s = %f" % (key, param_0[prefix + key][row, col])
                     for key in ["hhb", "ohb", "wat", "fat", "mel"]]))
 
     analysis.set_roi([520e-9, 600e-9])
@@ -242,7 +250,7 @@ def test_hsimage():
     plot_params(analysis, which="last")
     param_1 = analysis.get_solution(which="last", unpack=True, clip=True)
     spec_1 = analysis.model()[:, row, col]
-    print(' '.join(["%s = %f" % (key, param_1[key][row, col])
+    print(' '.join(["%s = %f" % (key, param_1[prefix + key][row, col])
                     for key in ["hhb", "ohb", "wat", "fat", "mel"]]))
 
 
@@ -251,7 +259,7 @@ def test_hsimage():
     plot_params(analysis, which="last")
     spec_2 = analysis.model()[:, row, col]
     param_2 = analysis.get_solution(which="last", unpack=True, clip=True)
-    print(' '.join(["%s = %f" % (key, param_2[key][row, col])
+    print(' '.join(["%s = %f" % (key, param_2[prefix + key][row, col])
                     for key in ["hhb", "ohb", "wat", "fat", "mel"]]))
 
     plot_params(analysis, which="all")
@@ -259,21 +267,25 @@ def test_hsimage():
     specs = analysis.model("all")
 
     for i in range(3):
-        print(' '.join(["%s = %f" % (key, params["%s_%d" % (key, i)][row, col])
-                        for key in ["hhb", "ohb", "wat", "fat", "mel"]]))
+        print(' '.join(
+            ["%s = %f" % (key, params["%s%s_%d" % (prefix, key, i)][row, col])
+             for key in ["hhb", "ohb", "wat", "fat", "mel"]]))
 
     keys = ['hhb', 'ohb', 'wat', 'fat', 'mel']
     for i, key in enumerate(keys):
-        diff_0 = np.max(np.abs(params["%s_%d" % (key, 2)] - param_0[key]))
-        diff_1 = np.max(np.abs(params["%s_%d" % (key, 1)] - param_1[key]))
-        diff_2 = np.max(np.abs(params["%s_%d" % (key, 0)] - param_2[key]))
+        diff_0 = np.max(np.abs(
+            params["%s%s_%d" % (prefix, key, 2)] - param_0[prefix + key]))
+        diff_1 = np.max(np.abs(
+            params["%s%s_%d" % (prefix, key, 1)] - param_1[prefix + key]))
+        diff_2 = np.max(np.abs(
+            params["%s%s_%d" % (prefix, key, 0)] - param_2[prefix + key]))
         print ("diff %s: %f %f %f" % (key, diff_0, diff_1, diff_2))
 
 
 def main():
     start = timer()
     test_mc_simulations()
-    # test_hsimage()
+    test_hsimage()
     print("Elapsed time: %f sec" % (timer() - start))
 
 

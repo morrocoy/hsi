@@ -48,9 +48,10 @@ PARAM_CONFIG = {
     'hhb': "Deoxyhemoglobin",
     'ohb': "Oxyhemoglobin",
     'met': "Methemoglobin",
-    'nir': "NIR",
-    'thi': "THI",
-    'twi': "TWI",
+    'tivita_oxy': "Oxygenation (TIVITA)",
+    'tivita_nir': "NIR (TIVITA)",
+    'tivita_thi': "THI (TIVITA)",
+    'tivita_twi': "TWI (TIVITA)",
 }
 
 
