@@ -8,12 +8,14 @@ from .hs_cofit import HSCoFit
 # from .hs_cofit_sequence import HSCoFitSequence
 from .hs_open_tivita import HSOpenTivita
 from .hs_lipids import HSLipids
+from .hs_oxygen import HSOxygen
 from .hs_blood_vessel import HSBloodVessel
 
 __all__ = [
     "HSBaseAnalysis",
     "HSCoFit",
     "HSLipids",
+    "HSOxygen",
     "HSBloodVessel",
     "HSOpenTivita",
 ]

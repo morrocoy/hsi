@@ -65,12 +65,19 @@ class HSLipids(HSBaseAnalysis):
         """
         super(HSLipids, self).__init__(spectra, wavelen, hsformat)
         self.prefix = "lipids_"
-        self.keys = ['lipids_li0', 'lipids_li1', 'lipids_li2', 'lipids_li3']
+        self.keys = ['lipids_li0',
+                     'lipids_li1',
+                     'lipids_li2',
+                     'lipids_li3',
+                     'lipids_li4',
+                     'lipids_li5']
         self.labels = [
             "Fat Angle across 900-920 nm",
-            "Fat index 1: NDI 925/960 nm",
-            "Fat index 2: NDI 925/875 nm",
+            "Fat Index 1: NDI 925/960 nm",
+            "Fat Index 2: NDI 925/875 nm",
             "Fat 2nd Derivative @ 925 nm",
+            "Fat abs. Angle 900-920 nm",
+            "Fat inv. Angle 900-920 nm",
         ]
 
     def evaluate(self, mask=None):
@@ -96,12 +103,14 @@ class HSLipids(HSBaseAnalysis):
             # number of wavelengths
             m = len(self.spectra)
 
+
             # unfiltered target vector in a reshaped 2-dimensional hsformat
             spectra = self.spectra.reshape(m, -1)
 
             # filtered target vector in a reshaped 2-dimensional hsformat
             intensity = convert(
                 HSIntensity, self.hsformat, self.spectra, wavelen)
+
             spectra_fat = -numpy.log(numpy.abs(intensity))
             spectra_fat[spectra_fat == numpy.inf] = 0
             spectra_fat = ndimage.uniform_filter(spectra_fat, size=7)
@@ -119,9 +128,9 @@ class HSLipids(HSBaseAnalysis):
             index_mask = self._ravel_mask(mask)
 
             m, n = spectra.shape  # number wavelengths, spectra
-            self._anaVarVector = numpy.zeros((4, n))
-            self._anaVarScales = numpy.ones((4, n))
-            self._anaVarBounds = numpy.zeros((4, 2))
+            self._anaVarVector = numpy.zeros((6, n))
+            self._anaVarScales = numpy.ones((6, n))
+            self._anaVarBounds = numpy.zeros((6, 2))
             self._anaVarBounds[:, 1] = 1
 
             b = spectra_fat[:, index_mask]
@@ -134,10 +143,13 @@ class HSLipids(HSBaseAnalysis):
                 b, wavelen)
             self._anaVarVector[3, index_mask] = self.evaluate_lipid_3(
                 b, wavelen)
-
+            self._anaVarVector[4, index_mask] = self.evaluate_lipid_4(
+                b, wavelen)
+            self._anaVarVector[5, index_mask] = self.evaluate_lipid_5(
+                b, wavelen)
     @staticmethod
-    def evaluate_lipid_4(spectra, wavelen, reg0=None):
-        # method 1: Fat angle index
+    def evaluate_lipid_0(spectra, wavelen, reg0=None):
+        # method 0: Fat angle index
         if reg0 is None:
             reg0 = [900e-9, 915e-9]
 
@@ -155,7 +167,7 @@ class HSLipids(HSBaseAnalysis):
 
     @staticmethod
     def evaluate_lipid_1(spectra, wavelen, reg0=None):
-        # method 2: ratio index at 925 nm and 965 nm
+        # method 1: ratio index at 925 nm and 965 nm
         if reg0 is None:
             reg0 = [925e-9, 960e-9]
 
@@ -173,7 +185,7 @@ class HSLipids(HSBaseAnalysis):
 
     @staticmethod
     def evaluate_lipid_2(spectra, wavelen, reg0=None):
-        # method 3: ratio index at 925 nm and 875 nm
+        # method 2: ratio index at 925 nm and 875 nm
         if reg0 is None:
             reg0 = [875e-9, 925e-9]
 
@@ -191,7 +203,7 @@ class HSLipids(HSBaseAnalysis):
 
     @staticmethod
     def evaluate_lipid_3(spectra, wavelen, reg0=None):
-        # method 4: second derivative at 925 nm
+        # method 3: second derivative at 925 nm
         if reg0 is None:
             reg0 = [925e-9, 925e-9]
 
@@ -211,8 +223,8 @@ class HSLipids(HSBaseAnalysis):
         return ratio.astype('float64')
 
     @staticmethod
-    def evaluate_lipid_0(spectra, wavelen, reg0=None):
-        # method 5: Fat angle index with absolute scaling
+    def evaluate_lipid_4(spectra, wavelen, reg0=None):
+        # method 4: Fat angle index with absolute scaling
         if reg0 is None:
             reg0 = [900e-9, 915e-9]
 
@@ -227,6 +239,28 @@ class HSLipids(HSBaseAnalysis):
         ratio[ratio < -20] = -19
         ratio[ratio > 85] = 85
         ratio[ratio == 0] = -20
-        # ratio = rescale_intensity(ratio, (-20, 85), (0, 1))
+        ratio = rescale_intensity(ratio, (-20, 85), (0, 1))
+
+        return ratio.astype('float64')
+
+    @staticmethod
+    def evaluate_lipid_5(spectra, wavelen, reg0=None):
+        # method 5: Inverse fat angle index as water index
+        # using negative angle of method 5 and different clipping
+        if reg0 is None:
+            reg0 = [900e-9, 915e-9]
+
+        idx0 = numpy.where((wavelen >= reg0[0]) * (wavelen <= reg0[1]))[0]
+        # val0 = numpy.mean(spectra[idx0], axis=0, dtype=numpy.float64)
+
+        y1 = spectra[idx0]*2000
+        x1 = range(len(idx0))
+
+        ratio = numpy.arctan2(y1[-1] - y1[0], x1[-1] - x1[0])
+        ratio = numpy.rad2deg(ratio)
+        ratio[ratio < -15] = -14
+        ratio[ratio > 83] = 83
+        ratio[ratio == 0] = -15
+        ratio = rescale_intensity(ratio, (-15, 83), (0, 1))
 
         return ratio.astype('float64')

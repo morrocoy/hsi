@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb  2 13:44:51 2022
+Created on Tue Jun  7 12:20:00 2022
 
 @author: kpapke
 """
@@ -15,11 +15,8 @@ import hsi
 from hsi import cm
 from hsi import HSImage
 
-# from hsi.analysis import HSOpenTivita
-# from hsi import HSAbsorption
-
-from hsi.analysis import HSLipids
-from hsi import HSIntensity
+from hsi.analysis import HSOxygen
+from hsi import HSIntensity, HSAbsorption
 
 from hsi.log import logmanager
 
@@ -49,7 +46,7 @@ def main():
 
     # Tivita algorithms
     spectra = hsimage.spectra  # raw spectral data
-    tissue = HSLipids(hsformat=HSIntensity)
+    tissue = HSOxygen(hsformat=HSIntensity)
     tissue.set_data(spectra, wavelen, hsformat=HSIntensity)
 
 
@@ -70,27 +67,15 @@ def main():
     cmap = cm.tivita()
 
     param = tissue.get_solution(unpack=True, clip=False)
-    prefix = "lipids_"
-    keys = ['li0', 'li1', 'li2', 'li3', 'li4', 'li5']
-    labels = [
-        "Fat Angle across 900-920 nm",
-        "Fat Index 1: NDI 925/960 nm",
-        "Fat Index 2: NDI 925/875 nm",
-        "Fat 2nd Derivative @ 925 nm",
-        "Fat abs. Angle 900-920 nm",
-        "Fat inv. Angle 900-920 nm",
-    ]
+    keys = tissue.keys
+    labels = tissue.labels
 
     fig = plt.figure()
-    fig.set_size_inches(6, 8)
+    # fig.set_size_inches(6, 8)
     # fig.patch.set_visible(False)
     for i, key in enumerate(keys):
-        ax = fig.add_subplot(3, 2, i+1, xticks = [], yticks = [])
-        # ax.axis('off')
-        # if key == "li0":
-        #     pos = plt.imshow(param[prefix + key], cmap=cmap, vmin=-20, vmax=85)
-        # else:
-        pos = plt.imshow(param[prefix + key], cmap=cmap, vmin=0, vmax=1)
+        ax = fig.add_subplot(1, 1, i+1, xticks = [], yticks = [])
+        pos = plt.imshow(param[key], cmap=cmap, vmin=0, vmax=1)
 
         # fig.colorbar(pos, ax=ax)
         # ax.set_title(key.upper())#, fontsize=14)
@@ -101,7 +86,7 @@ def main():
         'pad_inches': 0.03,
         'dpi': 300,  # high resolution png file
     }
-    file_path = os.path.join(pict_path, "fat_index_values")
+    file_path = os.path.join(pict_path, "oxy_index_values")
     plt.savefig(file_path + ".png", format="png", **options)
     plt.show()
 

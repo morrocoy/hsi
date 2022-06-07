@@ -35,6 +35,7 @@ from hsi.gui import RegnPlotCtrlItem
 # from hsi.analysis import HSOpenTivita
 from hsi.analysis import HSTivita
 from hsi.analysis import HSLipids
+from hsi.analysis import HSOxygen
 from hsi.analysis import HSCoFit
 
 from hsi.log import logmanager
@@ -50,14 +51,18 @@ PARAM_CONFIG = {
     'tivita_nir': "NIR (TIVITA)",
     'tivita_thi': "THI (TIVITA)",
     'tivita_twi': "TWI (TIVITA)",
-    'lipids_li0': "LPI Angle 900-915nm",
-    'lipids_li1': "LPI Ratio 925-960nm",
-    'lipids_li2': "LPI Ratio 875-925nm",
-    'lipids_li3': "LPI 2nd Derv. 925nm",
+    'oxygen_ox0': "OXY Angle 630-710nm",  # Moussa's oxygen index
+    'lipids_li0': "LPI Angle 900-915nm",  # Moussa's previous fat indices
+    'lipids_li1': "LPI Ratio 925-960nm",  # Moussa's previous fat indices
+    'lipids_li2': "LPI Ratio 875-925nm",  # Moussa's previous fat indices
+    'lipids_li3': "LPI 2nd Derv. 925nm",  # Moussa's previous fat indices
+    'lipids_li4': "LPI abs. Angle 900-920 nm",  # Moussa's absolute fat index
+    'lipids_li5': "LPI inv. Angle 900-920 nm",  # Moussa's absolute water index
     'cofit_blo_0': "Blood (Fit 600-995nm)",
     'cofit_oxy_0': "OXY (Fit 600-995nm)  ",
     'cofit_wat_0': "Water (Fit 600-995nm)",
-    'cofit_fat_0': "Fat (Fit 600-995nm)",
+    'cofit_wob_0': "Wat/Blo (Fit 600-995nm)",
+    # 'cofit_fat_0': "Fat (Fit 600-995nm)",
     'cofit_mel_0': "Melanin (Fit 600-995nm)",
     'cofit_hhb_0': "DeoxyHb (Fit 600-995nm)",
     'cofit_ohb_0': "OxyHb (Fit 600-995nm)",
@@ -65,7 +70,8 @@ PARAM_CONFIG = {
     'cofit_blo_1': "Blood (Fit 520-600nm)",
     'cofit_oxy_1': "OXY (Fit 520-600nm)  ",
     'cofit_wat_1': "Water (Fit 520-600nm)",
-    'cofit_fat_1': "Fat (Fit 520-600nm)",
+    # 'cofit_wob_1': "Wat/Blo (Fit 520-600nm)",
+    # 'cofit_fat_1': "Fat (Fit 520-600nm)",
     'cofit_mel_1': "Melanin (Fit 520-600nm)",
     'cofit_hhb_1': "DeoxyHb (Fit 520-600nm)",
     'cofit_ohb_1': "OxyHb (Fit 520-600nm)",
@@ -73,7 +79,8 @@ PARAM_CONFIG = {
     'cofit_blo_2': "Blood (Fit 520-995nm)",
     'cofit_oxy_2': "OXY (Fit 520-995nm)  ",
     'cofit_wat_2': "Water (Fit 520-995nm)",
-    'cofit_fat_2': "Fat (Fit 520-995nm)",
+    # 'cofit_wob_2': "Wat/Blo (Fit 520-995nm)",
+    # 'cofit_fat_2': "Fat (Fit 520-995nm)",
     'cofit_mel_2': "Melanin (Fit 520-995nm)",
     'cofit_hhb_2': "DeoxyHb (Fit 520-995nm)",
     'cofit_ohb_2': "OxyHb (Fit 520-995nm)",
@@ -282,6 +289,9 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
         # initiate Moussa's lipid index analysis module
         self.hsLipidsAnalysis = HSLipids(hsformat=HSIntensity)
 
+        # initiate Moussa's oxygen index analysis module
+        self.hsOxygenAnalysis = HSOxygen(hsformat=HSIntensity)
+
         # initiate component fit analysis module
         self.hsCoFitAnalysis = HSCoFit(hsformat=HSAbsorption)
         self.hsCoFitAnalysis.loadtxt("basevectors_2_17052022.txt", mode='all')
@@ -450,6 +460,10 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
             self.spectra, self.wavelen, hsformat=hsformat)
         self.hsLipidsAnalysis.evaluate(mask=mask)
 
+        self.hsOxygenAnalysis.set_data(
+            self.spectra, self.wavelen, hsformat=hsformat)
+        self.hsOxygenAnalysis.evaluate(mask=mask)
+
         self.hsCoFitAnalysis.set_data(
             self.fspectra, self.wavelen, hsformat=hsformat)
         self.hsCoFitAnalysis.prepare_ls_problem()
@@ -484,21 +498,29 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
         # update index plots and spectral viewer
         param = {}
         param.update(self.hsTivitaAnalysis.get_solution(unpack=True))
+        param.update(self.hsOxygenAnalysis.get_solution(unpack=True))
         param.update(self.hsLipidsAnalysis.get_solution(unpack=True))
         param.update(
             self.hsCoFitAnalysis.get_solution(which="all", unpack=True))
 
         # additional parameter combinations
         prefix = self.hsCoFitAnalysis.prefix
-        for i in range(2):
+        for i in range(3):
             param["%sblo_%d" % (prefix, i)] = \
                 param["%shhb_%d" % (prefix, i)] + param[
                     "%sohb_%d" % (prefix, i)]
+            idx = np.nonzero(param["%sblo_%d" % (prefix, i)])
+            # oxy = ohb / blood
             param["%soxy_%d" % (prefix, i)] = np.zeros(
                 param["%sblo_%d" % (prefix, i)].shape)
-            idx = np.nonzero(param["%sblo_%d" % (prefix, i)])
             param["%soxy_%d" % (prefix, i)][idx] = \
                 param["%sohb_%d" % (prefix, i)][idx] / param[
+                    "%sblo_%d" % (prefix, i)][idx]
+            # water / blood
+            param["%swob_%d" % (prefix, i)] = np.zeros(
+                param["%sblo_%d" % (prefix, i)].shape)
+            param["%swob_%d" % (prefix, i)][idx] = \
+                param["%swat_%d" % (prefix, i)][idx] / param[
                     "%sblo_%d" % (prefix, i)][idx]
 
         keys = [key for key in PARAM_CONFIG.keys() if key in param.keys()]
