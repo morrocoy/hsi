@@ -14,7 +14,7 @@ import sys
 import logging
 
 import numpy as np
-from pyqtgraph.Qt import QtWidgets
+from pyqtgraph.Qt import QtWidgets, QtCore, QtGui
 import pyqtgraph as pg
 
 import hsi
@@ -23,8 +23,9 @@ from hsi import HSAbsorption, HSIntensity
 
 from hsi.gui import QHSImageConfigWidget
 from hsi.gui import BaseImagCtrlItem
-from hsi.gui import HistImagCtrlItem
 from hsi.gui import PosnImagCtrlItem
+from hsi.gui import HistImagCtrlItem
+from hsi.gui import RegnImagCtrlItem
 from hsi.gui import RegnPlotCtrlItem
 
 from hsi.analysis import HSLipids
@@ -36,10 +37,12 @@ logger = logmanager.getLogger(__name__)
 
 PARAM_CONFIG = {
     'rgb': "RGB Image",
-    'lipids_li0': "LPI Angle 900-915nm",
-    'lipids_li1': "LPI Ratio 925-960nm",
-    'lipids_li2': "LPI Ratio 875-925nm",
-    'lipids_li3': "LPI 2nd Derv. 925nm",
+    'lipids_li0': "LPI Angle 900-915nm",  # Moussa's previous fat indices
+    'lipids_li1': "LPI Ratio 925-960nm",  # Moussa's previous fat indices
+    'lipids_li2': "LPI Ratio 875-925nm",  # Moussa's previous fat indices
+    'lipids_li3': "LPI 2nd Derv. 925nm",  # Moussa's previous fat indices
+    'lipids_li4': "LPI abs. Angle 900-920nm",  # Moussa's absolute fat index
+    'lipids_li5': "LPI inv. Angle 900-920nm",  # Moussa's absolute water index
 }
 
 class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
@@ -60,7 +63,8 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
             HistImagCtrlItem("Image Control Item 2", cbarWidth=10),
             HistImagCtrlItem("Image Control Item 3", cbarWidth=10),
             HistImagCtrlItem("Image Control Item 4", cbarWidth=10),
-            HistImagCtrlItem("Image Control Item 5", cbarWidth=10),
+            RegnImagCtrlItem("Image Control Item 5", cbarWidth=10),
+            # RegnImagCtrlItem("Image Control Item 6", cbarWidth=10),
         ]
 
         self.spectViewer = RegnPlotCtrlItem(
@@ -79,7 +83,14 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
         }
 
         # config widgets
-        self.hsImageConfig = QHSImageConfigWidget()
+        if not getattr(sys, 'frozen', False):
+            import os.path
+            data_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "..", "data")
+            self.hsImageConfig = QHSImageConfigWidget(dir=data_path)
+        else:
+            self.hsImageConfig = QHSImageConfigWidget()
+        # self.hsImageConfig = QHSImageConfigWidget()
         # self.hsComponentFitConfig = QHSComponentFitConfigWidget(
         #     hsformat=HSAbsorption)
         # self.hsComponentFitConfig.setEnabled(False)
@@ -129,23 +140,56 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
         self.hsImageConfig.setFormat(HSAbsorption)
         self.hsImageConfig.imageFilterTypeComboBox.setCurrentIndex(0)
 
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(self.hsImageConfig)
+        layoutConfig = QtWidgets.QVBoxLayout()
+        layoutConfig.addWidget(self.hsImageConfig)
 
         line = QtWidgets.QFrame()
         line.setFrameShape(QtWidgets.QFrame.HLine)
         line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        layout.addWidget(line)
+        layoutConfig.addWidget(line)
 
-        # layout.addWidget(self.hsComponentFitConfig)
+        # output for roi paramters ............................................
+        layoutROIParam1 = QtWidgets.QFormLayout()
+        layoutROIParam1.setContentsMargins(5, 10, 5, 10)  # ltrb
+        layoutROIParam1.setSpacing(3)
+
+        labelROIParam = QtWidgets.QLabel("ROI Mean Values")
+        labelROIParam.setStyleSheet(
+            "border: 0px;"
+            "font: bold;"
+        )
+        labelROIParam.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom)
+        labelROIParam.setMaximumWidth(220)
+        layoutROIParam1.addRow(labelROIParam)
+        layoutConfig.addLayout(layoutROIParam1)
+
+        # self.textBoxROIParam = QtWidgets.QLineEdit()
+        self.textBoxROIParam = QtWidgets.QTextEdit()
+        # self.textBoxROIParam.setStyleSheet(
+        #     "font: Monospace;"
+        # )
+        # self.textBoxROIParam.setFont(QtGui.QFont('Courier', 10))
+        self.textBoxROIParam.setFont(QtGui.QFont('Monospace', 10))
+        self.textBoxROIParam.setMaximumWidth(210)
+        self.textBoxROIParam.setMinimumWidth(210)
+        self.textBoxROIParam.setMinimumHeight(350)
+        self.textBoxROIParam.setMaximumHeight(500)
+        # layoutROIParam.addRow(self.textBoxROIParam)
+
+        layoutROIParam2 = QtWidgets.QHBoxLayout()
+        layoutROIParam2.setContentsMargins(5, 1, 3, 10)
+        layoutROIParam2.addWidget(self.textBoxROIParam)
+        # layoutROIParam2.setAlignment(QtCore.Qt.AlignCenter)
+        layoutConfig.addLayout(layoutROIParam2)
+
 
         # line = QtWidgets.QFrame()
         # line.setFrameShape(QtWidgets.QFrame.HLine)
         # line.setFrameShadow(QtWidgets.QFrame.Sunken)
         # layout.addWidget(line)
 
-        layout.addStretch()
-        self.mainLayout.addLayout(layout)
+        layoutConfig.addStretch()
+        self.mainLayout.addLayout(layoutConfig)
 
         # connect signals
 
@@ -159,6 +203,8 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
         # self.spectViewer.sigRegionChanged.connect(self.onRegionChanged)
         self.spectViewer.sigRegionChangeFinished.connect(
             self.onRegionChangeFinished)
+
+        self.imagCtrlItems[-1].sigROIMaskChanged.connect(self.updateROIParams)
 
     # def onRegionChanged(self, item):
     #     reg = item.getRegion()
@@ -274,6 +320,22 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
         self.spectViewer.setRegion(reg)
         self.spectViewer.blockSignals(False)
         self.updateSpectralView()
+
+    def updateROIParams(self, imagCtrlItem, mask):
+        image_count = 1
+        roi_param = {}
+        param = self.hsLipidsAnalysis.get_solution(unpack=True)
+        for key in param.keys():
+            m = mask.reshape(-1)
+            m_idx = np.ix_(range(image_count), m == 1)
+            p = param[key].reshape(image_count, -1)
+            roi_param[key] = np.mean(p[m_idx], axis=1)
+
+        # print(roi_param)
+        msg = "\n".join([
+            "%-26s %5.3f" % (PARAM_CONFIG[key]+":", roi_param[key])
+            for key in roi_param.keys()])
+        self.textBoxROIParam.setText(msg)
 
     def updateSpectralView(self):
         """Retrieve hyper spectral data at current cursor position

@@ -7,6 +7,7 @@ from .. import CONFIG_OPTIONS
 
 if CONFIG_OPTIONS['enableGUI']:
 
+    from .graphicsItems.ImageItem import ImageItem
     from .graphicsItems.InfiniteLine import InfiniteLine, InfLineLabel
     from .graphicsItems.ColorBarItem import ColorBarItem
 
@@ -14,11 +15,13 @@ if CONFIG_OPTIONS['enableGUI']:
     from .graphicsItems.BaseImagCtrlItem import BaseImagCtrlItem
     from .graphicsItems.HistImagCtrlItem import HistImagCtrlItem
     from .graphicsItems.PosnImagCtrlItem import PosnImagCtrlItem
+    from .graphicsItems.RegnImagCtrlItem import RegnImagCtrlItem
 
     from .widgets.QHSImageConfigWidget import QHSImageConfigWidget
     from .widgets.QHSCoFitConfigWidget import QHSCoFitConfigWidget
 
     __all__ = [
+        "ImageItem",
         "InfiniteLine",
         "InfLineLabel",
         "ColorBarItem",
@@ -26,6 +29,7 @@ if CONFIG_OPTIONS['enableGUI']:
         "BaseImagCtrlItem",
         "HistImagCtrlItem",
         "PosnImagCtrlItem",
+        "RegnImagCtrlItem",
         "QHSImageConfigWidget",
         "QHSCoFitConfigWidget",
     ]

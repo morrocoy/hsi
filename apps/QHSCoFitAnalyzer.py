@@ -81,11 +81,15 @@ class QHSCoFitAnalyzerWidget(QtWidgets.QWidget):
                 name="fitted spectrum",
                 pen=pg.mkPen(color=(255, 0, 0), width=1))
         }
-        import os.path
-        data_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "..", "data")
+
         # config widgets
-        self.hsImageConfig = QHSImageConfigWidget(dir=data_path)
+        if not getattr(sys, 'frozen', False):
+            import os.path
+            data_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "..", "data")
+            self.hsImageConfig = QHSImageConfigWidget(dir=data_path)
+        else:
+            self.hsImageConfig = QHSImageConfigWidget()
         self.hsCoFitConfig = QHSCoFitConfigWidget(
             hsformat=HSAbsorption)
 

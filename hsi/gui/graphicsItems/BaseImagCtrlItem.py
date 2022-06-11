@@ -8,6 +8,7 @@ from ...bindings.Qt import QtWidgets, QtCore
 from ...log import logmanager
 from ...misc import check_is_an_array, check_class
 
+from .ImageItem import ImageItem
 from .ColorBarItem import ColorBarItem
 from .InfiniteLine import InfiniteLine
 
@@ -35,7 +36,7 @@ class BaseImagCtrlItem(pg.GraphicsWidget):
 
         self.plotItem = pg.PlotItem()
 
-        self.imageItem = pg.ImageItem()
+        self.imageItem = ImageItem()
         self.plotItem.addItem(self.imageItem)
 
         self.cursorX = InfiniteLine(
@@ -70,6 +71,12 @@ class BaseImagCtrlItem(pg.GraphicsWidget):
         self.cursorX.sigPositionChanged.connect(self.cursorPositionChangeEvent)
         self.cursorY.sigPositionChanged.connect(self.cursorPositionChangeEvent)
 
+        self.cursorX.sigLineHovered.connect(self.onCursorHovered)
+        self.cursorY.sigLineHovered.connect(self.onCursorHovered)
+
+    def onCursorHovered(self, ev, state):
+        pass
+    
     def cursorPositionChangeFinishedEvent(self):
         # print(ev.pos())
         self.sigCursorPositionChangeFinished.emit(self)

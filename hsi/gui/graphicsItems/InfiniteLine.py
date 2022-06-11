@@ -36,7 +36,7 @@ class InfiniteLine(GraphicsObject):
     sigDragged = QtCore.Signal(object)
     sigPositionChangeFinished = QtCore.Signal(object)
     sigPositionChanged = QtCore.Signal(object)
-
+    sigLineHovered = QtCore.Signal(object, bool)
 
     def __init__(self, pos=None, angle=90, pen=None, movable=False, bounds=None,
                  hoverPen=None, label=None, labelOpts=None, span=(0, 1), markers=None,
@@ -258,16 +258,18 @@ class InfiniteLine(GraphicsObject):
         if (not ev.isExit()) and self.movable: # and ev.acceptDrags(QtCore.Qt.LeftButton):
             if self.orthogLine is None:
                 self.setMouseHover(True)
+                self.sigLineHovered.emit(ev, True)
             else:
                 state = self.isOrthogonalLineHovered(ev)
                 self.setMouseHover(state)
                 self.orthogLine.setMouseHover(state)
+                self.sigLineHovered.emit(ev, state)
 
         else:
             self.setMouseHover(False)
             if not self.orthogLine is None:
                 self.orthogLine.setMouseHover(False)
-
+            self.sigLineHovered.emit(ev, False)
 
     def isOrthogonalLineHovered(self, ev):
         p = self.mapToParent(ev.pos())

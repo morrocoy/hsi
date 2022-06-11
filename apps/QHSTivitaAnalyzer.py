@@ -92,7 +92,13 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
         }
 
         # config widgets
-        self.hsImageConfig = QHSImageConfigWidget()
+        if not getattr(sys, 'frozen', False):
+            import os.path
+            data_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "..", "data")
+            self.hsImageConfig = QHSImageConfigWidget(dir=data_path)
+        else:
+            self.hsImageConfig = QHSImageConfigWidget()
         # self.hsTivitaAnalysis = HSOpenTivita(hsformat=HSAbsorption)
         self.hsTivitaAnalysis = HSTivita(hsformat=HSIntensity)
 

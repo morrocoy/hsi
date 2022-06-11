@@ -15,7 +15,7 @@ import sys
 import logging
 
 import numpy as np
-from pyqtgraph.Qt import QtWidgets, QtCore
+from pyqtgraph.Qt import QtWidgets, QtCore, QtGui
 
 import pyqtgraph as pg
 
@@ -27,8 +27,9 @@ from hsi.gui import QHSImageConfigWidget
 from hsi.gui import QHSCoFitConfigWidget
 
 from hsi.gui import BaseImagCtrlItem
-from hsi.gui import HistImagCtrlItem
 from hsi.gui import PosnImagCtrlItem
+from hsi.gui import HistImagCtrlItem
+from hsi.gui import RegnImagCtrlItem
 from hsi.gui import RegnPlotCtrlItem
 # from hsi.gui import ColorBarItem
 
@@ -56,10 +57,10 @@ PARAM_CONFIG = {
     'lipids_li1': "LPI Ratio 925-960nm",  # Moussa's previous fat indices
     'lipids_li2': "LPI Ratio 875-925nm",  # Moussa's previous fat indices
     'lipids_li3': "LPI 2nd Derv. 925nm",  # Moussa's previous fat indices
-    'lipids_li4': "LPI abs. Angle 900-920 nm",  # Moussa's absolute fat index
-    'lipids_li5': "LPI inv. Angle 900-920 nm",  # Moussa's absolute water index
+    'lipids_li4': "LPI abs. Angle 900-920nm",  # Moussa's absolute fat index
+    'lipids_li5': "LPI inv. Angle 900-920nm",  # Moussa's absolute water index
     'cofit_blo_0': "Blood (Fit 600-995nm)",
-    'cofit_oxy_0': "OXY (Fit 600-995nm)  ",
+    'cofit_oxy_0': "OXY (Fit 600-995nm)",
     'cofit_wat_0': "Water (Fit 600-995nm)",
     'cofit_wob_0': "Wat/Blo (Fit 600-995nm)",
     # 'cofit_fat_0': "Fat (Fit 600-995nm)",
@@ -227,8 +228,122 @@ class CurveViewItem(pg.GraphicsWidget):
         pass
 
 
+class QHSROIParamWidget(QtWidgets.QWidget):
+    """ Config widget for hyper spectral images
+    """
+    sigValueChanged = QtCore.Signal(object, str)
 
-class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
+    def __init__(self, *args, **kwargs):
+        """ Constructor
+        """
+        parent = kwargs.get('parent', None)
+        super(QHSROIParamWidget, self).__init__(parent=parent)
+
+        if len(args) == 1:
+            kwargs['dir'] = args[0]
+        elif len(args) > 1:
+            raise TypeError("To many arguments {}".format(args))
+
+        self.dir = kwargs.get('dir', None)
+        self.filePath = None
+
+        self.clearButton = QtWidgets.QToolButton(self)
+        self.exportButton = QtWidgets.QToolButton(self)
+        self.dataTextEdit = QtWidgets.QTextEdit(self)
+
+        # configure actions
+        self._setupActions()
+
+        # configure widget views
+        self._setupViews(*args, **kwargs)
+
+    def _setupActions(self):
+        self.clearAction = QtWidgets.QAction(self)
+        self.clearAction.setIconText("Clear")
+        self.clearAction.triggered.connect(self.clearData)
+        self.addAction(self.clearAction)
+
+        self.exportAction = QtWidgets.QAction(self)
+        self.exportAction.setIconText("Export")
+        self.exportAction.triggered.connect(self.exportData)
+        self.addAction(self.exportAction)
+
+        self.clearButton.setDefaultAction(self.clearAction)
+        self.exportButton.setDefaultAction(self.exportAction)
+
+    def _setupViews(self, *args, **kwargs):
+        # self.mainLayout = QtWidgets.QVBoxLayout()
+        self.mainLayout = QtWidgets.QFormLayout()
+        self.mainLayout.setContentsMargins(5, 10, 5, 10) # left, top, right, bottom
+        self.mainLayout.setSpacing(3)
+        self.setLayout(self.mainLayout)
+
+        # file load ..........................................................
+        label = QtWidgets.QLabel("ROI Mean Values")
+        label.setStyleSheet(
+            "border: 0px;"
+            "font: bold;"
+        )
+        label.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom)
+        self.mainLayout.addRow(label)
+
+        # self.dataTextEdit.setFont(QtGui.QFont('Courier', 7))
+        self.dataTextEdit.setFont(QtGui.QFont('Monospace', 8))
+        self.dataTextEdit.setMinimumHeight(350)
+        self.dataTextEdit.setMaximumHeight(600)
+        self.mainLayout.addRow(self.dataTextEdit)
+
+        # self.fileLineEdit.setReadOnly(True)
+        # layout = QtWidgets.QHBoxLayout()
+        # layout.addWidget(self.fileLineEdit)
+        # layout.addWidget(self.exportButton)
+        # self.mainLayout.addRow(layout)
+
+        # filter and reset controls
+        label = QtWidgets.QLabel(self)
+        label.setMinimumHeight(20)
+        label.setStyleSheet("border: 0px;")
+        self.clearButton.setText("Clear")
+        self.exportButton.setText("Export")
+
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(self.clearButton)
+        layout.addWidget(self.exportButton)
+        self.mainLayout.addRow(layout)
+
+    def finalize(self):
+        """ Should be called manually before object deletion
+        """
+        logger.debug("Finalizing: {}".format(self))
+        super(QHSROIParamWidget, self).finalize()
+
+    def clearData(self):
+        """Load hyper spectral image file using a dialog box
+        """
+        logger.debug("Clear ROI Parameter")
+        self.dataTextEdit.setText("")
+        self.sigValueChanged.emit(self, "")
+
+    def exportData(self):
+        """Export content of textbox
+        """
+        filePath, filter = QtWidgets.QFileDialog.getSaveFileName(
+            None, 'Select file:', self.dir)
+
+        logger.debug("Export ROI Parameter to file: {}".format(filePath))
+
+        self.filePath = filePath
+        str = self.dataTextEdit.toPlainText()
+        with open(filePath, "w") as file:
+            file.write(str)
+
+    def setText(self, str):
+        self.dataTextEdit.setText(str)
+        self.sigValueChanged.emit(self, str)
+
+
+class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
 
     def __init__(self, *args, **kwargs):
         QtWidgets.QWidget.__init__(self)
@@ -247,7 +362,7 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
             HistImagCtrlItem("Image Control Item 3", cbarWidth=10),
             HistImagCtrlItem("Image Control Item 4", cbarWidth=10),
             HistImagCtrlItem("Image Control Item 5", cbarWidth=10),
-            HistImagCtrlItem("Image Control Item 6", cbarWidth=10),
+            RegnImagCtrlItem("Image Control Item 6", cbarWidth=10),
         ]
 
         # self.spectViewer = RegnPlotCtrlItem(
@@ -276,11 +391,13 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
         }
 
         # initiate image config widget
-        import os.path
-        data_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "..", "data")
-        self.hsImageConfig = QHSImageConfigWidget(dir=data_path)
-        # self.hsImageConfig = QHSImageConfigWidget()
+        if not getattr(sys, 'frozen', False):
+            import os.path
+            data_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)), "..", "data")
+            self.hsImageConfig = QHSImageConfigWidget(dir=data_path)
+        else:
+            self.hsImageConfig = QHSImageConfigWidget()
 
         # initiate Tivita analysis module
         # self.hsTivitaAnalysis = HSOpenTivita(hsformat=HSAbsorption)
@@ -292,6 +409,9 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
         # initiate Moussa's oxygen index analysis module
         self.hsOxygenAnalysis = HSOxygen(hsformat=HSIntensity)
 
+        # Widget to output mean values over region of interest
+        self.hsROIParam = QHSROIParamWidget()
+
         # initiate component fit analysis module
         self.hsCoFitAnalysis = HSCoFit(hsformat=HSAbsorption)
         self.hsCoFitAnalysis.loadtxt("basevectors_2_17052022.txt", mode='all')
@@ -300,6 +420,9 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
         self.hsCoFitAnalysis.set_var_bounds("wat", [0, 2.00])
         self.hsCoFitAnalysis.set_var_bounds("met", [0, 0.10])
         self.hsCoFitAnalysis.set_var_bounds("mel", [0, 0.20])
+
+        self.param = {}
+        self.roiparam = {}
 
         # set view
         self._setupViews(*args, **kwargs)
@@ -356,24 +479,21 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
         self.hsImageConfig.setFormat(HSAbsorption)
         # self.hsImageConfig.imageFilterTypeComboBox.setCurrentIndex(0)
         self.hsImageConfig.imageFilterTypeComboBox.setCurrentIndex(1)
+        self.hsROIParam.setMaximumWidth(220)
+        layoutConfig = QtWidgets.QVBoxLayout()
+        layoutConfig.addWidget(self.hsImageConfig)
 
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(self.hsImageConfig)
-
+        # separation line
         line = QtWidgets.QFrame()
         line.setFrameShape(QtWidgets.QFrame.HLine)
         line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        layout.addWidget(line)
+        layoutConfig.addWidget(line)
 
-        # layout.addWidget(self.hsComponentFitConfig)
+        # output for roi paramters
+        layoutConfig.addWidget(self.hsROIParam)
 
-        # line = QtWidgets.QFrame()
-        # line.setFrameShape(QtWidgets.QFrame.HLine)
-        # line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        # layout.addWidget(line)
-
-        layout.addStretch()
-        self.mainLayout.addLayout(layout)
+        layoutConfig.addStretch()
+        self.mainLayout.addLayout(layoutConfig)
 
         # connect signals
 
@@ -383,10 +503,16 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
             item.sigCursorPositionChanged.connect(self.updateCursorPosition)
 
         self.hsImageConfig.sigValueChanged.connect(self.setHSImage)
-
+        self.imagCtrlItems[-1].sigROIMaskChanged.connect(self.updateROIParams)
         # self.spectViewer.sigRegionChanged.connect(self.onRegionChanged)
         # self.spectViewer.sigRegionChangeFinished.connect(
         #     self.onRegionChangeFinished)
+
+        self.hsROIParam.sigValueChanged.connect(self.onROIParamValueChanged)
+
+    def onROIParamValueChanged(self, textEdit, str):
+        if str=="":
+            self.imagCtrlItems[-1].clearROIMask()
 
     # def onRegionChanged(self, item):
     #     reg = item.getRegion()
@@ -398,23 +524,6 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
 
     # def onRegionChangeFinished(self, item):
     #     reg = item.getRegion()
-
-    def updateCursorPosition(self):
-        sender = self.sender()
-        if not isinstance(sender, BaseImagCtrlItem):
-            raise TypeError("Unexpected type {}, was expecting {}"
-                            .format(type(sender), BaseImagCtrlItem))
-
-        x, y = sender.getCursorPos()
-        for item in self.imagCtrlItems:  # link cursors
-            if item is not sender:
-                item.blockSignals(True)
-                item.setCursorPos([x, y])
-                item.blockSignals(False)
-
-        self.updateSpectralView()
-
-        logger.debug("Update cursor position. Sender: {}".format(sender))
 
     def setHSImage(self, hsImageConfig, newFile):
 
@@ -525,12 +634,51 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
 
         keys = [key for key in PARAM_CONFIG.keys() if key in param.keys()]
         nkeys = len(keys)
+        self.param = dict([(key, param[key]) for key in keys])
+        self.roiparam = dict([(key, 0) for key in keys])
         for i, item in enumerate(self.imagCtrlItems[1:]):
             item.setData(param, PARAM_CONFIG)
             item.selectImage(keys[i % nkeys])
 
         self.mspectra = self.hsCoFitAnalysis.model(which="all")
         self.updateSpectralView()
+
+
+    def updateCursorPosition(self):
+        sender = self.sender()
+        if not isinstance(sender, BaseImagCtrlItem):
+            raise TypeError("Unexpected type {}, was expecting {}"
+                            .format(type(sender), BaseImagCtrlItem))
+
+        x, y = sender.getCursorPos()
+        for item in self.imagCtrlItems:  # link cursors
+            if item is not sender:
+                item.blockSignals(True)
+                item.setCursorPos([x, y])
+                item.blockSignals(False)
+
+        self.updateSpectralView()
+
+        logger.debug("Update cursor position. Sender: {}".format(sender))
+
+    def updateROIParams(self, imagCtrlItem, roimask):
+        image_count = 1
+        roi_param = {}
+
+        mask = roimask * self.hsImageConfig.getMask()
+        for key in self.param.keys():
+            m = mask.reshape(-1)
+            m_idx = np.ix_(range(image_count), m == 1)
+            p = self.param[key].reshape(image_count, -1)
+            roi_param[key] = np.mean(p[m_idx], axis=1)
+
+        self.roi_param = roi_param
+        # print(roi_param)
+
+        msg = "\n".join([
+            "%-25s %8.5f" % (PARAM_CONFIG[key]+":", roi_param[key])
+            for key in roi_param.keys()])
+        self.hsROIParam.setText(msg)
 
     def updateSpectralView(self):
         """Retrieve hyper spectral data at current cursor position
@@ -564,10 +712,10 @@ def main():
 
     app = QtWidgets.QApplication([])
 
-    win = QHSTivitaAnalyzerWidget()
+    win = QHSMultiAnalyzerWidget()
     # win.setGeometry(300, 30, 1200, 500)
     win.setGeometry(40, 160, 1800, 800)
-    win.setWindowTitle("TIVITA Index Analysis")
+    win.setWindowTitle("Multi Index Analysis")
     win.show()
     app.exec_()
 
