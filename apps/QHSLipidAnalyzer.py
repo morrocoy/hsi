@@ -59,10 +59,10 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
         # image, 2D histogram and spectral attenuation plots
         self.imagCtrlItems = [
             PosnImagCtrlItem("Image Control Item 0", cbarWidth=10),
-            HistImagCtrlItem("Image Control Item 1", cbarWidth=10),
-            HistImagCtrlItem("Image Control Item 2", cbarWidth=10),
-            HistImagCtrlItem("Image Control Item 3", cbarWidth=10),
-            HistImagCtrlItem("Image Control Item 4", cbarWidth=10),
+            RegnImagCtrlItem("Image Control Item 1", cbarWidth=10),
+            RegnImagCtrlItem("Image Control Item 2", cbarWidth=10),
+            RegnImagCtrlItem("Image Control Item 3", cbarWidth=10),
+            RegnImagCtrlItem("Image Control Item 4", cbarWidth=10),
             RegnImagCtrlItem("Image Control Item 5", cbarWidth=10),
             # RegnImagCtrlItem("Image Control Item 6", cbarWidth=10),
         ]
@@ -198,13 +198,15 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
             item.setXYLink(self.imagCtrlItems[0])
             item.sigCursorPositionChanged.connect(self.updateCursorPosition)
 
+        for item in self.imagCtrlItems[1:]:
+            item.sigROIMaskChanged.connect(self.updateROIParams)
         self.hsImageConfig.sigValueChanged.connect(self.setHSImage)
+
         # self.hsComponentFitConfig.sigValueChanged.connect(self.onComponentFitChanged)
         # self.spectViewer.sigRegionChanged.connect(self.onRegionChanged)
         self.spectViewer.sigRegionChangeFinished.connect(
             self.onRegionChangeFinished)
 
-        self.imagCtrlItems[-1].sigROIMaskChanged.connect(self.updateROIParams)
 
     # def onRegionChanged(self, item):
     #     reg = item.getRegion()
@@ -321,7 +323,15 @@ class QHSTivitaAnalyzerWidget(QtWidgets.QWidget):
         self.spectViewer.blockSignals(False)
         self.updateSpectralView()
 
-    def updateROIParams(self, imagCtrlItem, mask):
+    def updateROIParams(self, pts, mask):
+
+        sender = self.sender()
+        for item in self.imagCtrlItems[1:]:
+            if item != sender:
+                item.blockSignals(True)
+                item.setROIMask(pts)
+                item.blockSignals(False)
+
         image_count = 1
         roi_param = {}
         param = self.hsLipidsAnalysis.get_solution(unpack=True)

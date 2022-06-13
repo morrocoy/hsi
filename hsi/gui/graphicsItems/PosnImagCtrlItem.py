@@ -64,8 +64,10 @@ class QPosnImagCtrlConfigWidget(QtWidgets.QWidget):
         #     self.mainLayout.addWidget(self.label)
         #
         # self.mainLayout.addStretch()
-        self.label = QtWidgets.QLabel("Position")
-        self.label.setStyleSheet("border-color: black;")
+        # self.label = QtWidgets.QLabel("Position")
+        # self.label.setStyleSheet("border-color: black;")
+        self.label = QtWidgets.QLabel("+", self)
+        self.label.setStyleSheet("border-color: black; font: 14px;")
         self.mainLayout.addWidget(self.label)
 
 

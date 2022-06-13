@@ -6,11 +6,12 @@ import pyqtgraph as pg
 
 from ...bindings.Qt import QtWidgets, QtCore
 from ...log import logmanager
-from ...misc import getPkgDir
+# from ...misc import getPkgDir
 from ...core.hs_cm import cm
 
 from .ColorBarItem import ColorBarItem
 from .BaseImagCtrlItem import BaseImagCtrlItem
+from .ImageItem import ImageItem
 
 logger = logmanager.getLogger(__name__)
 
@@ -20,7 +21,9 @@ __all__ = ['RegnImagCtrlItem']
 class QRegnImagCtrlConfigWidget(QtWidgets.QWidget):
 
     sigToggleHistogramChanged = QtCore.Signal(object)
+    sigToggleSelectROIChanged = QtCore.Signal(bool)
     sigSelectedImageChanged = QtCore.Signal(object)
+
 
     """ Config widget with two spinboxes that control the image levels.
     """
@@ -32,7 +35,7 @@ class QRegnImagCtrlConfigWidget(QtWidgets.QWidget):
 
         self.colorBarItem = colorBarItem
 
-        self.isHistAutoLevel = True
+        self.isHistAutoLevel = True  # automatically adjust histogram levels
         self._setupActions()
         self._setupViews(label, labels)
 
@@ -42,6 +45,12 @@ class QRegnImagCtrlConfigWidget(QtWidgets.QWidget):
         # self.resetAction.triggered.connect(self.colorBarItem.resetColorLevels)
         # # self.resetAction.setShortcut("Ctrl+0")
         # self.addAction(self.resetAction)
+
+        self.toggleSelectROIAction = QtWidgets.QAction("ROI", self)
+        self.toggleSelectROIAction.setCheckable(True)
+        self.toggleSelectROIAction.setChecked(False)
+        self.toggleSelectROIAction.triggered.connect(
+            self._triggerSelectROI)
 
         self.toggleHistAutoLevelAction = QtWidgets.QAction("Auto", self)
         self.toggleHistAutoLevelAction.setCheckable(True)
@@ -88,8 +97,8 @@ class QRegnImagCtrlConfigWidget(QtWidgets.QWidget):
         #     self.mainLayout.addWidget(self.label)
 
         self.mainLayout.addStretch()
-        self.label = QtWidgets.QLabel("Limits", self)
-        self.label.setStyleSheet("border-color: black;")
+        self.label = QtWidgets.QLabel("I", self)
+        self.label.setStyleSheet("border-color: black; font: 14px;")
         self.mainLayout.addWidget(self.label)
 
         self.minLevelSpinBox = QtWidgets.QDoubleSpinBox(self)
@@ -123,14 +132,22 @@ class QRegnImagCtrlConfigWidget(QtWidgets.QWidget):
         # self.resetButton.setDefaultAction(self.resetAction)
         # self.mainLayout.addWidget(self.resetButton)
 
+        self.selectROIButton = QtWidgets.QToolButton(self)
+        self.selectROIButton.setDefaultAction(
+            self.toggleSelectROIAction)
+        self.selectROIButton.setStyleSheet(
+            "QToolButton:checked { background-color: gray }"
+        )
+        self.mainLayout.addWidget(self.selectROIButton)
+
         self.histAutoLevelButton = QtWidgets.QToolButton(self)
         self.histAutoLevelButton.setDefaultAction(
             self.toggleHistAutoLevelAction)
-        self.mainLayout.addWidget(self.histAutoLevelButton)
-
         self.histAutoLevelButton.setStyleSheet(
             "QToolButton:checked { background-color: gray }"
         )
+        self.mainLayout.addWidget(self.histAutoLevelButton)
+
 
         # self.histogramButton = QtWidgets.QToolButton(self)
         # self.histogramButton.setDefaultAction(self.toggleHistogramAction)
@@ -201,6 +218,9 @@ class QRegnImagCtrlConfigWidget(QtWidgets.QWidget):
                 self.sigSelectedImageChanged.emit(key)
                 break
 
+    def _triggerSelectROI(self, select):
+        self.sigToggleSelectROIChanged.emit(select)
+
     def _updateSpinBoxLevels(self, levels=[None, None]):
         """ Updates the spinboxes given the levels
         """
@@ -213,7 +233,8 @@ class QRegnImagCtrlConfigWidget(QtWidgets.QWidget):
 
 class RegnImagCtrlItem(BaseImagCtrlItem):
 
-    sigROIMaskChanged = QtCore.Signal(object, np.ndarray)
+    sigROIMaskChanged = QtCore.Signal(np.ndarray, np.ndarray)
+
 
     def __init__(self,
                  label=None,
@@ -240,9 +261,6 @@ class RegnImagCtrlItem(BaseImagCtrlItem):
 
         self.imageItem.setLookupTable(cmap)
 
-        self._setupActions()
-        self._setupViews(label)
-
         # roi drawing functionality ...........................................
         self.kern_template = np.array([
             [0.0, 1.0, 1.0, 0.0],
@@ -256,9 +274,17 @@ class RegnImagCtrlItem(BaseImagCtrlItem):
         # y, x = np.ogrid[-radius:radius + 1, -radius:radius + 1]
         # kern_template[x ** 2 + y ** 2 <= radius ** 2] = 1
 
-        self.roimask = None
+        self.roiEnabled = False
+        self.roiMask = None
         self.roiGraphItem = pg.GraphItem()
+
+        self.roiImageItem = ImageItem()
+        self.plotItem.addItem(self.roiImageItem)
         self.plotItem.addItem(self.roiGraphItem)
+
+        # actions and view ....................................................
+        self._setupActions()
+        self._setupViews(label)
 
         # self.toolbarWidget.toggleHistogramAction.setChecked(
         #     self.cbarHistogramIsVisible)
@@ -302,10 +328,12 @@ class RegnImagCtrlItem(BaseImagCtrlItem):
         self.toolbarWidget.sigSelectedImageChanged.connect(
             self.updateSelectedImage)
 
-        self.imageItem.sigROISelectionFinished.connect(self.createROIMask)
+        # self.imageItem.sigROISelectionFinished.connect(self.onSelectROIMask)
+        self.roiImageItem.sigROISelectionFinished.connect(self.onSelectROIMask)
+        self.toolbarWidget.sigToggleSelectROIChanged.connect(self.setROIEnabled)
 
-    def createROIMask(self, imageItem, pts):
-        image = imageItem.image
+    def setROIMask(self, pts):
+        image = self.imageItem.image
 
         if image.ndim == 2:
             nRows, nCols = image.shape
@@ -313,11 +341,8 @@ class RegnImagCtrlItem(BaseImagCtrlItem):
         elif image.ndim == 3:
             nRows, nCols, nChan = image.shape
 
-        # image_contour = np.zeros([nRows, nCols], dtype=np.uint8)
-        # image_contour[pts[:, 1], pts[:, 0]] = 255
-
         pts = np.clip(pts, [0, 0], [nCols, nRows])
-        contours = [pts]
+        # contours = [pts]
 
         # create mask by filling contour
         poly_path = Path(pts)
@@ -329,25 +354,28 @@ class RegnImagCtrlItem(BaseImagCtrlItem):
         mask = mask.reshape(nRows, nCols)
         mask = np.asarray(mask, dtype=np.uint8)
 
-        # mask2 = np.zeros((nRows, nCols), dtype=np.uint8)
-        # cv2.fillPoly(mask2, pts=contours, color=1)  # set 1 within the contour
-
-        self.roimask = mask
+        self.roiMask = mask
 
         rng = np.arange(0, len(pts))
         adj = np.column_stack([rng, np.roll(rng, 1)])
         pen = pg.mkPen(color=(255, 0, 255), width=2)
         self.roiGraphItem.setData(pos=pts, adj=adj, pen=pen, size=2,
-                  pxMode=False, symbol=None)
+                                  pxMode=False, symbol=None)
 
         # emit signal to indicate roi update
-        self.sigROIMaskChanged.emit(self, mask)
+        self.sigROIMaskChanged.emit(pts, mask)
 
-        # draw contour and mask for testing
+        # # draw contour and mask for testing
         # import cv2
-        # cv2.drawContours(image, contours, -1, (255, 0, 255), 3)
-
         # import matplotlib.pyplot as plt
+        #
+        # image_contour = np.zeros([nRows, nCols], dtype=np.uint8)
+        # image_contour[pts[:, 1], pts[:, 0]] = 255
+        #
+        # cv2.drawContours(image, contours, -1, (255, 0, 255), 3)
+        # mask2 = np.zeros((nRows, nCols), dtype=np.uint8)
+        # cv2.fillPoly(mask2, pts=contours, color=1)  # set 1 within the contour
+        #
         # fig = plt.figure()
         # plt.imshow(image_contour, cmap="gray", origin='lower', vmin=0, vmax=1)
         # # plt.imshow(mask, cmap="gray", vmin=0, vmax=1)
@@ -365,6 +393,11 @@ class RegnImagCtrlItem(BaseImagCtrlItem):
         # plt.imshow(mask2, cmap="gray", origin='lower', vmin=0, vmax=1)
         # plt.show()
         # plt.close
+
+    def onSelectROIMask(self, imageItem, pts):
+        self.setROIMask(pts)
+        self.setROIEnabled(False)
+        self.toolbarWidget.toggleSelectROIAction.setChecked(False)
 
     def onCursorHovered(self, ev, state):
         pass
@@ -388,7 +421,7 @@ class RegnImagCtrlItem(BaseImagCtrlItem):
 
     def clearROIMask(self):
         logger.debug("Clear ROI mask.")
-        self.roimask = None
+        self.roiMask = None
 
         pos = np.array([[0, 0]])
         adj = np.array([[0, 0]])
@@ -403,30 +436,30 @@ class RegnImagCtrlItem(BaseImagCtrlItem):
         data = self.data[key].copy()
         self.selectedImage = data
 
+        # main layer for image data
         if data.ndim == 2:
             nRows, nCols = data.shape
             nChan = 1
             self.imageItem.setImage(data, axisOrder='row-major')
-            brush = 2.5
-            kern = self.kern_template * brush
-            self.imageItem.setDrawKernel(kern, mask=kern, center=(1, 1),
-                                         mode='add')
-            self.imageItem.setLevels([0, 1])
-            self.roimask = None
-            self.imageItem.setDrawEnabled(True)
         elif data.ndim == 3:
             nRows, nCols, nChan = data.shape
             self.imageItem.setImage(data, axisOrder='row-major')
-            brush = 2.5 * np.array([1., 0, 1.])
-            kern = np.outer(self.kern_template, brush).reshape(
-                self.kern_template.shape + (len(brush),))
-            self.imageItem.setDrawKernel(kern, mask=kern, center=(1, 1),
-                                         mode='add')
-            self.imageItem.setLevels([[0, 1], [0, 1], [0, 1]])
-            self.roimask = None
-            self.imageItem.setDrawEnabled(True)
+
         else:
             raise Exception("Plot data must be 2D or 3D ndarray.")
+
+        # additional layer for ROI selection
+        self.roiImageItem.setImage(
+            np.zeros((nRows, nCols, 4)), axisOrder='row-major')
+        brush = 255 * np.array([1, 0, 1, 1])
+        kern = np.outer(self.kern_template, brush).reshape(
+            self.kern_template.shape + (len(brush),))
+        self.roiImageItem.setDrawKernel(
+            kern, mask=kern, center=(1, 1), mode='add')
+        self.roiImageItem.setLevels([[0, 1], [0, 1], [0, 1], [0, 1]])
+        self.roiImageItem.setDrawEnabled(self.roiEnabled)
+        self.roiMask = None
+
 
         self.plotItem.setRange(xRange=[0, nCols], yRange=[0, nRows])
 
@@ -438,3 +471,21 @@ class RegnImagCtrlItem(BaseImagCtrlItem):
 
     def setLevels(self, levels):
         self.colorBarItem.setLevels(levels)
+
+    def setROIEnabled(self, b):
+        logger.debug("Set ROI selection mode {}".format(b))
+
+        self.roiImageItem.setDrawEnabled(b)
+        # self.cursorX.blockSignals(b)
+        # self.cursorY.blockSignals(b)
+        if b:
+            self.cursorX.setMovable(False)
+            self.cursorY.setMovable(False)
+            # self.cursorX.setHoverPen(pen=(150, 150, 150))
+            # self.cursorY.setHoverPen(pen=(150, 150, 150))
+
+        else:
+            self.cursorX.setMovable(True)
+            self.cursorY.setMovable(True)
+            # self.cursorX.setHoverPen(pen=(255, 255, 255))
+            # self.cursorY.setHoverPen(pen=(255, 255, 255))

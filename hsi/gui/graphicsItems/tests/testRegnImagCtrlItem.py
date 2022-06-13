@@ -33,16 +33,16 @@ class DemoWindow(QtWidgets.QMainWindow):
         self.mainLayout.setSpacing(0)
         self.mainWidget.setLayout(self.mainLayout)
 
-        # img1 = pg.gaussianFilter(np.random.normal(size=(480, 640)),
-        #                          (5, 5)) * 20
-        # img2 = pg.gaussianFilter(np.random.normal(size=(480, 640)),
-        #                          (5, 5)) * 20
+        img1 = pg.gaussianFilter(np.random.normal(size=(480, 640)),
+                                 (5, 5)) * 20
+        img2 = pg.gaussianFilter(np.random.normal(size=(480, 640)),
+                                 (5, 5)) * 20
 
         # img1 = pg.gaussianFilter(np.random.normal(size=(480, 640, 3)), (5, 5, 1)) * 20
         # img2 = pg.gaussianFilter(np.random.normal(size=(480, 640, 3)), (5, 5, 1)) * 20
 
-        img1 = pg.gaussianFilter(np.random.normal(size=(50, 50, 3)), (5, 5, 1)) * 20
-        img2 = pg.gaussianFilter(np.random.normal(size=(50, 50, 3)), (5, 5, 1)) * 20
+        # img1 = pg.gaussianFilter(np.random.normal(size=(50, 50, 3)), (5, 5, 1)) * 20
+        # img2 = pg.gaussianFilter(np.random.normal(size=(50, 50, 3)), (5, 5, 1)) * 20
 
 
         # img1 = np.zeros([640, 480, 3])

@@ -312,6 +312,9 @@ class QHSROIParamWidget(QtWidgets.QWidget):
         layout.addWidget(self.exportButton)
         self.mainLayout.addRow(layout)
 
+    def clear(self):
+        self.dataTextEdit.setText("")
+
     def finalize(self):
         """ Should be called manually before object deletion
         """
@@ -357,11 +360,11 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
         # image, 2D histogram and spectral attenuation plots
         self.imagCtrlItems = [
             PosnImagCtrlItem("Image Control Item 0", cbarWidth=10),
-            HistImagCtrlItem("Image Control Item 1", cbarWidth=10),
-            HistImagCtrlItem("Image Control Item 2", cbarWidth=10),
-            HistImagCtrlItem("Image Control Item 3", cbarWidth=10),
-            HistImagCtrlItem("Image Control Item 4", cbarWidth=10),
-            HistImagCtrlItem("Image Control Item 5", cbarWidth=10),
+            RegnImagCtrlItem("Image Control Item 1", cbarWidth=10),
+            RegnImagCtrlItem("Image Control Item 2", cbarWidth=10),
+            RegnImagCtrlItem("Image Control Item 3", cbarWidth=10),
+            RegnImagCtrlItem("Image Control Item 4", cbarWidth=10),
+            RegnImagCtrlItem("Image Control Item 5", cbarWidth=10),
             RegnImagCtrlItem("Image Control Item 6", cbarWidth=10),
         ]
 
@@ -410,7 +413,7 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
         self.hsOxygenAnalysis = HSOxygen(hsformat=HSIntensity)
 
         # Widget to output mean values over region of interest
-        self.hsROIParam = QHSROIParamWidget()
+        self.hsROIParamView = QHSROIParamWidget()
 
         # initiate component fit analysis module
         self.hsCoFitAnalysis = HSCoFit(hsformat=HSAbsorption)
@@ -479,7 +482,7 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
         self.hsImageConfig.setFormat(HSAbsorption)
         # self.hsImageConfig.imageFilterTypeComboBox.setCurrentIndex(0)
         self.hsImageConfig.imageFilterTypeComboBox.setCurrentIndex(1)
-        self.hsROIParam.setMaximumWidth(220)
+        self.hsROIParamView.setMaximumWidth(220)
         layoutConfig = QtWidgets.QVBoxLayout()
         layoutConfig.addWidget(self.hsImageConfig)
 
@@ -490,7 +493,7 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
         layoutConfig.addWidget(line)
 
         # output for roi paramters
-        layoutConfig.addWidget(self.hsROIParam)
+        layoutConfig.addWidget(self.hsROIParamView)
 
         layoutConfig.addStretch()
         self.mainLayout.addLayout(layoutConfig)
@@ -502,17 +505,20 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
             item.setXYLink(self.imagCtrlItems[0])
             item.sigCursorPositionChanged.connect(self.updateCursorPosition)
 
+        for item in self.imagCtrlItems[1:]:
+            item.sigROIMaskChanged.connect(self.updateROIParams)
+
         self.hsImageConfig.sigValueChanged.connect(self.setHSImage)
-        self.imagCtrlItems[-1].sigROIMaskChanged.connect(self.updateROIParams)
+        self.hsROIParamView.sigValueChanged.connect(self.onROIParamViewChanged)
+
         # self.spectViewer.sigRegionChanged.connect(self.onRegionChanged)
         # self.spectViewer.sigRegionChangeFinished.connect(
         #     self.onRegionChangeFinished)
 
-        self.hsROIParam.sigValueChanged.connect(self.onROIParamValueChanged)
-
-    def onROIParamValueChanged(self, textEdit, str):
+    def onROIParamViewChanged(self, textEdit, str):
         if str=="":
-            self.imagCtrlItems[-1].clearROIMask()
+            for item in self.imagCtrlItems[1:]:
+                item.clearROIMask()
 
     # def onRegionChanged(self, item):
     #     reg = item.getRegion()
@@ -573,17 +579,18 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
             self.spectra, self.wavelen, hsformat=hsformat)
         self.hsOxygenAnalysis.evaluate(mask=mask)
 
+        method = 'bvls_f'
         self.hsCoFitAnalysis.set_data(
             self.fspectra, self.wavelen, hsformat=hsformat)
         self.hsCoFitAnalysis.prepare_ls_problem()
         self.hsCoFitAnalysis.freeze_component("met")
         self.hsCoFitAnalysis.set_roi([520e-9, 995e-9])
-        self.hsCoFitAnalysis.fit(method='bvls_f', mask=mask)
+        self.hsCoFitAnalysis.fit(method=method, mask=mask)
         self.hsCoFitAnalysis.set_roi([520e-9, 600e-9])
-        self.hsCoFitAnalysis.fit(method='bvls_f', mask=mask)
+        self.hsCoFitAnalysis.fit(method=method, mask=mask)
         self.hsCoFitAnalysis.unfreeze_component("met")
         self.hsCoFitAnalysis.set_roi([600e-9, 995e-9])
-        self.hsCoFitAnalysis.fit(method='bvls_f', mask=mask)
+        self.hsCoFitAnalysis.fit(method=method, mask=mask)
 
         if newFile:
             # update spectra and wavelength for analysis
@@ -639,10 +646,12 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
         for i, item in enumerate(self.imagCtrlItems[1:]):
             item.setData(param, PARAM_CONFIG)
             item.selectImage(keys[i % nkeys])
+            item.clearROIMask()
+
+        self.hsROIParamView.clear()
 
         self.mspectra = self.hsCoFitAnalysis.model(which="all")
         self.updateSpectralView()
-
 
     def updateCursorPosition(self):
         sender = self.sender()
@@ -661,10 +670,16 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
 
         logger.debug("Update cursor position. Sender: {}".format(sender))
 
-    def updateROIParams(self, imagCtrlItem, roimask):
+    def updateROIParams(self, pts, roimask):
+        sender = self.sender()
+        for item in self.imagCtrlItems[1:]:
+            if item != sender:
+                item.blockSignals(True)
+                item.setROIMask(pts)
+                item.blockSignals(False)
+
         image_count = 1
         roi_param = {}
-
         mask = roimask * self.hsImageConfig.getMask()
         for key in self.param.keys():
             m = mask.reshape(-1)
@@ -678,7 +693,7 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
         msg = "\n".join([
             "%-25s %8.5f" % (PARAM_CONFIG[key]+":", roi_param[key])
             for key in roi_param.keys()])
-        self.hsROIParam.setText(msg)
+        self.hsROIParamView.setText(msg)
 
     def updateSpectralView(self):
         """Retrieve hyper spectral data at current cursor position

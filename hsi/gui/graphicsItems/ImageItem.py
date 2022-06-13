@@ -29,7 +29,6 @@ class ImageItem(pg.ImageItem):
     def __init__(self, *args, **kwargs):
         super(ImageItem, self).__init__(*args, **kwargs)
         self.track_mouse_pos = []  # for roi selection
-        self.image_buffer = None
         self.drawEnabled = False
 
     def drawAt(self, pos, ev=None):
@@ -88,10 +87,10 @@ class ImageItem(pg.ImageItem):
             if ev.isStart():
                 logger.debug("Start drawing ROI Mask.")
                 self.track_mouse_pos = []
-                self.image_buffer = self.image.copy()
 
             pos = ev.pos()
             self.drawAt(pos, ev)
+
             if self.axisOrder == "col-major":
                 pos = [int(pos.x()), int(pos.y())]
             else:
@@ -102,9 +101,25 @@ class ImageItem(pg.ImageItem):
                 logger.debug("Finish drawing ROI Mask.")
                 # print(self.track_mouse_pos)
                 pnts = numpy.array(self.track_mouse_pos, dtype=int)
-                self.image = self.image_buffer.copy()
-                self.image_buffer=None
+                self.image.fill(0)
                 self.sigROISelectionFinished.emit(self, pnts)
+
+    def mouseClickEvent(self, ev):
+        if ev.button() == QtCore.Qt.MouseButton.RightButton:
+            if self.raiseContextMenu(ev):
+                ev.accept()
+        if self.drawEnabled and self.drawKernel is not None and \
+                ev.button() == QtCore.Qt.MouseButton.LeftButton:
+            self.drawAt(ev.pos(), ev)
+
+    def hoverEvent(self, ev):
+        if not ev.isExit() and self.drawEnabled and \
+                self.drawKernel is not None and \
+                ev.acceptDrags(QtCore.Qt.MouseButton.LeftButton):
+            ev.acceptClicks(QtCore.Qt.MouseButton.LeftButton) ## we don't use the click, but we also don't want anyone else to use it.
+            ev.acceptClicks(QtCore.Qt.MouseButton.RightButton)
+        elif not ev.isExit() and self.removable:
+            ev.acceptClicks(QtCore.Qt.MouseButton.RightButton)  ## accept context menu clicks
 
     def setDrawEnabled(self, b):
         self.drawEnabled = b
