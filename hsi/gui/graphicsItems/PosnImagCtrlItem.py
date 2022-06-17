@@ -36,17 +36,22 @@ class QPosnImagCtrlConfigWidget(QtWidgets.QWidget):
         pass
 
 
-    def _setupViews(self, label=None, labels=None):
+    def _setupViews(self, label, labels=None,  **kwargs):
 
         self.mainLayout = QtWidgets.QHBoxLayout()
         self.mainLayout.setContentsMargins(5, 0, 5, 0) # left, top, right, bottom
         self.mainLayout.setSpacing(3)
         self.setLayout(self.mainLayout)
 
+        if labels is None:
+            self.labels = {}
+
         self.selectImageComboBox = QtWidgets.QComboBox(self)
-        if labels is not None:
-            self.selectImageComboBox.addItems(labels)
-            self.selectImageComboBox.setCurrentText(labels[0])
+        for l in self.labels.values():
+            self.selectImageComboBox.addItems(l)
+        if len(self.labels):
+            self.selectImageComboBox.setCurrentIndex(0)
+        # self.selectImageComboBox.setMinimumWidth(120)
         self.selectImageComboBox.setMinimumWidth(150)
         self.mainLayout.addWidget(self.selectImageComboBox)
         self.mainLayout.addStretch()
@@ -205,7 +210,6 @@ class PosnImagCtrlItem(BaseImagCtrlItem):
         """
         pass
 
-
     def _setupViews(self, label):
         self.colorBarItem = ColorBarItem(
             imageItem=self.imageItem,
@@ -231,17 +235,22 @@ class PosnImagCtrlItem(BaseImagCtrlItem):
         self.toolbarWidget.sigSelectedImageChanged.connect(
             self.updateSelectedImage)
 
+    def currentImage(self):
+        label = self.toolbarWidget.selectImageComboBox.currentText()
+        for key, val in self.labels.items():
+            if val == label:
+                return key
+
+    def selectImage(self, key):
+        """ Sets the image data
+        """
+        self.toolbarWidget.selectImage(key)
 
     def setData(self, data, labels=None):
         """ Sets the image data
         """
         super(PosnImagCtrlItem, self).setData(data, labels)
         self.toolbarWidget.setLabels(self.labels)
-
-    def selectImage(self, key):
-        """ Sets the image data
-        """
-        self.toolbarWidget.selectImage(key)
 
     def updateSelectedImage(self, key):
         if self.data is None or not isinstance(

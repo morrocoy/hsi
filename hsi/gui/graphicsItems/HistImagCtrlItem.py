@@ -57,17 +57,21 @@ class QHistImagCtrlConfigWidget(QtWidgets.QWidget):
         # self.addAction(self.toggleHistogramAction)
 
 
-    def _setupViews(self, label=None, labels=None):
+    def _setupViews(self, label=None, labels=None, **kwargs):
 
         self.mainLayout = QtWidgets.QHBoxLayout()
         self.mainLayout.setContentsMargins(5, 0, 5, 0) # ltrb
         self.mainLayout.setSpacing(3)
         self.setLayout(self.mainLayout)
 
+        if labels is None:
+            self.labels = {}
+
         self.selectImageComboBox = QtWidgets.QComboBox(self)
-        if labels is not None:
-            self.selectImageComboBox.addItems(labels)
-            self.selectImageComboBox.setCurrentText(labels[0])
+        for l in self.labels.values():
+            self.selectImageComboBox.addItems(l)
+        if len(self.labels):
+            self.selectImageComboBox.setCurrentIndex(0)
         # self.selectImageComboBox.setMinimumWidth(120)
         self.selectImageComboBox.setMinimumWidth(150)
         self.mainLayout.addWidget(self.selectImageComboBox)
@@ -283,16 +287,25 @@ class HistImagCtrlItem(BaseImagCtrlItem):
         self.toolbarWidget.sigSelectedImageChanged.connect(
             self.updateSelectedImage)
 
+    def currentImage(self):
+        label = self.toolbarWidget.selectImageComboBox.currentText()
+        for key, val in self.labels.items():
+            if val == label:
+                return key
+
+    def selectImage(self, key):
+        """ Sets the image data
+        """
+        self.toolbarWidget.selectImage(key)
+
     def setData(self, data, labels=None):
         """ Sets the image data
         """
         super(HistImagCtrlItem, self).setData(data, labels)
         self.toolbarWidget.setLabels(self.labels)
 
-    def selectImage(self, key):
-        """ Sets the image data
-        """
-        self.toolbarWidget.selectImage(key)
+    def setLevels(self, levels):
+        self.colorBarItem.setLevels(levels)
 
     def updateSelectedImage(self, key):
         if self.data is None or not isinstance(
@@ -320,5 +333,3 @@ class HistImagCtrlItem(BaseImagCtrlItem):
         self.cursorX.setBounds((0, nCols-1))
         self.cursorY.setBounds((0, nRows-1))
 
-    def setLevels(self, levels):
-        self.colorBarItem.setLevels(levels)

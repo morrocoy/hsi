@@ -68,17 +68,21 @@ class QRegnImagCtrlConfigWidget(QtWidgets.QWidget):
         # self.addAction(self.toggleHistogramAction)
 
 
-    def _setupViews(self, label=None, labels=None):
+    def _setupViews(self, label=None, labels=None, **kwargs):
 
         self.mainLayout = QtWidgets.QHBoxLayout()
         self.mainLayout.setContentsMargins(5, 0, 5, 0) # ltrb
         self.mainLayout.setSpacing(3)
         self.setLayout(self.mainLayout)
 
+        if labels is None:
+            self.labels = {}
+
         self.selectImageComboBox = QtWidgets.QComboBox(self)
-        if labels is not None:
-            self.selectImageComboBox.addItems(labels)
-            self.selectImageComboBox.setCurrentText(labels[0])
+        for l in self.labels.values():
+            self.selectImageComboBox.addItems(l)
+        if len(self.labels):
+            self.selectImageComboBox.setCurrentIndex(0)
         # self.selectImageComboBox.setMinimumWidth(120)
         self.selectImageComboBox.setMinimumWidth(150)
         self.mainLayout.addWidget(self.selectImageComboBox)
@@ -235,7 +239,6 @@ class RegnImagCtrlItem(BaseImagCtrlItem):
 
     sigROIMaskChanged = QtCore.Signal(np.ndarray, np.ndarray)
 
-
     def __init__(self,
                  label=None,
                  cmap=None,
@@ -327,10 +330,49 @@ class RegnImagCtrlItem(BaseImagCtrlItem):
 
         self.toolbarWidget.sigSelectedImageChanged.connect(
             self.updateSelectedImage)
-
         # self.imageItem.sigROISelectionFinished.connect(self.onSelectROIMask)
         self.roiImageItem.sigROISelectionFinished.connect(self.onSelectROIMask)
         self.toolbarWidget.sigToggleSelectROIChanged.connect(self.setROIEnabled)
+
+    def clearROIMask(self):
+        logger.debug("Clear ROI mask.")
+        self.roiMask = None
+
+        pos = np.array([[0, 0]])
+        adj = np.array([[0, 0]])
+        pen = pg.mkPen(color=(0, 0, 0), width=0)
+        self.roiGraphItem.setData(pos=pos, adj=adj, pen=pen, pxMode=False, symbol=None)
+
+    def currentImage(self):
+        label = self.toolbarWidget.selectImageComboBox.currentText()
+        for key, val in self.labels.items():
+            if val == label:
+                return key
+
+    def onSelectROIMask(self, imageItem, pts):
+        self.setROIMask(pts)
+        self.setROIEnabled(False)
+        self.toolbarWidget.toggleSelectROIAction.setChecked(False)
+
+    def onCursorHovered(self, ev, state):
+        pass
+    #     if state:
+    #     self.imageItem.setDrawEnabled(False)
+    #     self.imageItem.blockSignals(True)
+    #     else:
+    #         self.imageItem.setDrawEnabled(True)
+    #         self.imageItem.blockSignals(True)
+
+    def selectImage(self, key):
+        """ Sets the image data
+        """
+        self.toolbarWidget.selectImage(key)
+
+    def setData(self, data, labels=None):
+        """ Sets the image data
+        """
+        super(RegnImagCtrlItem, self).setData(data, labels)
+        self.toolbarWidget.setLabels(self.labels)
 
     def setROIMask(self, pts):
         image = self.imageItem.image
@@ -394,40 +436,6 @@ class RegnImagCtrlItem(BaseImagCtrlItem):
         # plt.show()
         # plt.close
 
-    def onSelectROIMask(self, imageItem, pts):
-        self.setROIMask(pts)
-        self.setROIEnabled(False)
-        self.toolbarWidget.toggleSelectROIAction.setChecked(False)
-
-    def onCursorHovered(self, ev, state):
-        pass
-    #     if state:
-    #     self.imageItem.setDrawEnabled(False)
-    #     self.imageItem.blockSignals(True)
-    #     else:
-    #         self.imageItem.setDrawEnabled(True)
-    #         self.imageItem.blockSignals(True)
-
-    def setData(self, data, labels=None):
-        """ Sets the image data
-        """
-        super(RegnImagCtrlItem, self).setData(data, labels)
-        self.toolbarWidget.setLabels(self.labels)
-
-    def selectImage(self, key):
-        """ Sets the image data
-        """
-        self.toolbarWidget.selectImage(key)
-
-    def clearROIMask(self):
-        logger.debug("Clear ROI mask.")
-        self.roiMask = None
-
-        pos = np.array([[0, 0]])
-        adj = np.array([[0, 0]])
-        pen = pg.mkPen(color=(0, 0, 0), width=0)
-        self.roiGraphItem.setData(pos=pos, adj=adj, pen=pen, pxMode=False, symbol=None)
-
     def updateSelectedImage(self, key):
         if self.data is None or not isinstance(
                 self.data, dict) or not key in self.data.keys():
@@ -441,10 +449,11 @@ class RegnImagCtrlItem(BaseImagCtrlItem):
             nRows, nCols = data.shape
             nChan = 1
             self.imageItem.setImage(data, axisOrder='row-major')
+            self.sigSelectedImageChanged.emit(key)
         elif data.ndim == 3:
             nRows, nCols, nChan = data.shape
             self.imageItem.setImage(data, axisOrder='row-major')
-
+            self.sigSelectedImageChanged.emit(key)
         else:
             raise Exception("Plot data must be 2D or 3D ndarray.")
 

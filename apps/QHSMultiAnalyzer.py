@@ -13,6 +13,7 @@ the different color channels.
 """
 import sys
 import logging
+import json
 
 import numpy as np
 from pyqtgraph.Qt import QtWidgets, QtCore, QtGui
@@ -287,9 +288,13 @@ class QHSROIParamWidget(QtWidgets.QWidget):
         label.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom)
         self.mainLayout.addRow(label)
 
+
         # self.dataTextEdit.setFont(QtGui.QFont('Courier', 7))
-        self.dataTextEdit.setFont(QtGui.QFont('Monospace', 8))
-        self.dataTextEdit.setMinimumHeight(350)
+        if sys.platform == "win32":
+            self.dataTextEdit.setFont(QtGui.QFont('Monospace', 8))
+        else:
+            self.dataTextEdit.setFont(QtGui.QFont('Monospace', 7))
+        self.dataTextEdit.setMinimumHeight(260)
         self.dataTextEdit.setMaximumHeight(600)
         self.mainLayout.addRow(self.dataTextEdit)
 
@@ -344,6 +349,258 @@ class QHSROIParamWidget(QtWidgets.QWidget):
     def setText(self, str):
         self.dataTextEdit.setText(str)
         self.sigValueChanged.emit(self, str)
+
+
+class QHSMultiAnalyzerViewConfigWidget(QtWidgets.QWidget):
+    """ Config widget for view selection
+    """
+    sigCurrentParamViewChanged = QtCore.Signal(list)
+
+    # 'im0': "RGB Image (original)",
+    # 'im1': "RGB Image (with selection)",
+    # 'tivita_oxy': "OXY (TIVITA)",
+    # 'tivita_nir': "NIR (TIVITA)",
+    # 'tivita_thi': "THI (TIVITA)",
+    # 'tivita_twi': "TWI (TIVITA)",
+    # 'oxygen_ox0': "OXY Angle 630-710nm",  # Moussa's oxygen index
+    # 'lipids_li0': "LPI Angle 900-915nm",  # Moussa's previous fat indices
+    # 'lipids_li1': "LPI Ratio 925-960nm",  # Moussa's previous fat indices
+    # 'lipids_li2': "LPI Ratio 875-925nm",  # Moussa's previous fat indices
+    # 'lipids_li3': "LPI 2nd Derv. 925nm",  # Moussa's previous fat indices
+    # 'lipids_li4': "LPI abs. Angle 900-920nm",  # Moussa's absolute fat index
+    # 'lipids_li5': "LPI inv. Angle 900-920nm",  # Moussa's absolute water index
+    # 'cofit_blo_0': "Blood (Fit 600-995nm)",
+    # 'cofit_oxy_0': "OXY (Fit 600-995nm)",
+    # 'cofit_wat_0': "Water (Fit 600-995nm)",
+    # 'cofit_wob_0': "Wat/Blo (Fit 600-995nm)",
+    # # 'cofit_fat_0': "Fat (Fit 600-995nm)",
+    # 'cofit_mel_0': "Melanin (Fit 600-995nm)",
+    # 'cofit_hhb_0': "DeoxyHb (Fit 600-995nm)",
+    # 'cofit_ohb_0': "OxyHb (Fit 600-995nm)",
+    # 'cofit_met_0': "MetHb (Fit 600-995nm)",
+    # 'cofit_blo_1': "Blood (Fit 520-600nm)",
+    # 'cofit_oxy_1': "OXY (Fit 520-600nm)  ",
+    # 'cofit_wat_1': "Water (Fit 520-600nm)",
+    # # 'cofit_wob_1': "Wat/Blo (Fit 520-600nm)",
+    # # 'cofit_fat_1': "Fat (Fit 520-600nm)",
+    # 'cofit_mel_1': "Melanin (Fit 520-600nm)",
+    # 'cofit_hhb_1': "DeoxyHb (Fit 520-600nm)",
+    # 'cofit_ohb_1': "OxyHb (Fit 520-600nm)",
+    # # 'cofit_met_1': "MetHb (Fit 520-600nm)",
+    # 'cofit_blo_2': "Blood (Fit 520-995nm)",
+    # 'cofit_oxy_2': "OXY (Fit 520-995nm)  ",
+    # 'cofit_wat_2': "Water (Fit 520-995nm)",
+    # # 'cofit_wob_2': "Wat/Blo (Fit 520-995nm)",
+    # # 'cofit_fat_2': "Fat (Fit 520-995nm)",
+    # 'cofit_mel_2': "Melanin (Fit 520-995nm)",
+    # 'cofit_hhb_2': "DeoxyHb (Fit 520-995nm)",
+    # 'cofit_ohb_2': "OxyHb (Fit 520-995nm)",
+    # # 'cofit_met_2': "MetHb (Fit 520-995nm)",
+
+    views = {
+        "TIVITA": [
+            'im1',  # "RGB Image (with selection)"
+            'tivita_oxy',  # "OXY (TIVITA)"
+            'tivita_nir',  # "NIR (TIVITA)"
+            'oxygen_ox0',  # Moussa's oxygen index
+            'tivita_thi',  # "THI (TIVITA)"
+            'tivita_twi',  # "TWI (TIVITA)"
+            'cofit_oxy_1', # "OXY (Fit 520-600nm)"
+        ],
+        "Oxygenation": [
+            'im1',  # "RGB Image (with selection)"
+            'tivita_oxy',  # "OXY (TIVITA)"
+            'oxygen_ox0',  # Moussa's oxygen index
+            'cofit_oxy_1',  # "OXY (Fit 520-600nm)"
+            'cofit_ohb_1',  # "OxyHb (Fit 520-600nm)",
+            'cofit_oxy_2',  #"OXY (Fit 520-995nm)",
+            'cofit_ohb_2',  # "OxyHb (Fit 520-995nm)",
+        ],
+        "Lipids": [
+            'im1',  # "RGB Image (with selection)"
+            'lipids_li0',  # "LPI Angle 900-915nm"
+            'lipids_li1',  # "LPI Ratio 925-960nm"
+            'lipids_li2',  # "LPI Ratio 875-925nm"
+            'lipids_li3',  # "LPI 2nd Derv. 925nm"
+            'lipids_li4',  # "LPI abs. Angle 900-920nm"
+            'lipids_li5',  # "LPI inv. Angle 900-920nm"
+        ],
+        "User defined": [
+            'im1',  # "RGB Image (with selection)"
+            'tivita_oxy',  # "OXY (TIVITA)"
+            'tivita_nir',  # "NIR (TIVITA)"
+            'oxygen_ox0',  # Moussa's oxygen index
+            'tivita_thi',  # "THI (TIVITA)"
+            'tivita_twi',  # "TWI (TIVITA)"
+            'cofit_oxy_1',  # "OXY (Fit 520-600nm)"
+        ],
+    }
+
+    def __init__(self, *args, **kwargs):
+        """ Constructor
+        """
+        parent = kwargs.get('parent', None)
+        super(QHSMultiAnalyzerViewConfigWidget, self).__init__(parent=parent)
+
+        if len(args) == 1:
+            kwargs['dir'] = args[0]
+        elif len(args) > 1:
+            raise TypeError("To many arguments {}".format(args))
+
+        self.dir = kwargs.get('dir', None)
+        self.filePath = None
+
+        self.addParamViewButton = QtWidgets.QToolButton(self)
+        self.saveParamViewButton = QtWidgets.QToolButton(self)
+        self.loadParamViewButton = QtWidgets.QToolButton(self)
+        self.viewComboBox = QtWidgets.QComboBox(self)
+
+        # configure actions
+        self._setupActions()
+
+        # configure widget views
+        self._setupViews(*args, **kwargs)
+
+    def _setupActions(self):
+        self.addParamViewAction = QtWidgets.QAction(self)
+        self.addParamViewAction.setIconText("Add")
+        self.addParamViewAction.triggered.connect(self.addCurrentParamView)
+        self.addAction(self.addParamViewAction)
+
+        self.saveParamViewAction = QtWidgets.QAction(self)
+        self.saveParamViewAction.setIconText("Save")
+        self.saveParamViewAction.triggered.connect(self.saveParamViewConfig)
+        self.addAction(self.saveParamViewAction)
+
+        self.loadParamViewAction = QtWidgets.QAction(self)
+        self.loadParamViewAction.setIconText("Load")
+        self.loadParamViewAction.triggered.connect(self.loadParamViewConfig)
+        self.addAction(self.loadParamViewAction)
+
+        self.addParamViewButton.setDefaultAction(self.addParamViewAction)
+        self.saveParamViewButton.setDefaultAction(self.saveParamViewAction)
+        self.loadParamViewButton.setDefaultAction(self.loadParamViewAction)
+
+    def _setupViews(self, *args, **kwargs):
+        # self.mainLayout = QtWidgets.QVBoxLayout()
+        self.mainLayout = QtWidgets.QFormLayout()
+        self.mainLayout.setContentsMargins(5, 10, 5, 10) # left, top, right, bottom
+        self.mainLayout.setSpacing(3)
+        self.setLayout(self.mainLayout)
+
+        label = QtWidgets.QLabel("View Config")
+        label.setStyleSheet(
+            "border: 0px;"
+            "font: bold;"
+        )
+        label.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom)
+        self.mainLayout.addRow(label)
+
+        for key in self.views.keys():
+            self.viewComboBox.addItem(key)
+        # self.viewComboBox.setReadOnly(True)
+        # self.viewComboBox.setMinimumHeight(350)
+        # self.viewComboBox.setMaximumHeight(600)
+        self.mainLayout.addRow(self.viewComboBox)
+
+        label = QtWidgets.QLabel(self)
+        label.setMinimumHeight(20)
+        label.setStyleSheet("border: 0px;")
+        self.addParamViewButton.setText("Add")
+        self.saveParamViewButton.setText("Save")
+        self.loadParamViewButton.setText("Load")
+
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(self.addParamViewButton)
+        layout.addWidget(self.saveParamViewButton)
+        layout.addWidget(self.loadParamViewButton)
+        self.mainLayout.addRow(layout)
+
+        # connect signals
+        self.viewComboBox.currentTextChanged.connect(
+            self.onCurrentParamViewChanged)
+
+    def addCurrentParamView(self):
+        """Add view to current configuration
+        """
+        key, ok = QtWidgets.QInputDialog.getText(
+            self, 'Add view', 'Define name for the current view')
+
+        if ok:
+            view = self.views[self.viewComboBox.currentText()]
+            self.viewComboBox.addItem(key)
+            logger.debug("Set new view '{}': {}".format(key, view))
+            self.views.update({key: view})
+
+    def clear(self):
+        self.viewComboBox.setText("")
+
+    def finalize(self):
+        """ Should be called manually before object deletion
+        """
+        logger.debug("Finalizing: {}".format(self))
+        super(QHSMultiAnalyzerViewConfigWidget, self).finalize()
+
+    def getParamView(self):
+        key = self.viewComboBox.currentText()
+        if key in self.views.keys():
+            return self.views[key]
+
+    def loadParamViewConfig(self):
+        """Load view configuration
+        """
+        filter = "Json (*.json)"
+        filePath, filter = QtWidgets.QFileDialog.getOpenFileName(
+            None, 'Select file:', filter=filter)
+
+        logger.debug("Import view configuration from {}".format(filePath))
+        with open(filePath) as file:
+            self.views = json.load(file)
+
+        self.viewComboBox.blockSignals(True)
+        self.viewComboBox.clear()
+        for key in self.views.keys():
+            self.viewComboBox.addItem(key)
+        self.viewComboBox.setCurrentIndex(0)
+        self.viewComboBox.blockSignals(False)
+
+
+    def onCurrentParamViewChanged(self, key):
+        if key in self.views.keys():
+            view = self.views[key]
+            self.sigCurrentParamViewChanged.emit(view)
+
+    def saveParamViewConfig(self):
+        """Export view configuration
+        """
+        filter = "Json (*.json)"
+        filePath, filter = QtWidgets.QFileDialog.getSaveFileName(
+            None, 'Save file:', filter=filter)
+
+        logger.debug("Export view configuration to {}".format(filePath))
+
+        views = json.dumps(self.views, sort_keys=False, indent=4)
+        with open(filePath +  ".json", 'w') as file:
+            file.write(views)
+
+    def setParamView(self, key, view=None):
+        """Add view to current configuration
+        """
+        if key not in self.views.keys():
+            return
+
+        if view is None:
+            view = self.views[key]
+            logger.debug("Set parameter view '{}': {}".format(key, view))
+            self.viewComboBox.setCurrentText(key)
+            self.sigCurrentParamViewChanged.emit(view)
+        else:
+            logger.debug("Set new view '{}': {}".format(key, view))
+            self.views[key] = view
+            self.viewComboBox.setCurrentText(key)
+            self.sigCurrentParamViewChanged.emit(view)
+
 
 
 class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
@@ -412,6 +669,9 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
         # initiate Moussa's oxygen index analysis module
         self.hsOxygenAnalysis = HSOxygen(hsformat=HSIntensity)
 
+        # view configuration widget
+        self.hsViewConfig = QHSMultiAnalyzerViewConfigWidget()
+
         # Widget to output mean values over region of interest
         self.hsROIParamView = QHSROIParamWidget()
 
@@ -452,26 +712,33 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
 
         # place graphics items
         self.graphicsLayoutWidget = pg.GraphicsLayoutWidget()
-        for i in range(2):
-            for j in range(3):
-                self.graphicsLayoutWidget.addItem(
-                    self.imagCtrlItems[i*3 + j], i, j)
-                self.imagCtrlItems[i*3 + j].setMinimumHeight(380)
-
-        # self.graphicsLayoutWidget2 = pg.GraphicsLayoutWidget()
-
-        self.graphicsLayoutWidget.addItem(self.spectViewer, 0, 3)
-        # self.graphicsLayoutWidget2.addItem(self.spectViewer, 0, 0, rowspan=1)
-        # self.spectViewer.setMinimumWidth(400)
+        for item in self.imagCtrlItems:
+            item.setMinimumHeight(380)
         self.spectViewer.setMinimumHeight(380)
 
-        self.graphicsLayoutWidget.addItem(
-            self.imagCtrlItems[6], 1, 3)
-        self.imagCtrlItems[6].setMinimumHeight(380)
+        self.graphicsLayoutWidget.addItem(self.imagCtrlItems[0], 0, 0)
+        self.graphicsLayoutWidget.addItem(self.imagCtrlItems[1], 0, 1)
+        self.graphicsLayoutWidget.addItem(self.imagCtrlItems[2], 0, 2)
+        self.graphicsLayoutWidget.addItem(self.spectViewer, 0, 3)
+        self.graphicsLayoutWidget.addItem(self.imagCtrlItems[3], 2, 0)
+        self.graphicsLayoutWidget.addItem(self.imagCtrlItems[4], 2, 1)
+        self.graphicsLayoutWidget.addItem(self.imagCtrlItems[5], 2, 2)
+        self.graphicsLayoutWidget.addItem(self.imagCtrlItems[6], 2, 3)
 
-        # qGraphicsGridLayout = self.graphicsLayoutWidget.ci.layout
-        # qGraphicsGridLayout.setColumnStretchFactor(0, 1)
-        # qGraphicsGridLayout.setColumnStretchFactor(1, 1)
+        infoLabel = QtWidgets.QLabel(
+            " --- ".join(["Not for clinical use" for _ in range(7)]).upper())
+        infoLabel.setStyleSheet(
+            "border: 0px;"
+            "font: bold 14px;"
+            "color: rgb(200,0,0);"
+            "background-color: black;"
+            "border-style: outset;"
+            "border-width: 10px;"
+        )
+        infoLabel.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        infoLabelProxy = QtWidgets.QGraphicsProxyWidget()
+        infoLabelProxy.setWidget(infoLabel)
+        self.graphicsLayoutWidget.addItem(infoLabelProxy, 1, 0, colspan=4)
 
         self.mainLayout.addWidget(self.graphicsLayoutWidget)
         # self.mainLayout.addWidget(self.graphicsLayoutWidget2)
@@ -492,6 +759,15 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
         line.setFrameShadow(QtWidgets.QFrame.Sunken)
         layoutConfig.addWidget(line)
 
+        # view configuration widget
+        layoutConfig.addWidget(self.hsViewConfig)
+
+        # separation line
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        layoutConfig.addWidget(line)
+
         # output for roi paramters
         layoutConfig.addWidget(self.hsROIParamView)
 
@@ -499,8 +775,6 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
         self.mainLayout.addLayout(layoutConfig)
 
         # connect signals
-
-        # link image items
         for item in self.imagCtrlItems[0:]:
             item.setXYLink(self.imagCtrlItems[0])
             item.sigCursorPositionChanged.connect(self.updateCursorPosition)
@@ -510,26 +784,22 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
 
         self.hsImageConfig.sigValueChanged.connect(self.setHSImage)
         self.hsROIParamView.sigValueChanged.connect(self.onROIParamViewChanged)
+        self.hsViewConfig.sigCurrentParamViewChanged.connect(self.updateParamView)
 
-        # self.spectViewer.sigRegionChanged.connect(self.onRegionChanged)
-        # self.spectViewer.sigRegionChangeFinished.connect(
-        #     self.onRegionChangeFinished)
+        for item in self.imagCtrlItems:
+            item.sigSelectedImageChanged.connect(self.onSelectedImageChanged)
+
+    def onSelectedImageChanged(self, key):
+        view = [item.currentImage() for item in self.imagCtrlItems]
+        # print(view)
+        self.hsViewConfig.blockSignals(True)
+        self.hsViewConfig.setParamView("User defined", view)
+        self.hsViewConfig.blockSignals(False)
 
     def onROIParamViewChanged(self, textEdit, str):
         if str=="":
             for item in self.imagCtrlItems[1:]:
                 item.clearROIMask()
-
-    # def onRegionChanged(self, item):
-    #     reg = item.getRegion()
-    #     self.hsComponentFitConfig.blockSignals(True)
-    #     self.hsComponentFitConfig.wavRegionWidget.blockSignals(True)
-    #     self.hsComponentFitConfig.set_roi(reg)
-    #     self.hsComponentFitConfig.wavRegionWidget.blockSignals(False)
-    #     self.hsComponentFitConfig.blockSignals(False)
-
-    # def onRegionChangeFinished(self, item):
-    #     reg = item.getRegion()
 
     def setHSImage(self, hsImageConfig, newFile):
 
@@ -560,7 +830,6 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
             'im0': image_0,
             'im1': image_1
         }, PARAM_CONFIG)  # rgb images
-        self.imagCtrlItems[0].selectImage('im1')
 
         # forward hsformat of hyperspectral image to the vector analyzer
         hsformat = self.hsImageConfig.getFormat()
@@ -644,14 +913,26 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
         self.param = dict([(key, param[key]) for key in keys])
         self.roiparam = dict([(key, 0) for key in keys])
         for i, item in enumerate(self.imagCtrlItems[1:]):
+            item.blockSignals(True)
             item.setData(param, PARAM_CONFIG)
-            item.selectImage(keys[i % nkeys])
             item.clearROIMask()
-
-        self.hsROIParamView.clear()
+            item.blockSignals(False)
 
         self.mspectra = self.hsCoFitAnalysis.model(which="all")
+
         self.updateSpectralView()
+        self.updateParamView()
+        self.hsROIParamView.clear()
+
+    def updateParamView(self, view=None):
+        if view is None:
+            view = self.hsViewConfig.getParamView()
+
+        for i, item in enumerate(self.imagCtrlItems):
+            item.blockSignals(True)
+            item.selectImage(view[i])
+            item.blockSignals(False)
+
 
     def updateCursorPosition(self):
         sender = self.sender()
@@ -729,7 +1010,7 @@ def main():
 
     win = QHSMultiAnalyzerWidget()
     # win.setGeometry(300, 30, 1200, 500)
-    win.setGeometry(40, 160, 1800, 800)
+    win.setGeometry(40, 160, 1820, 800)
     win.setWindowTitle("Multi Index Analysis")
     win.show()
     app.exec_()

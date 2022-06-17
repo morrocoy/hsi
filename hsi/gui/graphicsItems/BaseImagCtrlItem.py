@@ -22,6 +22,7 @@ class BaseImagCtrlItem(pg.GraphicsWidget):
 
     sigCursorPositionChangeFinished = QtCore.Signal(object)
     sigCursorPositionChanged = QtCore.Signal(object)
+    sigSelectedImageChanged = QtCore.Signal(str)
 
     def __init__(self, *args, **kwargs):
 
@@ -73,6 +74,9 @@ class BaseImagCtrlItem(pg.GraphicsWidget):
 
         self.cursorX.sigLineHovered.connect(self.onCursorHovered)
         self.cursorY.sigLineHovered.connect(self.onCursorHovered)
+
+    def currentImage(self):
+        pass
 
     def onCursorHovered(self, ev, state):
         pass
