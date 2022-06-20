@@ -92,8 +92,8 @@ class QHSCoFitConfigWidget(QtWidgets.QWidget):
 
         # file providing the base vectors
         # filePath = kwargs.get('filePath', "basevectors_1.txt")
-        filePath = kwargs.get('filePath', "basevectors_2.txt")
-        # filePath = kwargs.get('filePath', "basevectors_2_17052022.txt")
+        # filePath = kwargs.get('filePath', "basevectors_2.txt")
+        filePath = kwargs.get('filePath', "basevectors_2_17052022.txt")
 
         # analysis object
         self.hsVectorAnalysis = kwargs.get('analysis', HSCoFit())

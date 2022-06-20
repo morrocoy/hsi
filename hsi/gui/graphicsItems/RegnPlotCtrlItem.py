@@ -245,6 +245,7 @@ class RegnPlotCtrlItem(pg.GraphicsWidget):
             self.plotItem2.setLabel('left', ylabel, yunits)
 
         # self.plotItem1.setLabel('bottom', "test")
+        self.plotItem1.addLegend(offset=(0, -250))
 
         self.toolbarProxy = QtWidgets.QGraphicsProxyWidget()
         self.toolbarProxy.setWidget(self.toolbarWidget)

@@ -616,6 +616,9 @@ class HSCoFit(HSBaseAnalysis):
             self._anaVarScales[-1, :] = 1.
             self._anaVarBounds[-1, :] = [-1e9, 1e9]
 
+            self.keys = [self.prefix + key for key in self.components.keys()]
+            self.keys.append(self.prefix + "offset")
+
     def remove_component(self, name):
         """Remove a component vector.
 

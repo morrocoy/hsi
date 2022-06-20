@@ -22,7 +22,7 @@ import pyqtgraph as pg
 
 import hsi
 
-from hsi import HSAbsorption, HSIntensity
+from hsi import HSAbsorption, HSExtinction, HSIntensity, convert
 
 from hsi.gui import QHSImageConfigWidget
 from hsi.gui import QHSCoFitConfigWidget
@@ -171,6 +171,7 @@ class CurveViewItem(pg.GraphicsWidget):
 
         # self.plotItem1.setMinimumHeight(280)
         self.plotItem1.setMaximumHeight(330)
+        self.plotItem1.addLegend(offset=(0, -100))
         _spacer_statusbar = QtWidgets.QLabel()
         _spacer_statusbar.setMinimumHeight(70)
         # _spacer_statusbar.setMaximumHeight(100)
@@ -201,7 +202,7 @@ class CurveViewItem(pg.GraphicsWidget):
 
         shadowItem = pg.PlotCurveItem(x=x, y=y, pen=pen)
 
-        self.plotItem1.addItem(item)
+        self.plotItem1.addItem(item, name="Hallo")
         # self.plotItem2.addItem(shadowItem)
 
         self.curveItems.append(item)
@@ -628,26 +629,27 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
         # self.spectViewer = RegnPlotCtrlItem(
         #     "spectral attenuation", xlabel="wavelength", xunits="m")
         self.spectViewer = CurveViewItem(
-            "spectral attenuation", xlabel="wavelength", xunits="m")
+            "Spectral attenuation", xlabel="Wavelength", xunits="m")
 
         self.spectPlotItem = pg.PlotItem()
 
         self.curveItems = {
             'crv0': pg.PlotCurveItem(
-                name="raw spectral data",
+                name="Raw spectral data",
                 pen=pg.mkPen(color=(100, 100, 100), width=1)),
             'crv1': pg.PlotCurveItem(
-                name="filtered spectrum",
+                name="Filtered spectrum",
                 pen=pg.mkPen(color=(255, 255, 255), width=2)),
             'crv2': pg.PlotCurveItem(
-                name="Fit 600-1000nm",
+                name="Fit 600-995nm",
                 pen=pg.mkPen(color=(255, 0, 0), width=1)),
             'crv3': pg.PlotCurveItem(
                 name="Fit 500-600nm",
                 pen=pg.mkPen(color=(0, 255, 0), width=1)),
             'crv4': pg.PlotCurveItem(
-                name="Fit 500-1000nm",
-                pen=pg.mkPen(color=(0, 255, 255), width=1))
+                name="Fit 500-995nm",
+                pen=pg.mkPen(color=(0, 255, 255), width=1),
+            )
         }
 
         # initiate image config widget
@@ -746,7 +748,8 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
         # user config widgets
         self.hsImageConfig.setMaximumWidth(220)
         # self.hsComponentFitConfig.setMaximumWidth(220)
-        self.hsImageConfig.setFormat(HSAbsorption)
+        # self.hsImageConfig.setFormat(HSAbsorption)
+        self.hsImageConfig.setFormat(HSExtinction)
         # self.hsImageConfig.imageFilterTypeComboBox.setCurrentIndex(0)
         self.hsImageConfig.imageFilterTypeComboBox.setCurrentIndex(1)
         self.hsROIParamView.setMaximumWidth(220)
@@ -918,7 +921,10 @@ class QHSMultiAnalyzerWidget(QtWidgets.QWidget):
             item.clearROIMask()
             item.blockSignals(False)
 
-        self.mspectra = self.hsCoFitAnalysis.model(which="all")
+        self.mspectra = convert(
+            self.hsImageConfig.getFormat(), HSAbsorption,
+            self.hsCoFitAnalysis.model(which="all"), self.wavelen
+        )
 
         self.updateSpectralView()
         self.updateParamView()

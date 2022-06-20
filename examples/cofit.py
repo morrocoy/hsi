@@ -42,7 +42,8 @@ def plot_results(analysis):
 
 
     keys = [
-        'oxy', 'blo', 'wat', 'mel']
+        # 'oxy', 'blo', 'wat', 'mel']
+        'oxy', 'blo', 'wat', 'offset']
     labels = ["Oxygenation", "Blood", "Water", "Melanin"]
 
     fig = plt.figure()
@@ -56,6 +57,8 @@ def plot_results(analysis):
             pos = plt.imshow(param[prefix + key], cmap=cmap, vmin=0, vmax=1)
         elif key == 'wat':
             pos = plt.imshow(param[prefix + key], cmap=cmap, vmin=0, vmax=1.6)
+        elif key == 'offset':
+            pos = plt.imshow(param[prefix + key], cmap=cmap)
         else:
             pos = plt.imshow(param[prefix + key], cmap=cmap, vmin=0, vmax=1.)
         fig.colorbar(pos, ax=ax)
@@ -269,7 +272,7 @@ def main():
 
     # plot solution parameters ................................................
     plot_results(analysis)
-    plot_pixel(analysis)
+    # plot_pixel(analysis)
 
 
 

@@ -19,7 +19,7 @@ import pyqtgraph as pg
 
 import hsi
 
-from hsi import HSAbsorption
+from hsi import HSAbsorption, HSExtinction, HSIntensity, convert
 
 from hsi.gui import QHSImageConfigWidget
 from hsi.gui import QHSCoFitConfigWidget
@@ -44,6 +44,7 @@ PARAM_CONFIG = {
     'cofit_hhb': "Deoxyhemoglobin",
     'cofit_ohb': "Oxyhemoglobin",
     'cofit_met': "Methemoglobin",
+    'cofit_offset': "Offset",
 }
 
 
@@ -68,17 +69,17 @@ class QHSCoFitAnalyzerWidget(QtWidgets.QWidget):
         ]
 
         self.spectViewer = RegnPlotCtrlItem(
-            "spectral attenuation", xlabel="wavelength", xunits="m")
+            "spectral attenuation", xlabel="Wavelength", xunits="m")
 
         self.curveItems = {
             'raw': pg.PlotCurveItem(
-                name="raw spectral data",
+                name="Raw spectral data",
                 pen=pg.mkPen(color=(100, 100, 100), width=1)),
             'fil': pg.PlotCurveItem(
-                name="filtered spectrum",
+                name="Filtered spectrum",
                 pen=pg.mkPen(color=(255, 255, 255), width=1)),
             'mod': pg.PlotCurveItem(
-                name="fitted spectrum",
+                name="Fitted spectrum",
                 pen=pg.mkPen(color=(255, 0, 0), width=1))
         }
 
@@ -140,7 +141,8 @@ class QHSCoFitAnalyzerWidget(QtWidgets.QWidget):
 
         # user config widgets
         self.hsImageConfig.setMaximumWidth(220)
-        self.hsImageConfig.setFormat(HSAbsorption)
+        # self.hsImageConfig.setFormat(HSAbsorption)
+        self.hsImageConfig.setFormat(HSExtinction)
         self.hsCoFitConfig.setMaximumWidth(220)
 
         layout = QtWidgets.QVBoxLayout()
@@ -291,6 +293,10 @@ class QHSCoFitAnalyzerWidget(QtWidgets.QWidget):
 
         # hsformat = self.hsImageConfig.getFormat()
         self.mspectra = analyzer.getSpectra()  # hsformat=hsformat)
+        # self.mspectra = convert(
+        #     self.hsImageConfig.getFormat(), HSAbsorption,
+        #     analyzer.getSpectra(), self.wavelen
+        # )
 
         # update spectral viewer
         reg = analyzer.getROI()
