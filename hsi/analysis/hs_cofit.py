@@ -155,7 +155,7 @@ class HSCoFit(HSBaseAnalysis):
             self.components[name] = HSComponent(
                 y, x, self.wavelen, name=name, label=label, hsformat=hsformat,
                 weight=weight, bounds=bounds)
-            self.keys.append(self.prefix + name)
+            self._keys.append(name)
 
     def clear(self, mode='all'):
         """ Clear all spectral information including component vectors."""
@@ -538,7 +538,7 @@ class HSCoFit(HSBaseAnalysis):
                 vec.set_format(self.hsformat)  # adopt hsformat
                 vec.set_interp_points(self.wavelen)
             self.components.update(vectors)
-            self.keys = [self.prefix + key for key in vectors.keys()]
+            self._keys = [key for key in vectors.keys()]
 
         return self.components  # return dict of component vectors if no errors
 
@@ -616,8 +616,8 @@ class HSCoFit(HSBaseAnalysis):
             self._anaVarScales[-1, :] = 1.
             self._anaVarBounds[-1, :] = [-1e9, 1e9]
 
-            self.keys = [self.prefix + key for key in self.components.keys()]
-            self.keys.append(self.prefix + "offset")
+            self._keys = [key for key in self.components.keys()]
+            self._keys.append("offset")
 
     def remove_component(self, name):
         """Remove a component vector.
@@ -631,7 +631,7 @@ class HSCoFit(HSBaseAnalysis):
             logger.debug(
                 "Remove component '{}'.".format(name))
             self.components.pop(name)
-            self.keys.remove(self.prefix + name)
+            self._keys.remove(name)
 
     def savetxt(self, file_path, title=None, mode='bvec'):
         """Export the component vectors and spectral data.
@@ -747,8 +747,10 @@ class HSCoFit(HSBaseAnalysis):
                 "Change bounds of '{}' to {}.".format(name, bounds))
             self.components[name].set_bounds(bounds)
 
-            if self._anaVarBounds is not None:
+            if self._anaVarScales is not None:
                 for i, vec in enumerate(self.components.values()):
+                    self._anaSysMatrix[:, i] = vec.get_scaled_value()
+                    self._anaVarScales[i, :] = vec.weight * vec.scale
                     self._anaVarBounds[i, :] = vec.get_scaled_bounds()
 
     def unfreeze_component(self, name):

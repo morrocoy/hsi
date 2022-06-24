@@ -25,6 +25,7 @@ from hsi.log import logmanager
 
 logger = logmanager.getLogger(__name__)
 
+prefix = ""
 prefix = "cofit_"
 
 def plot_results(analysis):
@@ -218,6 +219,10 @@ def main():
     # analysis.set_roi([650e-9, 995e-9])
 
     # print base component names
+    # keys = [key.split("_")[1] for key in analysis.keys]
+    # print(keys)
+    print(analysis.keys)
+    # analysis.set_prefix_enabled(False)
     print(analysis.keys)
 
     # modify bounds for component weights .....................................

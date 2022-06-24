@@ -63,11 +63,11 @@ class HSOxygen(HSBaseAnalysis):
                 - :class:`HSRefraction<hsi.HSRefraction>`
         """
         super(HSOxygen, self).__init__(spectra, wavelen, hsformat)
-        self.prefix = "lipids_"
-        self.keys = [
-            'oxygen_ox0',
-            # 'oxygen_ox1',
-            # 'oxygen_ox2',
+        self.prefix = "oxygen_"
+        self._keys = [
+            'ox0',
+            # 'ox1',
+            # 'ox2',
         ]
         self.labels = [
             "Oxygen Angle across 630-710 nm",
@@ -116,7 +116,7 @@ class HSOxygen(HSBaseAnalysis):
 
             m, n = spectra.shape  # number wavelengths, spectra
 
-            _nkeys = len(self.keys)
+            _nkeys = len(self._keys)
             self._anaVarVector = numpy.zeros((_nkeys, n))
             self._anaVarScales = numpy.ones((_nkeys, n))
             self._anaVarBounds = numpy.zeros((_nkeys, 2))

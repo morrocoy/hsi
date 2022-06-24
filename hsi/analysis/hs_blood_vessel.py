@@ -65,7 +65,7 @@ class HSBloodVessel(HSBaseAnalysis):
                 - :class:`HSRefraction<hsi.HSRefraction>`
         """
         super(HSBloodVessel, self).__init__(spectra, wavelen, hsformat)
-        self.keys = ['bv0', 'bv1', 'bv2']
+        self._keys = ['bv0', 'bv1', 'bv2']
         self.labels = [
             "Angle Index SNV at 625-720 nm",
             "Mean at 750-950 nm",

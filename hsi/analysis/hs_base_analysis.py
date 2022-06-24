@@ -73,8 +73,9 @@ class HSBaseAnalysis(object):
 
 
         # list of solution parameter keys
-        self.keys = []
+        self._keys = []
         self.prefix = ""  # key prefix to distinguish analyzers
+        self.use_prefix = True  # enable or disable prefix
 
         # check hsformat, if not previously defined also set the hsformat
         if not HSFormatFlag.has_flag(hsformat):
@@ -224,6 +225,7 @@ class HSBaseAnalysis(object):
 
         if unpack:
             shape = self.spectra.shape[1:]
+
             if len(x.shape) == 3:
                 return {"%s_%d" % (key, j) : x[j, i, :].reshape(shape) for i, key in
                         enumerate(self.keys) for j in range(len(x))}
@@ -246,6 +248,16 @@ class HSBaseAnalysis(object):
                 return x.reshape(shape)
             else:
                 raise Exception("Wrong solution format '{}'.".format(x.shape))
+
+    @property
+    def keys(self):
+        if self.use_prefix:
+            return [self.prefix + key for key in self._keys]
+        else:
+            return self._keys
+
+    def set_prefix_enabled(self, b):
+        self.use_prefix = b
 
     def set_data(self, y, x=None, hsformat=None):
         """Set spectral data to be fitted.

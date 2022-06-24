@@ -229,21 +229,25 @@ def test_mc_simulations_2():
 
     analysis.set_roi([520e-9, 995e-9])
     analysis.fit(method='bvls_f')
-    analysis.freeze_component("mel")
+    # analysis.freeze_component("mel")
     plot_test_spectra(analysis, index)
 
     analysis.set_roi([520e-9, 600e-9])
     # analysis.set_roi([680e-9, 820e-9])
     # analysis.set_roi([550e-9, 820e-9])
     analysis.fit(method='bvls_f')
-    analysis.freeze_component("hhb")
-    analysis.freeze_component("ohb")
+    # analysis.freeze_component("hhb")
+    # analysis.freeze_component("ohb")
     plot_test_spectra(analysis, index)
 
-    analysis.set_roi([520e-9, 995e-9])
+
+    # analysis.set_roi([520e-9, 995e-9])
+    analysis.unfreeze_component("mel")
+    analysis.set_roi([520e-9, 600e-9])
     # analysis.set_roi([700e-9, 995e-9])
     analysis.fit(method='bvls_f')
     plot_test_spectra(analysis, index)
+
 
     return
 
@@ -318,34 +322,45 @@ def test_hsimage():
     analysis.remove_component("fat")
     print(analysis.keys)
 
+    mask = hsimage.get_tissue_mask([0.1, 0.9])
+
+    analysis.set_roi([520e-9, 995e-9])
     analysis.prepare_ls_problem()
-
-    # analysis.set_roi([520e-9, 995e-9])
-    # analysis.fit(method='bvls_f', mask=mask)
-    # analysis.freeze_component("mel")
-    # plot_results(analysis)
-    # plot_pixel(analysis)
-
-    analysis.set_roi([520e-9, 600e-9])
-    # analysis.set_roi([680e-9, 820e-9])
-    # analysis.set_roi([520e-9, 820e-9])
     analysis.fit(method='bvls_f', mask=mask)
-    analysis.freeze_component("hhb")
-    analysis.freeze_component("ohb")
+
+    imel = list(analysis.components.keys()).index("mel")
+    index_mask = analysis._ravel_mask(mask)
+    analysis._anaVarVector[imel, index_mask] = 0.15
+    analysis.freeze_component("mel")
     plot_results(analysis)
     plot_pixel(analysis)
 
     analysis.set_roi([520e-9, 995e-9])
     analysis.fit(method='bvls_f', mask=mask)
+    # analysis.freeze_component("mel")
     plot_results(analysis)
     plot_pixel(analysis)
+
+    # analysis.set_roi([520e-9, 600e-9])
+    # # analysis.set_roi([680e-9, 820e-9])
+    # # analysis.set_roi([520e-9, 820e-9])
+    # analysis.fit(method='bvls_f', mask=mask)
+    # analysis.freeze_component("hhb")
+    # analysis.freeze_component("ohb")
+    # plot_results(analysis)
+    # plot_pixel(analysis)
+
+    # analysis.set_roi([520e-9, 995e-9])
+    # analysis.fit(method='bvls_f', mask=mask)
+    # plot_results(analysis)
+    # plot_pixel(analysis)
 
 
 def main():
     start = timer()
 
-    test_mc_simulations_1()
-    test_mc_simulations_2()
+    # test_mc_simulations_1()
+    # test_mc_simulations_2()
     test_hsimage()
 
     print("Elapsed time: %f sec" % (timer() - start))

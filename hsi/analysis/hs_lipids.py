@@ -65,12 +65,12 @@ class HSLipids(HSBaseAnalysis):
         """
         super(HSLipids, self).__init__(spectra, wavelen, hsformat)
         self.prefix = "lipids_"
-        self.keys = ['lipids_li0',
-                     'lipids_li1',
-                     'lipids_li2',
-                     'lipids_li3',
-                     'lipids_li4',
-                     'lipids_li5']
+        self._keys = ['li0',
+                     'li1',
+                     'li2',
+                     'li3',
+                     'li4',
+                     'li5']
         self.labels = [
             "Fat Angle across 900-920 nm",
             "Fat Index 1: NDI 925/960 nm",

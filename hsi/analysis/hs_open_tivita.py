@@ -62,7 +62,7 @@ class HSOpenTivita(HSBaseAnalysis):
         """
         super(HSOpenTivita, self).__init__(spectra, wavelen, hsformat)
         self.prefix = "tivita_"
-        self.keys = ['tivita_oxy', 'tivita_nir', 'tivita_thi', 'tivita_twi']
+        self._keys = ['oxy', 'nir', 'thi', 'twi']
         self.labels = [
             "Oxygenation (TIVITA)",
             "NIR-Perfusion (TIVITA)",
